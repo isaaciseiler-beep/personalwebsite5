@@ -1,0 +1,59 @@
+[
+  {
+    "slug": "policy-visuals",
+    "title": "policy visuals",
+    "kind": "project",
+    "summary": "visual explainers on ai policy for broad audiences.",
+    "image": "/images/sample1.svg",
+    "tags": ["ai", "policy", "visuals"],
+    "year": 2025,
+    "url": "https://example.com/policy-visuals"
+  },
+  {
+    "slug": "urban-night",
+    "title": "urban night",
+    "kind": "photo",
+    "summary": "long exposure cityscapes.",
+    "image": "/images/sample2.svg",
+    "tags": ["photography"],
+    "year": 2024
+  },
+  {
+    "slug": "gov-tech-report",
+    "title": "gov tech report",
+    "kind": "project",
+    "summary": "reporting on civic technology deployments.",
+    "image": "/images/sample3.svg",
+    "tags": ["government", "tech"],
+    "year": 2024,
+    "url": "https://example.com/gov-tech"
+  },
+  {
+    "slug": "motion-study",
+    "title": "motion study",
+    "kind": "project",
+    "summary": "micro-interactions for clarity and delight.",
+    "image": "/images/sample4.svg",
+    "tags": ["ui", "motion"],
+    "year": 2023
+  },
+  {
+    "slug": "faces-series",
+    "title": "faces series",
+    "kind": "photo",
+    "summary": "portraits exploring light and texture.",
+    "image": "/images/sample5.svg",
+    "tags": ["portraits"],
+    "year": 2022
+  },
+  {
+    "slug": "field-notes",
+    "title": "field notes",
+    "kind": "photo",
+    "summary": "documentary stills from on-the-ground work.",
+    "image": "/images/sample6.svg",
+    "tags": ["documentary"],
+    "year": 2021
+  }
+]
+
