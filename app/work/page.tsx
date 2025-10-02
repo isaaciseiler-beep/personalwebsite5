@@ -3,41 +3,65 @@
 import { useState } from "react";
 import { PageTransition } from "@/components/PageTransition";
 import { Card } from "@/components/Card";
-import { FilterPills } from "@/components/FilterPills";
+import PhotoCard from "@/components/PhotoCard";
 import { Lightbox } from "@/components/Lightbox";
-import projects from "@/data/projects.json";
+import projectsData from "@/data/projects.json";
 import type { Project } from "@/types/project";
+import Link from "next/link";
 
-export default function WorkPage() {
-  const [filter, setFilter] = useState<"all" | "project" | "photo">("all");
+export default function WorkLanding() {
+  const all = projectsData as Project[];
+  const projects = all.filter(p => p.kind === "project");
+  const photos = all.filter(p => p.kind === "photo");
+
   const [lightbox, setLightbox] = useState<{ open: boolean; src: string | null; alt: string }>({
     open: false,
     src: null,
     alt: ""
   });
 
-  const items = (projects as Project[]).filter((p) => (filter === "all" ? true : p.kind === filter));
-
   return (
     <PageTransition>
       <section>
         <h1 className="text-2xl font-semibold tracking-tight">work</h1>
         <p className="mt-3 max-w-prose text-muted">projects and photos.</p>
-        <div className="mt-4">
-          <FilterPills value={filter} onChange={setFilter} />
+      </section>
+
+      {/* projects preview */}
+      <section className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-xl">projects</h2>
+          <Link href="/work/projects" className="link-underline text-sm text-muted hover:text-accent">
+            see more
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 md:grid-cols-3">
+          {projects.slice(0, 6).map(item => (
+            <div key={item.slug} className="h-full">
+              <Card item={item} />
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* grid forces children to stretch; each Card wrapper is h-full */}
-      <section className="mt-6 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 md:grid-cols-3">
-        {items.map((item) => (
-          <div key={item.slug} className="h-full">
-            <Card
-              item={item}
-              onPhotoClick={(src, alt) => setLightbox({ open: true, src, alt })}
-            />
-          </div>
-        ))}
+      {/* photos preview */}
+      <section className="mt-10">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-xl">photos</h2>
+          <Link href="/work/photos" className="link-underline text-sm text-muted hover:text-accent">
+            see gallery
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 md:grid-cols-3">
+          {photos.slice(0, 6).map(item => (
+            <div key={item.slug} className="h-full">
+              <PhotoCard
+                item={item}
+                onClick={(src, alt) => setLightbox({ open: true, src, alt })}
+              />
+            </div>
+          ))}
+        </div>
       </section>
 
       <Lightbox
