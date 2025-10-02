@@ -1,4 +1,4 @@
-// app/work/photos/page.tsx — FULL FILE (masonry v2 + hover captions + gallery feed)
+// app/work/photos/page.tsx — FULL REPLACEMENT
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -14,11 +14,10 @@ import { motion, AnimatePresence } from "framer-motion";
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 function RatioClass(i: number) {
-  // rhythm: tall, wide, square pattern
   const r = i % 6;
-  if (r === 0 || r === 3) return "h-[420px]"; // portrait feel
-  if (r === 1 || r === 4) return "h-[300px]"; // landscape
-  return "h-[360px]"; // square-ish
+  if (r === 0 || r === 3) return "h-[420px]";
+  if (r === 1 || r === 4) return "h-[300px]";
+  return "h-[360px]";
 }
 
 export default function PhotosPage() {
@@ -41,6 +40,7 @@ export default function PhotosPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [locs, setLocs] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [mapExpanded, setMapExpanded] = useState(false);
 
   const items = all.filter((p) => {
     const tagOk = tags.length ? (p.tags ?? []).some((t) => tags.includes(t)) : true;
@@ -53,11 +53,30 @@ export default function PhotosPage() {
 
   return (
     <PageTransition>
-      <Reveal><h1 className="text-2xl font-semibold tracking-tight">photos</h1></Reveal>
-      <Reveal><p className="mt-3 max-w-prose text-muted">editorial gallery with filters and map.</p></Reveal>
+      <Reveal><h1 className="text-3xl md:text-4xl font-semibold tracking-tight">photos &amp; videos</h1></Reveal>
 
+      {/* map block */}
       <div className="mt-4">
-        <button onClick={() => setFiltersOpen(v => !v)} className="rounded-xl border border-subtle px-4 py-2 hover:border-[color:var(--color-accent)]/60">
+        <div className="mb-2 flex items-center justify-end gap-2">
+          <button
+            onClick={() => setMapExpanded((v) => !v)}
+            className="rounded-xl border border-subtle px-3 py-1.5 text-sm hover:border-[color:var(--color-accent)]/60"
+            aria-expanded={mapExpanded}
+          >
+            {mapExpanded ? "minimize map" : "expand map"}
+          </button>
+        </div>
+        <Reveal>
+          <MapView photos={items} expanded={mapExpanded} />
+        </Reveal>
+      </div>
+
+      {/* filter drawer */}
+      <div className="mt-4">
+        <button
+          onClick={() => setFiltersOpen(v => !v)}
+          className="rounded-xl border border-subtle px-4 py-2 hover:border-[color:var(--color-accent)]/60"
+        >
           {filtersOpen ? "hide filters" : "show filters"}
         </button>
       </div>
@@ -79,16 +98,14 @@ export default function PhotosPage() {
         )}
       </AnimatePresence>
 
-      <Reveal><div className="mt-6"><MapView photos={items} /></div></Reveal>
-
-      {/* masonry with rhythm + hover captions */}
+      {/* magazine-style masonry */}
       <div className="mt-6 masonry">
         {items.map((item, i) => (
           <div key={item.slug} className="masonry-item">
             <Reveal delay={i * 0.04}>
               <button
                 aria-label={`view ${item.title}`}
-                className="block h-full text-left group"
+                className="group relative block h-full text-left"
                 onClick={() => setLightbox({ open: true, index: i })}
               >
                 <div className={`overflow-hidden rounded-xl border border-subtle bg-card ${RatioClass(i)}`}>
@@ -100,11 +117,16 @@ export default function PhotosPage() {
                       loading="lazy"
                     />
                   )}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-3 opacity-0 transition-all duration-200 ease-[cubic-bezier(.2,0,0,1)] group-hover:translate-y-0 group-hover:opacity-100">
+                  {/* hover caption */}
+                  <div className="caption-bar pointer-events-none absolute inset-x-0 bottom-0">
                     <div className="mx-2 mb-2 rounded-lg bg-[color:var(--color-bg)]/60 px-3 py-1.5 text-sm backdrop-blur">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate">{item.title}</span>
-                        {item.location && <span className="rounded-full border border-subtle px-2 py-0.5 text-xs text-muted">{item.location}</span>}
+                        {item.location && (
+                          <span className="rounded-full border border-subtle px-2 py-0.5 text-xs text-muted">
+                            {item.location}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
