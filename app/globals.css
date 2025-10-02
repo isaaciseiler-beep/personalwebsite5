@@ -76,8 +76,23 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 .route-progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#0ea5e9,#7dd3fc);transform-origin:left;z-index:60}
 .scroll-progress{position:fixed;top:0;left:0;height:3px;background:rgba(127,127,127,.35);transform-origin:left;z-index:59}
 
-/* ===== MAP STACKING ===== */
+/* ===== MAP (stacking + popup styling) ===== */
+/* keep maps below header */
 .leaflet-container,.mapboxgl-map{z-index:0}
+
+/* glassy popups with location-only look */
+.mapboxgl-popup-content{
+  background: color-mix(in oklab, var(--color-bg) 70%, transparent);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  padding: 6px 10px;
+}
+.mapboxgl-popup-tip{
+  border-top-color: color-mix(in oklab, var(--color-bg) 70%, transparent) !important;
+}
+.popup-card{ font-size: 12px; }
 
 /* ===== MASONRY (magazine layout) ===== */
 .masonry{column-gap:1.5rem}
@@ -85,7 +100,7 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 @media (min-width:768px){.masonry{column-count:3}}
 .masonry-item{break-inside:avoid;margin-bottom:1.5rem}
 
-/* photo hover caption helper (used in phase 2) */
+/* photo hover caption helper */
 .group .caption-bar{
   transform:translateY(12px);
   opacity:0;
@@ -93,6 +108,6 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 }
 .group:hover .caption-bar{transform:translateY(0);opacity:1}
 
-/* ===== UTILITIES (optional helpers) ===== */
+/* ===== UTILITIES ===== */
 .shadow-subtle{box-shadow:0 8px 30px rgba(0,0,0,.20)}
 .bg-card-blur{background-color:color-mix(in oklab, var(--color-bg) 60%, transparent);backdrop-filter:blur(6px)}
