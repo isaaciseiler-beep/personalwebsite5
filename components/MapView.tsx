@@ -1,3 +1,4 @@
+// components/MapView.tsx — FULL REPLACEMENT
 "use client";
 
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -46,28 +47,11 @@ export default function MapView({
 
   const styleId = theme === "light" ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11";
 
-  // ensure map resizes when container animates
+  // ensure map resizes after container height animation
   useEffect(() => {
     const id = setTimeout(() => mapRef.current?.resize(), 240);
     return () => clearTimeout(id);
   }, [expanded]);
-
-  // compact attribution (cannot legally remove)
-  useEffect(() => {
-    const m = mapRef.current?.getMap?.();
-    if (!m) return;
-    // hide default control then add compact control
-    const attribs = document.querySelectorAll(".mapboxgl-ctrl-attrib");
-    attribs.forEach((el) => (el.parentElement?.style.setProperty("display", "none")));
-    // @ts-ignore
-    const ctrl = new mboxgl.AttributionControl({ compact: true });
-    // some bundles expose mapboxgl on window; fallback: do nothing if unavailable
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const gl: any = (window as any).mapboxgl || undefined;
-    if (gl) {
-      m.addControl(new gl.AttributionControl({ compact: true }), "bottom-right");
-    }
-  }, []);
 
   const zoomBy = (delta: number) => {
     const z = Math.min(14, Math.max(1, zoom + delta));
@@ -93,7 +77,7 @@ export default function MapView({
         doubleClickZoom={false}
         touchZoomRotate={false}
         dragRotate={false}
-        attributionControl={true}
+        attributionControl={true}  // keep for license; styled in CSS
       >
         {/* zoom controls */}
         <div className="absolute right-2 top-2 z-10 flex flex-col gap-2">
@@ -128,23 +112,21 @@ export default function MapView({
         ))}
 
         {/* location-only popup */}
-        {selected && (
-          (() => {
-            const p = points.find((x) => x.slug === selected)!;
-            return (
-              <Popup
-                longitude={p.lng as number}
-                latitude={p.lat as number}
-                closeButton={true}
-                offset={16}
-                anchor="bottom"
-                onClose={() => setSelected(null)}
-              >
-                <div className="popup-card">{p.location ?? "location"}</div>
-              </Popup>
-            );
-          })()
-        )}
+        {selected && (() => {
+          const p = points.find((x) => x.slug === selected)!;
+          return (
+            <Popup
+              longitude={p.lng as number}
+              latitude={p.lat as number}
+              closeButton
+              offset={16}
+              anchor="bottom"
+              onClose={() => setSelected(null)}
+            >
+              <div className="popup-card">{p.location ?? "location"}</div>
+            </Popup>
+          );
+        })()}
       </Map>
 
       {/* bottom gradient when minimized */}
