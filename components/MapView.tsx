@@ -4,6 +4,7 @@
 import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { Marker, Popup, MapRef } from "react-map-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { m } from "framer-motion";
 import type { Project } from "@/types/project";
 
 function useTheme(): "dark" | "light" {
@@ -21,44 +22,45 @@ function useTheme(): "dark" | "light" {
 
 export default function MapView({
   photos,
-  expanded = false
+  expanded = false,
+  onToggle
 }: {
   photos: Project[];
   expanded?: boolean;
+  onToggle?: () => void;
 }) {
   const theme = useTheme();
   const points = useMemo(
     () => photos.filter((p) => typeof p.lat === "number" && typeof p.lng === "number"),
     [photos]
   );
+  if (points.length === 0) return null;
+
   const styleId =
     theme === "light" ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11";
+  const center = { longitude: points[0].lng as number, latitude: points[0].lat as number };
 
-  // hooks must run unconditionally
   const mapRef = useRef<MapRef | null>(null);
   const [zoom, setZoom] = useState(3);
-
-  const center = useMemo(() => {
-    if (points.length > 0) return { longitude: points[0].lng as number, latitude: points[0].lat as number };
-    // default center (Pacific) if no points; component will return null below
-    return { longitude: 0, latitude: 0 };
-  }, [points]);
-
   const zoomBy = (delta: number) => {
     const z = Math.min(14, Math.max(1, zoom + delta));
     setZoom(z);
     mapRef.current?.flyTo({ zoom: z, duration: 200 });
   };
 
-  if (points.length === 0) return null;
-
   return (
-    <div className="relative overflow-hidden rounded-xl border border-subtle">
+    <m.div
+      className="relative overflow-hidden rounded-xl border border-subtle"
+      initial={false}
+      animate={{ height: expanded ? 420 : 220 }}
+      transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
+      style={{ height: expanded ? 420 : 220 }}
+    >
       <Map
         ref={mapRef}
         initialViewState={{ ...center, zoom }}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-        style={{ width: "100%", height: expanded ? 420 : 220 }}
+        style={{ width: "100%", height: "100%" }}
         mapStyle={styleId}
         scrollZoom={false}
         doubleClickZoom={false}
@@ -83,7 +85,7 @@ export default function MapView({
           </button>
         </div>
 
-        {/* dynamic pins */}
+        {/* pins */}
         {points.map((p) => (
           <Marker key={p.slug} longitude={p.lng as number} latitude={p.lat as number}>
             <div className="relative">
@@ -93,7 +95,7 @@ export default function MapView({
           </Marker>
         ))}
 
-        {/* location-only popups (simple, defined) */}
+        {/* location-only popups */}
         {points.map(
           (p) =>
             p.location && (
@@ -110,6 +112,30 @@ export default function MapView({
             )
         )}
       </Map>
-    </div>
+
+      {/* bottom gradient when minimized */}
+      {!expanded && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-10"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0), var(--color-bg))" }}
+        />
+      )}
+
+      {/* chevron toggle */}
+      <button
+        onClick={onToggle}
+        className="absolute inset-x-0 bottom-0 z-10 mx-auto mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--color-bg)]/70 text-[color:var(--color-fg)] backdrop-blur hover:bg-[color:var(--color-bg)]/85"
+        aria-label={expanded ? "minimize map" : "expand map"}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+          {expanded ? (
+            <path d="M6 15l6-6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          ) : (
+            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          )}
+        </svg>
+      </button>
+    </m.div>
   );
 }
