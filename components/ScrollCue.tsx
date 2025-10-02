@@ -1,3 +1,4 @@
+// components/ScrollCue.tsx — FULL FILE
 "use client";
 
 import { m } from "framer-motion";
@@ -8,11 +9,7 @@ export default function ScrollCue() {
 
   useEffect(() => {
     function onScroll() {
-      if (window.scrollY > 50) {
-        setVisible(false);
-      } else {
-        setVisible(true);
-      }
+      setVisible(window.scrollY <= 50);
     }
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
