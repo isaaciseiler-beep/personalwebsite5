@@ -8,10 +8,10 @@ import type { Project } from "@/types/project";
 export default function MapView({ photos }: { photos: Project[] }) {
   const [popup, setPopup] = useState<Project | null>(null);
 
-  const coords = photos.filter((p) => p.lat && p.lng);
-  if (coords.length === 0) return null;
+  const points = photos.filter(p => typeof p.lat === "number" && typeof p.lng === "number");
+  if (points.length === 0) return null;
 
-  const center = { longitude: coords[0].lng as number, latitude: coords[0].lat as number };
+  const center = { longitude: points[0].lng as number, latitude: points[0].lat as number };
 
   return (
     <div className="overflow-hidden rounded-xl border border-subtle">
@@ -21,7 +21,7 @@ export default function MapView({ photos }: { photos: Project[] }) {
         style={{ width: "100%", height: 360 }}
         mapStyle="mapbox://styles/mapbox/dark-v11"
       >
-        {coords.map((p) => (
+        {points.map(p => (
           <Marker
             key={p.slug}
             longitude={p.lng as number}
@@ -31,7 +31,10 @@ export default function MapView({ photos }: { photos: Project[] }) {
               setPopup(p);
             }}
           >
-            <div className="h-5 w-5 rounded-full bg-accent border-2 border-white shadow" />
+            <div className="relative">
+              <div className="h-3.5 w-3.5 rounded-full bg-white shadow-[0_0_0_2px_rgba(14,165,233,0.8)]" />
+              <div className="absolute inset-0 rounded-full animate-ping bg-accent/40" />
+            </div>
           </Marker>
         ))}
         {popup && (
@@ -40,6 +43,7 @@ export default function MapView({ photos }: { photos: Project[] }) {
             latitude={popup.lat as number}
             onClose={() => setPopup(null)}
             closeOnClick={false}
+            offset={12}
           >
             <div className="text-sm">
               <div className="font-medium">{popup.title}</div>
