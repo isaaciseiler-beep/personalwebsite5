@@ -1,23 +1,21 @@
 "use client";
 
+import React, { useState } from "react";
 import Image, { type ImageProps } from "next/image";
-import { useState } from "react";
 
-/**
- * ShimmerImage wraps next/image with a lightweight shimmer placeholder.
- * It enforces `alt` text so accessibility and ESLint rules are satisfied.
- */
 type Props = Omit<ImageProps, "alt"> & { alt: string; className?: string };
 
 export default function ShimmerImage({ alt, className = "", ...rest }: Props) {
   const [loaded, setLoaded] = useState(false);
 
+  const imgClass = `${className} ${loaded ? "" : "opacity-0"}`;
+
   return (
     <div className={`relative overflow-hidden ${className}`}>
       <Image
         {...rest}
-        alt={alt}                          {/* 👈 always enforced */}
-        className={`${className} ${loaded ? "" : "opacity-0"}`}
+        alt={alt}
+        className={imgClass}
         onLoadingComplete={() => setLoaded(true)}
       />
       {!loaded && (
