@@ -1,6 +1,6 @@
 {
   "name": "isaac-portfolio",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,7 +12,7 @@
   "dependencies": {
     "framer-motion": "^11.2.6",
     "lucide-react": "^0.468.0",
-    "mapbox-gl": "^2.16.1",
+    "mapbox-gl": "^2.15.0",
     "next": "14.2.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
