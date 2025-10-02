@@ -6,8 +6,6 @@ import timeline from "@/data/timeline.json";
 import type { TimelineEvent } from "@/types/timeline";
 import { motion, useReducedMotion } from "framer-motion";
 
-export const metadata = { title: "about — isaac seiler" };
-
 export default function AboutPage() {
   const items = timeline as TimelineEvent[];
   const prefersReducedMotion = useReducedMotion();
@@ -15,9 +13,7 @@ export default function AboutPage() {
   const container = {
     hidden: {},
     show: {
-      transition: {
-        staggerChildren: prefersReducedMotion ? 0 : 0.06
-      }
+      transition: { staggerChildren: prefersReducedMotion ? 0 : 0.06 }
     }
   };
 
@@ -25,7 +21,9 @@ export default function AboutPage() {
     <PageTransition>
       <section className="prose-invert">
         <h1 className="text-2xl font-semibold tracking-tight">about</h1>
-        <p className="mt-3 max-w-prose text-muted">highlights and a straightforward career timeline.</p>
+        <p className="mt-3 max-w-prose text-muted">
+          highlights and a straightforward career timeline.
+        </p>
       </section>
 
       <motion.ol
@@ -42,4 +40,3 @@ export default function AboutPage() {
     </PageTransition>
   );
 }
-
