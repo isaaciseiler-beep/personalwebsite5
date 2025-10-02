@@ -1,3 +1,4 @@
+// components/CursorTilt.tsx — FULL FILE
 "use client";
 
 import React, { useRef } from "react";
@@ -5,8 +6,8 @@ import { useReducedMotion } from "framer-motion";
 
 type Props = {
   children: React.ReactNode;
-  maxTiltDeg?: number;   // default 6
-  scale?: number;        // default 1.015
+  maxTiltDeg?: number;  // default 6
+  scale?: number;       // default 1.015
   className?: string;
 };
 
@@ -25,9 +26,9 @@ export default function CursorTilt({ children, maxTiltDeg = 6, scale = 1.015, cl
     const el = ref.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width;   // 0..1
-    const py = (e.clientY - rect.top) / rect.height;   // 0..1
-    const rx = (0.5 - py) * (maxTiltDeg * 2);          // invert y
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    const rx = (0.5 - py) * (maxTiltDeg * 2);
     const ry = (px - 0.5) * (maxTiltDeg * 2);
     el.style.transform = `perspective(800px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${scale})`;
   }
