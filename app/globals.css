@@ -1,8 +1,10 @@
-/* app/globals.css — FULL REPLACEMENT */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* smooth scrolling with PRM fallback */
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
 /* ===== THEME TOKENS ===== */
 :root,[data-theme="dark"]{
@@ -52,6 +54,8 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 /* cards / hover baseline */
 .card-hover{transition:transform 150ms cubic-bezier(.2,0,0,1), box-shadow 150ms cubic-bezier(.2,0,0,1);transform:translateY(0) rotate(0)}
 .card-hover:hover{box-shadow:0 8px 30px rgba(0,0,0,.20)}
+/* ensure group hover also triggers card lift (for wrappers using group) */
+.group:hover .card-hover{transform:translateY(-2px) rotate(0);box-shadow:0 8px 30px rgba(0,0,0,.20)}
 
 /* borders */
 .border-subtle{border-color:var(--color-border)}
@@ -77,9 +81,10 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 /* ===== PROGRESS BARS ===== */
 .route-progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#0ea5e9,#7dd3fc);transform-origin:left;z-index:60}
 .scroll-progress{position:fixed;top:0;left:0;height:3px;background:rgba(127,127,127,.35);transform-origin:left;z-index:59}
+/* optional: edge progress (if used) */
+.edge-progress{position:fixed;left:0;top:0;width:2px;background:color-mix(in oklab,var(--color-accent) 70%, transparent);transform-origin:top;z-index:40}
 
-/* ===== MAP (stacking + popup styling) ===== */
-/* keep maps below header */
+/* ===== MAP (stacking + popup + attribution styling) ===== */
 .leaflet-container,.mapboxgl-map{z-index:0}
 
 /* glassy popups with location-only look */
@@ -96,29 +101,25 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 }
 .popup-card{ font-size: 12px; }
 
-  /* restyle Mapbox attribution */
+/* restyle Mapbox attribution */
 .mapboxgl-ctrl-attrib {
-  background: none !important;           /* transparent background */
-  font-size: 11px !important;            /* smaller font */
-  color: var(--color-fg) !important;     /* match site foreground */
-  text-transform: uppercase;             /* subtle stylization */
-  letter-spacing: 0.05em;                /* spaced out */
+  background: none !important;
+  font-size: 11px !important;
+  color: var(--color-fg) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   padding: 2px 6px !important;
   border-radius: 6px;
-  backdrop-filter: blur(6px);            /* glassy look */
-  background-color: rgba(0,0,0,0.5);     /* black translucent pill */
+  backdrop-filter: blur(6px);
+  background-color: rgba(0,0,0,0.5);
 }
 .mapboxgl-ctrl-attrib a {
-  color: var(--color-accent) !important; /* accent blue for links */
+  color: var(--color-accent) !important;
   text-decoration: none !important;
 }
 .mapboxgl-ctrl-attrib a:hover {
-  text-decoration: underline !important; /* underline only on hover */
+  text-decoration: underline !important;
 }
-
-/* gradient overlay used when map is minimized (rendered by component) */
-/* no class needed here—kept for reference */
-/* .map-minimized-fade { background: linear-gradient(to bottom, rgba(0,0,0,0), var(--color-bg)); } */
 
 /* ===== MASONRY (magazine layout) ===== */
 .masonry{column-gap:1.5rem}
