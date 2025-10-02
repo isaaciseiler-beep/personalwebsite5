@@ -12,24 +12,10 @@ export function Nav() {
 
   const NavLinks = () => (
     <ul className="flex flex-col md:flex-row gap-6 md:gap-4 items-start md:items-center">
+      <li><Link href="/about" className="link-underline hover:text-accent" prefetch>about</Link></li>
+      <li><Link href="/work" className="link-underline hover:text-accent" prefetch>work</Link></li>
       <li>
-        <Link href="/about" className="link-underline hover:text-accent">
-          about
-        </Link>
-      </li>
-      <li>
-        <Link href="/work" className="link-underline hover:text-accent">
-          work
-        </Link>
-      </li>
-      <li>
-        <a
-          href={linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-underline hover:text-accent"
-          aria-label="linkedin"
-        >
+        <a href={linkedin} target="_blank" rel="noopener noreferrer" className="link-underline hover:text-accent" aria-label="linkedin">
           linkedin
         </a>
       </li>
@@ -38,21 +24,20 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-50 bg-black/70 backdrop-blur">
+      <a href="#content" className="skip-link">skip to content</a>
       <div className="mx-auto max-w-5xl flex items-center justify-between border-b border-subtle py-6 px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight text-lg">
+        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight text-lg" prefetch>
           <Image src="/logo.png" alt="isaac logo" width={42} height={42} className="rounded-full" />
           <span className="sr-only">isaac</span>
         </Link>
 
-        <nav className="hidden md:block">
-          <NavLinks />
-        </nav>
+        <nav className="hidden md:block"><NavLinks /></nav>
 
         <button
           className="md:hidden rounded-xl border border-subtle p-2"
           aria-label="toggle menu"
           aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen(v => !v)}
         >
           {open ? <X size={18} /> : <Menu size={18} />}
         </button>
