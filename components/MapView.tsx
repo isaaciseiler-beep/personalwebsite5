@@ -6,15 +6,21 @@ import * as L from "leaflet";
 import type { Project } from "@/types/project";
 import { useMemo } from "react";
 
+const pinSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'>
+  <defs>
+    <filter id='s' x='-50%' y='-50%' width='200%' height='200%'>
+      <feDropShadow dx='0' dy='1' stdDeviation='1.2' flood-color='rgba(0,0,0,0.6)'/>
+    </filter>
+  </defs>
+  <path d='M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z' fill='#ffffff' stroke='#0a0a0a' stroke-width='1.5' filter='url(#s)'/>
+  <circle cx='12' cy='9.5' r='2.6' fill='#0a0a0a'/>
+</svg>`;
+
 const icon = new L.Icon({
-  iconUrl:
-    "data:image/svg+xml;utf8," +
-    encodeURIComponent(
-      `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='#0ea5e9'><path d='M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z'/></svg>`
-    ),
-  iconSize: [24, 24],
-  iconAnchor: [12, 24],
-  popupAnchor: [0, -22]
+  iconUrl: "data:image/svg+xml;utf8," + encodeURIComponent(pinSvg),
+  iconSize: [28, 28],
+  iconAnchor: [14, 26],
+  popupAnchor: [0, -24]
 });
 
 export default function MapView({ photos }: { photos: Project[] }) {
@@ -34,14 +40,17 @@ export default function MapView({ photos }: { photos: Project[] }) {
   ] as [number, number];
 
   return (
-    <div className="overflow-hidden rounded-xl border border-subtle">
+    <div className="relative z-0 overflow-hidden rounded-xl border border-subtle">
       <MapContainer
         center={center}
         zoom={4}
         scrollWheelZoom={false}
+        zoomControl={true}
+        className="monochrome-map"
         style={{ height: 360, width: "100%" }}
       >
         <TileLayer
+          // OSM tiles, styled via CSS filters for monochrome
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
