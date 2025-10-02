@@ -19,6 +19,7 @@ export function Card({ item, onPhotoClick }: CardProps) {
             height={600}
             className="h-56 w-full object-cover"
             loading="lazy"
+            sizes="(min-width: 768px) 33vw, 100vw"
           />
         )}
         <div className="flex min-h-0 flex-1 flex-col p-4">
@@ -27,7 +28,7 @@ export function Card({ item, onPhotoClick }: CardProps) {
           {item.summary && <p className="mt-2 flex-1 text-sm text-muted line-clamp-2">{item.summary}</p>}
           {item.tags && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {item.tags.map((t) => (
+              {item.tags.map(t => (
                 <span key={t} className="rounded-full border border-subtle px-2 py-0.5 text-xs text-muted">
                   {t}
                 </span>
@@ -46,6 +47,9 @@ export function Card({ item, onPhotoClick }: CardProps) {
       </button>
     );
   }
-  if (item.url) return <Link href={item.url} target="_blank" rel="noopener noreferrer" className="block h-full">{body}</Link>;
+  if (item.kind === "project") {
+    if (item.url) return <Link href={item.url} target="_blank" rel="noopener noreferrer" className="block h-full">{body}</Link>;
+    return <Link href={`/work/projects/${item.slug}`} className="block h-full prefetch">{body}</Link>;
+  }
   return <div className="h-full">{body}</div>;
 }
