@@ -2,7 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
+import * as L from "leaflet";
 import type { Project } from "@/types/project";
 import { useMemo } from "react";
 
@@ -14,18 +14,24 @@ const icon = new L.Icon({
     ),
   iconSize: [24, 24],
   iconAnchor: [12, 24],
-  popupAnchor: [0, -22],
+  popupAnchor: [0, -22]
 });
 
 export default function MapView({ photos }: { photos: Project[] }) {
   const points = useMemo(
-    () => photos.filter(p => typeof p.lat === "number" && typeof p.lng === "number"),
+    () =>
+      photos.filter(
+        (p) => typeof p.lat === "number" && typeof p.lng === "number"
+      ),
     [photos]
   );
 
   if (points.length === 0) return null;
 
-  const center = [points[0].lat as number, points[0].lng as number] as [number, number];
+  const center = [
+    points[0].lat as number,
+    points[0].lng as number
+  ] as [number, number];
 
   return (
     <div className="overflow-hidden rounded-xl border border-subtle">
@@ -39,8 +45,12 @@ export default function MapView({ photos }: { photos: Project[] }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
-        {points.map(p => (
-          <Marker key={p.slug} position={[p.lat as number, p.lng as number]} icon={icon}>
+        {points.map((p) => (
+          <Marker
+            key={p.slug}
+            position={[p.lat as number, p.lng as number]}
+            icon={icon}
+          >
             <Popup>
               <div className="text-sm">
                 <div className="font-medium">{p.title}</div>
