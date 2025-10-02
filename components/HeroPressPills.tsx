@@ -1,4 +1,3 @@
-// components/HeroPressPills.tsx — FULL FILE
 "use client";
 
 export default function HeroPressPills() {
@@ -18,7 +17,7 @@ export default function HeroPressPills() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Isaac on OpenAI's social media discussing uses of ChatGPT Study Mode
+        Isaac on OpenAI&rsquo;s social media discussing uses of ChatGPT Study Mode
       </a>
       <a
         href="https://source.washu.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/"
@@ -50,7 +49,7 @@ export default function HeroPressPills() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Isaac's profile by Washington University
+        Isaac&rsquo;s profile by Washington University
       </a>
     </div>
   );
