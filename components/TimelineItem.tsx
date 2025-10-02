@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import type { TimelineEvent } from "@/types/timeline";
 
@@ -11,7 +11,7 @@ const child = {
 
 export function TimelineItem({ event }: { event: TimelineEvent }) {
   return (
-    <motion.li variants={child} className="relative pl-6">
+    <m.li variants={child} className="relative pl-6">
       <span className="absolute left-0 top-2 h-3 w-3 rounded-full bg-accent/70" />
       <div className="text-sm text-muted">{event.year}</div>
       <div className="mt-1 text-lg">
@@ -19,15 +19,11 @@ export function TimelineItem({ event }: { event: TimelineEvent }) {
       </div>
       {event.summary && <p className="mt-1 text-muted">{event.summary}</p>}
       {event.link && (
-        <Link
-          href={event.link}
-          className="link-underline mt-2 inline-block text-sm hover:text-accent"
-          target="_blank"
-        >
+        <Link href={event.link} className="link-underline mt-2 inline-block text-sm hover:text-accent" target="_blank">
           more
         </Link>
       )}
-    </motion.li>
+    </m.li>
   );
 }
 
