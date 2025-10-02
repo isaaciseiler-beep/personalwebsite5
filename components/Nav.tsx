@@ -37,21 +37,10 @@ export function Nav() {
   );
 
   return (
-    <header className="sticky top-0 z-20 bg-black/70 backdrop-blur">
-      {/* content container */}
+    <header className="sticky top-0 z-50 bg-black/70 backdrop-blur">
       <div className="mx-auto max-w-5xl flex items-center justify-between border-b border-subtle py-6 px-4">
-        {/* logo 50% larger, with sr-only text */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 font-semibold tracking-tight text-lg"
-        >
-          <Image
-            src="/logo.png"
-            alt="isaac logo"
-            width={42}
-            height={42}
-            className="rounded-full"
-          />
+        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight text-lg">
+          <Image src="/logo.png" alt="isaac logo" width={42} height={42} className="rounded-full" />
           <span className="sr-only">isaac</span>
         </Link>
 
@@ -69,7 +58,6 @@ export function Nav() {
         </button>
       </div>
 
-      {/* animated mobile menu (full-width background preserved) */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -86,7 +74,6 @@ export function Nav() {
         )}
       </AnimatePresence>
 
-      {/* thin line spanning full viewport width */}
       <div className="h-px w-full bg-border" />
     </header>
   );
