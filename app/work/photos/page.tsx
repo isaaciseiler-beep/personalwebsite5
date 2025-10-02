@@ -16,17 +16,17 @@ const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 export default function PhotosPage() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  const all = (data as Project[]).filter(p => p.kind === "photo");
+  const all = (data as Project[]).filter((p) => p.kind === "photo");
 
   const tagOptions = useMemo(() => {
     const set = new Set<string>();
-    all.forEach(p => p.tags?.forEach(t => set.add(t)));
+    all.forEach((p) => p.tags?.forEach((t) => set.add(t)));
     return Array.from(set).sort();
   }, [all]);
 
   const locOptions = useMemo(() => {
     const set = new Set<string>();
-    all.forEach(p => p.location && set.add(p.location));
+    all.forEach((p) => p.location && set.add(p.location));
     return Array.from(set).sort();
   }, [all]);
 
@@ -34,13 +34,13 @@ export default function PhotosPage() {
   const [locs, setLocs] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const items = all.filter(p => {
-    const tagOk = tags.length ? (p.tags ?? []).some(t => tags.includes(t)) : true;
+  const items = all.filter((p) => {
+    const tagOk = tags.length ? (p.tags ?? []).some((t) => tags.includes(t)) : true;
     const locOk = locs.length ? (p.location ? locs.includes(p.location) : false) : true;
     return tagOk && locOk;
   });
 
-  const gallery = items.map(p => ({ src: p.image ?? "", alt: p.title }));
+  const gallery = items.map((p) => ({ src: p.image ?? "", alt: p.title }));
   const [lightbox, setLightbox] = useState<{ open: boolean; index: number }>({ open: false, index: 0 });
 
   return (
@@ -49,7 +49,7 @@ export default function PhotosPage() {
       <Reveal><p className="mt-3 max-w-prose text-muted">filter by tags and location; mapped where available.</p></Reveal>
 
       <div className="mt-4">
-        <button onClick={() => setFiltersOpen(v => !v)} className="rounded-xl border border-subtle px-4 py-2 hover:border-accent/60">
+        <button onClick={() => setFiltersOpen(v => !v)} className="rounded-xl border border-subtle px-4 py-2 hover:border-[color:var(--color-accent)]/60">
           {filtersOpen ? "hide filters" : "show filters"}
         </button>
       </div>
@@ -73,13 +73,14 @@ export default function PhotosPage() {
 
       <Reveal><div className="mt-6"><MapView photos={items} /></div></Reveal>
 
-      <div className="mt-6 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 md:grid-cols-3">
+      {/* MAGAZINE-STYLE MASONRY */}
+      <div className="mt-6 masonry">
         {items.map((item, i) => (
-          <Reveal key={item.slug} delay={i * 0.04}>
-            <div className="h-full">
+          <div key={item.slug} className="masonry-item">
+            <Reveal delay={i * 0.04}>
               <PhotoCard item={item} onClick={() => setLightbox({ open: true, index: i })} />
-            </div>
-          </Reveal>
+            </Reveal>
+          </div>
         ))}
       </div>
 
@@ -87,7 +88,7 @@ export default function PhotosPage() {
         open={lightbox.open}
         items={gallery}
         index={lightbox.index}
-        setIndex={(i) => setLightbox(s => ({ ...s, index: i }))}
+        setIndex={(i) => setLightbox((s) => ({ ...s, index: i }))}
         onClose={() => setLightbox({ open: false, index: 0 })}
       />
     </PageTransition>
