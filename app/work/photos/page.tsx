@@ -8,8 +8,6 @@ import data from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import { Lightbox } from "@/components/Lightbox";
 
-export const metadata = { title: "photos — isaac seiler" };
-
 export default function PhotosPage() {
   const photos = (data as Project[]).filter(p => p.kind === "photo");
 
@@ -22,7 +20,9 @@ export default function PhotosPage() {
   return (
     <PageTransition>
       <h1 className="text-2xl font-semibold tracking-tight">photos</h1>
-      <p className="mt-3 max-w-prose text-muted">selected images, mapped by location where available.</p>
+      <p className="mt-3 max-w-prose text-muted">
+        selected images, mapped by location where available.
+      </p>
 
       {/* map shows only when photos have coordinates */}
       <div className="mt-6">
