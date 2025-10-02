@@ -1,4 +1,3 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT (uses next/image in masonry; map toggle via chevron)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -11,6 +10,7 @@ import type { Project } from "@/types/project";
 import { Lightbox } from "@/components/Lightbox";
 import TagFilter from "@/components/TagFilter";
 import { motion, AnimatePresence } from "framer-motion";
+import CursorTilt from "@/components/CursorTilt";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -24,7 +24,7 @@ function RatioClass(i: number) {
 export default function PhotosPage() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  const all = (data as Project[]).filter((p) => p.kind === "photo");
+  const all = (data as Project[]).filter((p) => p.kind === "photo" || p.kind === "video");
 
   const tagOptions = useMemo(() => {
     const set = new Set<string>();
@@ -90,7 +90,7 @@ export default function PhotosPage() {
         )}
       </AnimatePresence>
 
-      {/* magazine-style masonry with visible images + hover captions */}
+      {/* magazine-style masonry with visible images/videos + hover captions + card lift */}
       <div className="mt-6 masonry">
         {items.map((item, i) => (
           <div key={item.slug} className="masonry-item">
@@ -100,18 +100,33 @@ export default function PhotosPage() {
                 className="group relative block h-full text-left"
                 onClick={() => setLightbox({ open: true, index: i })}
               >
-                <div className={`relative overflow-hidden rounded-xl border border-subtle bg-card ${RatioClass(i)}`}>
-                  {item.image && (
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      width={1200}
-                      height={800}
-                      className="h-full w-full object-cover transition-transform duration-200 ease-[cubic-bezier(.2,0,0,1)] group-hover:scale-[1.02]"
-                      sizes="(min-width: 768px) 33vw, 100vw"
-                      loading="lazy"
+                <CursorTilt className={`relative overflow-hidden rounded-xl border border-subtle bg-card transition-transform duration-200 ease-[cubic-bezier(.2,0,0,1)] group-hover:-translate-y-0.5 shadow-subtle ${RatioClass(i)}`}>
+                  {/* media */}
+                  {item.kind === "video" || (item as any).video ? (
+                    <video
+                      className="h-full w-full object-cover"
+                      src={(item as any).video ?? item.image ?? ""}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
                     />
+                  ) : (
+                    item.image && (
+                      <Image
+                        src={item.image}
+                        alt={item.title}
+                        width={1200}
+                        height={800}
+                        className="h-full w-full object-cover"
+                        sizes="(min-width: 768px) 33vw, 100vw"
+                        loading="lazy"
+                      />
+                    )
                   )}
+
+                  {/* hover caption */}
                   <div className="caption-bar pointer-events-none absolute inset-x-0 bottom-0">
                     <div className="mx-2 mb-2 rounded-lg bg-[color:var(--color-bg)]/60 px-3 py-1.5 text-sm backdrop-blur">
                       <div className="flex items-center justify-between gap-2">
@@ -124,7 +139,7 @@ export default function PhotosPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </CursorTilt>
               </button>
             </Reveal>
           </div>
