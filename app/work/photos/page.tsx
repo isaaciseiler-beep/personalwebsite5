@@ -1,10 +1,11 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT
+// app/work/photos/page.tsx — FULL REPLACEMENT (uses next/image instead of <img>)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { PageTransition } from "@/components/PageTransition";
 import Reveal from "@/components/Reveal";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import data from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import { Lightbox } from "@/components/Lightbox";
@@ -98,7 +99,7 @@ export default function PhotosPage() {
         )}
       </AnimatePresence>
 
-      {/* magazine-style masonry */}
+      {/* magazine-style masonry with next/image */}
       <div className="mt-6 masonry">
         {items.map((item, i) => (
           <div key={item.slug} className="masonry-item">
@@ -108,13 +109,14 @@ export default function PhotosPage() {
                 className="group relative block h-full text-left"
                 onClick={() => setLightbox({ open: true, index: i })}
               >
-                <div className={`overflow-hidden rounded-xl border border-subtle bg-card ${RatioClass(i)}`}>
+                <div className={`relative overflow-hidden rounded-xl border border-subtle bg-card ${RatioClass(i)}`}>
                   {item.image && (
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.title}
-                      className="h-full w-full object-cover transition-transform duration-200 ease-[cubic-bezier(.2,0,0,1)] group-hover:scale-[1.02]"
-                      loading="lazy"
+                      fill
+                      sizes="(min-width: 768px) 33vw, 100vw"
+                      className="object-cover transition-transform duration-200 ease-[cubic-bezier(.2,0,0,1)] group-hover:scale-[1.02]"
                     />
                   )}
                   {/* hover caption */}
