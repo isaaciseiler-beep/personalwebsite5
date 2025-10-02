@@ -1,3 +1,4 @@
+// components/Nav.tsx — FULL FILE
 "use client";
 
 import Link from "next/link";
@@ -42,7 +43,7 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* translucent bar only (no gradient, no lines) */}
+      {/* translucent blur bar (no gradient, no lines) */}
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
@@ -82,7 +83,7 @@ export function Nav() {
         </div>
       </div>
 
-      {/* mobile drawer (no borders/lines) */}
+      {/* mobile drawer */}
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
