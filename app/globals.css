@@ -59,7 +59,7 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 /* clamp */
 .line-clamp-2{-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
 
-/* HERO GRADIENT (ensures background shows) */
+/* hero gradient */
 .hero-bg{
   position:relative;
   background:
@@ -73,14 +73,15 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   background-size:180px 180px;
 }
 
-/* MAP STACKING */
+/* map stacking safety */
 .leaflet-container,.mapboxgl-map{z-index:0}
 
-/* SCROLL PROGRESS (thicker) */
+/* route + scroll progress (scroll is thicker) */
+.route-progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#0ea5e9,#7dd3fc);transform-origin:left;z-index:60}
 .scroll-progress{position:fixed;top:0;left:0;height:3px;background:rgba(127,127,127,.35);transform-origin:left;z-index:59}
 
-/* MASONRY (magazine) */
+/* masonry helpers (phase 2 will use) */
 .masonry{column-gap:1.5rem}
 @media (min-width: 640px){ .masonry{column-count:2} }
 @media (min-width: 768px){ .masonry{column-count:3} }
-.masonry-item{break-inside:avoid; margin-bottom:1.5rem}
+.masonry-item{break-inside:avoid;margin-bottom:1.5rem}
