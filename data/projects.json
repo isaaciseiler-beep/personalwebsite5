@@ -16,7 +16,10 @@
     "summary": "long exposure cityscapes.",
     "image": "/images/sample2.svg",
     "tags": ["photography"],
-    "year": 2024
+    "year": 2024,
+    "location": "taipei, taiwan",
+    "lat": 25.033964,
+    "lng": 121.564468
   },
   {
     "slug": "gov-tech-report",
@@ -44,7 +47,10 @@
     "summary": "portraits exploring light and texture.",
     "image": "/images/sample5.svg",
     "tags": ["portraits"],
-    "year": 2022
+    "year": 2022,
+    "location": "singapore",
+    "lat": 1.352083,
+    "lng": 103.819836
   },
   {
     "slug": "field-notes",
@@ -53,7 +59,9 @@
     "summary": "documentary stills from on-the-ground work.",
     "image": "/images/sample6.svg",
     "tags": ["documentary"],
-    "year": 2021
+    "year": 2021,
+    "location": "vietnam",
+    "lat": 21.027764,
+    "lng": 105.83416
   }
 ]
-
