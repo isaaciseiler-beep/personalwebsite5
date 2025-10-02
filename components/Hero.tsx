@@ -1,4 +1,3 @@
-// components/Hero.tsx — FULL REPLACEMENT (theme-aware wordmark images)
 "use client";
 
 import { m, useReducedMotion, useScroll, useTransform } from "framer-motion";
@@ -6,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ScrollCue from "@/components/ScrollCue";
+import CursorTilt from "@/components/CursorTilt";
 
 function useTheme(): "dark" | "light" {
   const [t, setT] = useState<"dark" | "light">(
@@ -37,18 +37,21 @@ export default function Hero() {
       <div className="hero-bg absolute inset-0" aria-hidden="true" />
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 md:py-28">
         <m.div style={{ y: ty }}>
-          {/* theme-aware wordmark */}
-          <div className="w-full">
-            <Image
-              src={src}
-              alt="Isaac Seiler"
-              priority
-              width={1600}
-              height={600}
-              sizes="(min-width: 1024px) 900px, (min-width: 768px) 720px, 90vw"
-              className="h-auto w-full max-w-[900px]"
-            />
-          </div>
+          {/* wordmark with the same hover motion as cards */}
+          <CursorTilt maxTiltDeg={4} scale={1.02} className="inline-block">
+            <div className="card-hover inline-block">
+              <Image
+                src={src}
+                alt="Isaac Seiler wordmark"
+                priority
+                width={1600}
+                height={600}
+                sizes="(min-width: 1024px) 900px, (min-width: 768px) 720px, 90vw"
+                className="h-auto w-full max-w-[900px] select-none"
+                draggable={false}
+              />
+            </div>
+          </CursorTilt>
 
           <p className="mt-6 max-w-xl text-muted">
             building at the edge of ai, policy, and visual storytelling. projects, photos, research.
