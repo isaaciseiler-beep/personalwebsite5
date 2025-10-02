@@ -3,42 +3,27 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
-type Props = { size?: number };
-
-export default function ThemeLogo({ size = 42 }: Props) {
+export default function ThemeLogo({ size = 42 }: { size?: number }) {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [err, setErr] = useState<"none" | "png-missing" | "svg-missing">("none");
+  const [fallbackStage, setFallbackStage] = useState<0 | 1 | 2>(0); // png -> svg -> box
 
-  // watch theme attribute
   useEffect(() => {
     const el = document.documentElement;
-    const set = () => {
-      const t = el.getAttribute("data-theme") === "light" ? "light" : "dark";
-      setTheme(t);
-    };
-    set();
-    const obs = new MutationObserver(set);
+    const cb = () => setTheme(el.getAttribute("data-theme") === "light" ? "light" : "dark");
+    cb();
+    const obs = new MutationObserver(cb);
     obs.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
     return () => obs.disconnect();
   }, []);
 
-  // choose src with fallbacks: .png → .svg
   const src = useMemo(() => {
     const base = theme === "light" ? "logo-dark" : "logo-light";
-    if (err === "none") return `/${base}.png`;
-    if (err === "png-missing") return `/${base}.svg`;
-    return ""; // will trigger text fallback
-  }, [theme, err]);
+    if (fallbackStage === 0) return `/${base}.png`;
+    if (fallbackStage === 1) return `/${base}.svg`;
+    return "";
+  }, [theme, fallbackStage]);
 
-  if (!src) {
-    // last-resort text fallback so header never collapses
-    return (
-      <span
-        aria-label="logo"
-        className="inline-block h-[42px] w-[42px] rounded-full border border-subtle bg-card"
-      />
-    );
-  }
+  if (!src) return <span className="inline-block h-[42px] w-[42px] rounded-full border border-subtle bg-card" aria-label="logo" />;
 
   return (
     <Image
@@ -48,7 +33,7 @@ export default function ThemeLogo({ size = 42 }: Props) {
       height={size}
       className="rounded-full"
       priority
-      onError={() => setErr((e) => (e === "none" ? "png-missing" : "svg-missing"))}
+      onError={() => setFallbackStage(s => (s < 2 ? (s + 1) as 1 | 2 : s))}
     />
   );
 }
