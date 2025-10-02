@@ -5,7 +5,6 @@ import Reveal from "@/components/Reveal";
 import Hero from "@/components/Hero";
 import EdgeProgress from "@/components/EdgeProgress";
 import PinnedAbout from "@/components/PinnedAbout";
-import PressRow from "@/components/PressRow";
 import NowBar from "@/components/NowBar";
 import { Card } from "@/components/Card";
 import PhotoCard from "@/components/PhotoCard";
@@ -16,6 +15,7 @@ import type { Project } from "@/types/project";
 import Link from "next/link";
 import { useState } from "react";
 import { Lightbox } from "@/components/Lightbox";
+import HeroPressPills from "@/components/HeroPressPills";
 
 export default function HomePage() {
   const all = projectsData as Project[];
@@ -45,6 +45,7 @@ export default function HomePage() {
         images={["/images/sample1.svg", "/images/sample2.svg", "/images/sample3.svg"]}
       />
 
+      {/* featured projects */}
       <section className="py-8">
         <div className="mx-auto max-w-5xl px-4">
           <div className="mb-4 flex items-center justify-between">
@@ -63,7 +64,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="pb-10">
+      {/* featured photos */}
+      <section className="pb-8">
         <div className="mx-auto max-w-5xl px-4">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl">featured photos</h2>
@@ -83,7 +85,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <PressRow items={featured.press ?? []} />
+      {/* pills go here (replaces old lower “featured in” list) */}
+      <section className="mx-auto max-w-5xl px-4">
+        <HeroPressPills />
+      </section>
+
       <NowBar text={now.text ?? ""} />
 
       <Lightbox
