@@ -1,10 +1,40 @@
-export function Footer() {
+// components/Footer.tsx
+"use client";
+
+export default function Footer() {
   return (
-    <footer className="py-12 text-sm text-muted">
-      <div className="border-t border-subtle pt-6">
-        © {new Date().getFullYear()} isaac seiler
+    <footer className="relative mt-16">
+      {/* fog backdrop */}
+      <div className="fog-footer" aria-hidden>
+        <div className="fog-gradient" />
+        <div className="fog-noise" />
+        <div className="fog-fade" />
+      </div>
+
+      {/* content on top */}
+      <div className="relative mx-auto max-w-5xl px-4 py-8">
+        <div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
+          <div className="text-sm text-muted">
+            © {new Date().getFullYear()} isaac seiler
+          </div>
+          <nav className="flex flex-wrap gap-4 text-sm">
+            <a className="link-underline hover:text-[color:var(--color-accent)]" href="/about">
+              about
+            </a>
+            <a className="link-underline hover:text-[color:var(--color-accent)]" href="/work">
+              my work
+            </a>
+            <a
+              className="link-underline hover:text-[color:var(--color-accent)]"
+              href={process.env.NEXT_PUBLIC_LINKEDIN_URL || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              linkedin
+            </a>
+          </nav>
+        </div>
       </div>
     </footer>
   );
 }
-
