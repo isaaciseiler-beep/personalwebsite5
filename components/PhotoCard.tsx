@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import ShimmerImage from "@/components/ShimmerImage";
 import CursorTilt from "@/components/CursorTilt";
 import type { Project } from "@/types/project";
 
@@ -12,13 +12,14 @@ export default function PhotoCard({ item, onClick }: Props) {
       <CursorTilt className="h-full" maxTiltDeg={5} scale={1.01}>
         <div className="overflow-hidden rounded-xl border border-subtle bg-card">
           {item.image && (
-            <Image
+            <ShimmerImage
               src={item.image}
               alt={item.title}
               width={1600}
               height={1200}
               className="h-72 w-full object-cover"
               loading="lazy"
+              sizes="(min-width: 768px) 33vw, 100vw"
             />
           )}
           <div className="flex items-center justify-between p-3">
