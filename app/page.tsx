@@ -1,4 +1,5 @@
-// app/page.tsx — FULL REPLACEMENT
+"use client";
+
 import { PageTransition } from "@/components/PageTransition";
 import Reveal from "@/components/Reveal";
 import { Card } from "@/components/Card";
@@ -15,14 +16,12 @@ export default function HomePage() {
   const featuredProjects = all.filter(p => p.kind === "project").slice(0, 3);
   const featuredPhotos   = all.filter(p => p.kind === "photo").slice(0, 3);
 
-  // lightbox for photos
+  // lightbox for featured photos
   const photoGallery = featuredPhotos.map(p => ({ src: p.image ?? "", alt: p.title }));
   const [lightbox, setLightbox] = useState<{ open: boolean; index: number }>({ open: false, index: 0 });
 
   return (
     <PageTransition>
-      {/* HERO stays the same if rendered in layout or parent page; remove if you already render <Hero /> elsewhere */}
-
       {/* ===== featured projects ===== */}
       <section className="py-8">
         <div className="mx-auto max-w-5xl px-4">
