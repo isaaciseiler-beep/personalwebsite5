@@ -4,6 +4,7 @@ import { Nav } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
 import RouteProgress from "@/components/RouteProgress";
 import ScrollProgress from "@/components/ScrollProgress";
+import ThemeScript from "@/components/ThemeScript";
 
 export const metadata: Metadata = {
   title: { default: "isaac seiler — portfolio", template: "isaac seiler — %s" },
@@ -20,19 +21,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-dvh bg-bg text-fg selection:bg-accent/20 selection:text-fg">
-        {/* progress indicators */}
+      <head>
+        <ThemeScript />
+      </head>
+      <body className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-fg)] selection:bg-[color:var(--color-accent)]/20 selection:text-[var(--color-fg)]">
         <RouteProgress />
         <ScrollProgress />
-
-        {/* full-width header */}
         <Nav />
-
-        {/* main content container */}
         <main id="content" className="mx-auto max-w-5xl px-4 py-10">
           {children}
         </main>
-
         <div className="mx-auto max-w-5xl px-4">
           <Footer />
         </div>
