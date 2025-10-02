@@ -1,4 +1,3 @@
-// app/work/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -11,9 +10,13 @@ import type { Project } from "@/types/project";
 
 export default function WorkPage() {
   const [filter, setFilter] = useState<"all" | "project" | "photo">("all");
-  const [lightbox, setLightbox] = useState<{ open: boolean; src: string | null; alt: string }>({ open: false, src: null, alt: "" });
+  const [lightbox, setLightbox] = useState<{ open: boolean; src: string | null; alt: string }>({
+    open: false,
+    src: null,
+    alt: ""
+  });
 
-  const items = (projects as Project[]).filter(p => (filter === "all" ? true : p.kind === filter));
+  const items = (projects as Project[]).filter((p) => (filter === "all" ? true : p.kind === filter));
 
   return (
     <PageTransition>
@@ -25,14 +28,24 @@ export default function WorkPage() {
         </div>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-        {items.map(item => (
-          <Card key={item.slug} item={item} onPhotoClick={(src, alt) => setLightbox({ open: true, src, alt })} />
+      {/* grid forces children to stretch; each Card wrapper is h-full */}
+      <section className="mt-6 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 md:grid-cols-3">
+        {items.map((item) => (
+          <div key={item.slug} className="h-full">
+            <Card
+              item={item}
+              onPhotoClick={(src, alt) => setLightbox({ open: true, src, alt })}
+            />
+          </div>
         ))}
       </section>
 
-      <Lightbox open={lightbox.open} src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox({ open: false, src: null, alt: "" })} />
+      <Lightbox
+        open={lightbox.open}
+        src={lightbox.src}
+        alt={lightbox.alt}
+        onClose={() => setLightbox({ open: false, src: null, alt: "" })}
+      />
     </PageTransition>
   );
 }
-
