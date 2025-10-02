@@ -8,6 +8,7 @@ import PinnedAbout from "@/components/PinnedAbout";
 import NowBar from "@/components/NowBar";
 import { Card } from "@/components/Card";
 import PhotoCard from "@/components/PhotoCard";
+import HeroPressPills from "@/components/HeroPressPills";
 import projectsData from "@/data/projects.json";
 import featured from "@/data/featured.json";
 import now from "@/data/now.json";
@@ -15,7 +16,6 @@ import type { Project } from "@/types/project";
 import Link from "next/link";
 import { useState } from "react";
 import { Lightbox } from "@/components/Lightbox";
-import HeroPressPills from "@/components/HeroPressPills";
 
 export default function HomePage() {
   const all = projectsData as Project[];
@@ -85,9 +85,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* pills go here (replaces old lower “featured in” list) */}
-      <section className="mx-auto max-w-5xl px-4">
-        <HeroPressPills />
+      {/* in the news — pills */}
+      <section className="mx-auto max-w-5xl px-4 pb-6">
+        <h2 className="text-xl mb-4">in the news</h2>
+        <Reveal>
+          <HeroPressPills />
+        </Reveal>
       </section>
 
       <NowBar text={now.text ?? ""} />
