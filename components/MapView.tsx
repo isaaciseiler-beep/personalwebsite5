@@ -31,21 +31,26 @@ export default function MapView({
     () => photos.filter((p) => typeof p.lat === "number" && typeof p.lng === "number"),
     [photos]
   );
-  if (points.length === 0) return null;
-
-  const center = { longitude: points[0].lng as number, latitude: points[0].lat as number };
   const styleId =
     theme === "light" ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11";
 
+  // hooks must run unconditionally
   const mapRef = useRef<MapRef | null>(null);
   const [zoom, setZoom] = useState(3);
 
-  // custom zoom controls
+  const center = useMemo(() => {
+    if (points.length > 0) return { longitude: points[0].lng as number, latitude: points[0].lat as number };
+    // default center (Pacific) if no points; component will return null below
+    return { longitude: 0, latitude: 0 };
+  }, [points]);
+
   const zoomBy = (delta: number) => {
     const z = Math.min(14, Math.max(1, zoom + delta));
     setZoom(z);
     mapRef.current?.flyTo({ zoom: z, duration: 200 });
   };
+
+  if (points.length === 0) return null;
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-subtle">
@@ -88,9 +93,7 @@ export default function MapView({
           </Marker>
         ))}
 
-        {/* show only location in popup on hover (click-to-open fallback) */}
-        {/* Mapbox popups open on click by default; we keep it simple + defined */}
-        {/* If you want hover-only, we'd need layer events; this is safe without custom sources */}
+        {/* location-only popups (simple, defined) */}
         {points.map(
           (p) =>
             p.location && (
