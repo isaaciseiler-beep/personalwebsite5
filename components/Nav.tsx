@@ -12,7 +12,6 @@ const MotionSpan = motion.span;
 export function Nav() {
   const [open, setOpen] = useState(false);
   const linkedin = process.env.NEXT_PUBLIC_LINKEDIN_URL || "#";
-
   const linkHover = { y: -1, transition: { duration: 0.12, ease: [0.2, 0, 0, 1] } };
 
   const NavLinks = () => (
@@ -28,13 +27,8 @@ export function Nav() {
         </Link>
       </li>
       <li>
-        <a
-          href={linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-underline hover:text-[color:var(--color-accent)]"
-          aria-label="linkedin"
-        >
+        <a href={linkedin} target="_blank" rel="noopener noreferrer"
+           className="link-underline hover:text-[color:var(--color-accent)]" aria-label="linkedin">
           <MotionSpan whileHover={linkHover}>linkedin</MotionSpan>
         </a>
       </li>
@@ -43,67 +37,37 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* translucent blur layer */}
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: "var(--color-bg)",
-          opacity: 0.7,
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)"
-        }}
-      />
-      {/* bottom fade (no hard line) */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-6"
-        style={{
-          background: "linear-gradient(to bottom, rgba(0,0,0,0), var(--color-bg))"
-        }}
-      />
-
+      {/* translucent blur layer (no gradient) */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none"
+           style={{ background: "var(--color-bg)", opacity: 0.7, backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }} />
+      {/* bottom fade instead of line */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-6"
+           style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0), var(--color-bg))" }} />
       <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
         <a href="#content" className="skip-link">skip to content</a>
-
-        {/* logo with gentle motion */}
         <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
           <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
             <ThemeLogo size={42} />
           </motion.div>
           <span className="sr-only">isaac</span>
         </Link>
-
-        {/* desktop nav + toggle */}
         <nav className="hidden md:flex items-center gap-4">
           <NavLinks />
           <ThemeToggle />
         </nav>
-
-        {/* mobile actions */}
         <div className="md:hidden flex items-center gap-2">
           <ThemeToggle />
-          <button
-            className="rounded-xl border border-subtle p-2"
-            aria-label="toggle menu"
-            aria-expanded={open}
-            onClick={() => setOpen(v => !v)}
-          >
+          <button className="rounded-xl border border-subtle p-2" aria-label="toggle menu"
+                  aria-expanded={open} onClick={() => setOpen(v => !v)}>
             {open ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </div>
-
-      {/* mobile drawer */}
       <AnimatePresence initial={false}>
         {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
-            className="relative md:hidden overflow-hidden"
-          >
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
+                      className="relative md:hidden overflow-hidden">
             <div className="mx-auto max-w-5xl px-4 py-4">
               <NavLinks />
             </div>
