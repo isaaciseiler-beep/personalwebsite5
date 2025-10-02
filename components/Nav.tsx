@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export function Nav() {
   const [open, setOpen] = useState(false);
@@ -12,10 +13,10 @@ export function Nav() {
 
   const NavLinks = () => (
     <ul className="flex flex-col md:flex-row gap-6 md:gap-4 items-start md:items-center">
-      <li><Link href="/about" className="link-underline hover:text-accent" prefetch>about</Link></li>
-      <li><Link href="/work" className="link-underline hover:text-accent" prefetch>work</Link></li>
+      <li><Link href="/about" className="link-underline hover:text-[color:var(--color-accent)]" prefetch>about</Link></li>
+      <li><Link href="/work" className="link-underline hover:text-[color:var(--color-accent)]" prefetch>work</Link></li>
       <li>
-        <a href={linkedin} target="_blank" rel="noopener noreferrer" className="link-underline hover:text-accent" aria-label="linkedin">
+        <a href={linkedin} target="_blank" rel="noopener noreferrer" className="link-underline hover:text-[color:var(--color-accent)]" aria-label="linkedin">
           linkedin
         </a>
       </li>
@@ -23,7 +24,7 @@ export function Nav() {
   );
 
   return (
-    <header className="sticky top-0 z-50 bg-black/70 backdrop-blur">
+    <header className="sticky top-0 z-50 bg-[color:var(--color-bg)]/70 backdrop-blur">
       <a href="#content" className="skip-link">skip to content</a>
       <div className="mx-auto max-w-5xl flex items-center justify-between border-b border-subtle py-6 px-4">
         <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight text-lg" prefetch>
@@ -31,16 +32,22 @@ export function Nav() {
           <span className="sr-only">isaac</span>
         </Link>
 
-        <nav className="hidden md:block"><NavLinks /></nav>
+        <nav className="hidden md:flex items-center gap-4">
+          <NavLinks />
+          <ThemeToggle />
+        </nav>
 
-        <button
-          className="md:hidden rounded-xl border border-subtle p-2"
-          aria-label="toggle menu"
-          aria-expanded={open}
-          onClick={() => setOpen(v => !v)}
-        >
-          {open ? <X size={18} /> : <Menu size={18} />}
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            className="rounded-xl border border-subtle p-2"
+            aria-label="toggle menu"
+            aria-expanded={open}
+            onClick={() => setOpen(v => !v)}
+          >
+            {open ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
