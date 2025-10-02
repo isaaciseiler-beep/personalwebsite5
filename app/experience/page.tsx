@@ -1,19 +1,19 @@
-// app/experience/page.tsx — FULL FILE
+// app/experience/page.tsx — FULL REPLACEMENT (uses floating fab, removes fixed box)
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
 import Reveal from "@/components/Reveal";
 import ExperienceEducation from "@/components/ExperienceEducation";
 import { TimelineItem } from "@/components/TimelineItem";
-import ExperienceSummary from "@/components/ExperienceSummary";
 import items from "@/data/timeline.json";
 import type { TimelineEvent } from "@/types/timeline";
+import ExperienceChatFab from "@/components/ExperienceChatFab";
 
 export default function ExperiencePage() {
   const events = items as TimelineEvent[];
   return (
     <PageTransition>
-      {/* top breathing room + big header */}
+      {/* header with more breathing room */}
       <section className="mx-auto max-w-5xl px-4 pt-12 md:pt-16">
         <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">experience</h1>
       </section>
@@ -22,11 +22,6 @@ export default function ExperiencePage() {
       <section className="mx-auto max-w-5xl px-4 mt-8">
         <h2 className="text-xl mb-4">education</h2>
         <ExperienceEducation />
-      </section>
-
-      {/* openai summary helper */}
-      <section className="mx-auto max-w-5xl px-4 mt-8">
-        <ExperienceSummary />
       </section>
 
       {/* professional experience */}
@@ -40,7 +35,9 @@ export default function ExperiencePage() {
           ))}
         </ol>
       </section>
+
+      {/* floating chat/summarizer */}
+      <ExperienceChatFab />
     </PageTransition>
   );
 }
-
