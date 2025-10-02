@@ -1,74 +1,53 @@
 "use client";
 
-import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import * as L from "leaflet";
+import "mapbox-gl/dist/mapbox-gl.css";
+import Map, { Marker, Popup, ViewState } from "react-map-gl";
+import { useState } from "react";
 import type { Project } from "@/types/project";
-import { useMemo } from "react";
-
-const pinSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'>
-  <defs>
-    <filter id='s' x='-50%' y='-50%' width='200%' height='200%'>
-      <feDropShadow dx='0' dy='1' stdDeviation='1.2' flood-color='rgba(0,0,0,0.6)'/>
-    </filter>
-  </defs>
-  <path d='M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z' fill='#ffffff' stroke='#0a0a0a' stroke-width='1.5' filter='url(#s)'/>
-  <circle cx='12' cy='9.5' r='2.6' fill='#0a0a0a'/>
-</svg>`;
-
-const icon = new L.Icon({
-  iconUrl: "data:image/svg+xml;utf8," + encodeURIComponent(pinSvg),
-  iconSize: [28, 28],
-  iconAnchor: [14, 26],
-  popupAnchor: [0, -24]
-});
 
 export default function MapView({ photos }: { photos: Project[] }) {
-  const points = useMemo(
-    () =>
-      photos.filter(
-        (p) => typeof p.lat === "number" && typeof p.lng === "number"
-      ),
-    [photos]
-  );
+  const [popup, setPopup] = useState<Project | null>(null);
 
-  if (points.length === 0) return null;
+  const coords = photos.filter((p) => p.lat && p.lng);
+  if (coords.length === 0) return null;
 
-  const center = [
-    points[0].lat as number,
-    points[0].lng as number
-  ] as [number, number];
+  const center = { longitude: coords[0].lng as number, latitude: coords[0].lat as number };
 
   return (
-    <div className="relative z-0 overflow-hidden rounded-xl border border-subtle">
-      <MapContainer
-        center={center}
-        zoom={4}
-        scrollWheelZoom={false}
-        zoomControl={true}
-        className="monochrome-map"
-        style={{ height: 360, width: "100%" }}
+    <div className="overflow-hidden rounded-xl border border-subtle">
+      <Map
+        initialViewState={{ ...center, zoom: 3 } as ViewState}
+        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        style={{ width: "100%", height: 360 }}
+        mapStyle="mapbox://styles/mapbox/dark-v11"
       >
-        <TileLayer
-          // OSM tiles, styled via CSS filters for monochrome
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        />
-        {points.map((p) => (
+        {coords.map((p) => (
           <Marker
             key={p.slug}
-            position={[p.lat as number, p.lng as number]}
-            icon={icon}
+            longitude={p.lng as number}
+            latitude={p.lat as number}
+            onClick={(e) => {
+              e.originalEvent.stopPropagation();
+              setPopup(p);
+            }}
           >
-            <Popup>
-              <div className="text-sm">
-                <div className="font-medium">{p.title}</div>
-                {p.location && <div className="text-muted">{p.location}</div>}
-              </div>
-            </Popup>
+            <div className="h-5 w-5 rounded-full bg-accent border-2 border-white shadow" />
           </Marker>
         ))}
-      </MapContainer>
+        {popup && (
+          <Popup
+            longitude={popup.lng as number}
+            latitude={popup.lat as number}
+            onClose={() => setPopup(null)}
+            closeOnClick={false}
+          >
+            <div className="text-sm">
+              <div className="font-medium">{popup.title}</div>
+              {popup.location && <div className="text-muted">{popup.location}</div>}
+            </div>
+          </Popup>
+        )}
+      </Map>
     </div>
   );
 }
