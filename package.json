@@ -1,6 +1,6 @@
 {
   "name": "isaac-portfolio",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,15 +11,15 @@
   },
   "dependencies": {
     "framer-motion": "^11.2.6",
-    "leaflet": "^1.9.4",
     "lucide-react": "^0.468.0",
+    "mapbox-gl": "^2.16.1",
     "next": "14.2.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-leaflet": "^4.2.1"
+    "react-map-gl": "^7.1.5"
   },
   "devDependencies": {
-    "@types/leaflet": "^1.9.12",
+    "@types/mapbox-gl": "^2.7.19",
     "@types/node": "^20.14.10",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.25",
@@ -30,5 +30,7 @@
     "tailwindcss": "^3.4.6",
     "typescript": "^5.5.4"
   },
-  "engines": { "node": ">=18.18.0" }
+  "engines": {
+    "node": ">=18.18.0"
+  }
 }
