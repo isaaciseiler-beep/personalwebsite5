@@ -1,11 +1,15 @@
 "use client";
 
 export default function HeroPressPills() {
+  // re-usable classes: .card-hover already defined in globals (adds lift/shadow)
+  const base =
+    "inline-block rounded-full border border-subtle px-3 py-1 text-sm transition-colors hover:border-[color:var(--color-accent)]/60";
+
   return (
-    <div className="mt-6 flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-3">
       <a
         href="https://openai.com/index/introducing-chatgpt-pulse/"
-        className="rounded-full border border-subtle px-3 py-1 text-sm hover:border-[color:var(--color-accent)]/60"
+        className={`card-hover ${base}`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -13,7 +17,7 @@ export default function HeroPressPills() {
       </a>
       <a
         href="https://www.instagram.com/reel/DNyG5VvXEZM/?hl=en"
-        className="rounded-full border border-subtle px-3 py-1 text-sm hover:border-[color:var(--color-accent)]/60"
+        className={`card-hover ${base}`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -21,7 +25,7 @@ export default function HeroPressPills() {
       </a>
       <a
         href="https://source.washu.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/"
-        className="rounded-full border border-subtle px-3 py-1 text-sm hover:border-[color:var(--color-accent)]/60"
+        className={`card-hover ${base}`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -29,7 +33,7 @@ export default function HeroPressPills() {
       </a>
       <a
         href="https://artsci.washu.edu/ampersand/junior-seiler-awarded-truman-scholarship"
-        className="rounded-full border border-subtle px-3 py-1 text-sm hover:border-[color:var(--color-accent)]/60"
+        className={`card-hover ${base}`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -37,7 +41,7 @@ export default function HeroPressPills() {
       </a>
       <a
         href="https://source.washu.edu/2025/06/several-alumni-earn-fulbright-awards/"
-        className="rounded-full border border-subtle px-3 py-1 text-sm hover:border-[color:var(--color-accent)]/60"
+        className={`card-hover ${base}`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -45,7 +49,7 @@ export default function HeroPressPills() {
       </a>
       <a
         href="https://artsci.washu.edu/ampersand/isaac-seiler-setting-his-sights-high"
-        className="rounded-full border border-subtle px-3 py-1 text-sm hover:border-[color:var(--color-accent)]/60"
+        className={`card-hover ${base}`}
         target="_blank"
         rel="noopener noreferrer"
       >
