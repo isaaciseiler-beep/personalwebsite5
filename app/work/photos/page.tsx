@@ -1,3 +1,4 @@
+// app/work/photos/page.tsx — FULL FILE (masonry gallery)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -73,7 +74,7 @@ export default function PhotosPage() {
 
       <Reveal><div className="mt-6"><MapView photos={items} /></div></Reveal>
 
-      {/* MAGAZINE-STYLE MASONRY */}
+      {/* magazine-style masonry */}
       <div className="mt-6 masonry">
         {items.map((item, i) => (
           <div key={item.slug} className="masonry-item">
