@@ -1,3 +1,4 @@
+// components/Nav.tsx — FULL REPLACEMENT (rename About → Experience)
 "use client";
 
 import Link from "next/link";
@@ -17,8 +18,8 @@ export function Nav() {
   const NavLinks = () => (
     <ul className="flex flex-col md:flex-row gap-6 md:gap-4 items-start md:items-center">
       <li>
-        <Link href="/about" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
-          <MotionSpan whileHover={linkHover}>about</MotionSpan>
+        <Link href="/experience" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
+          <MotionSpan whileHover={linkHover}>experience</MotionSpan>
         </Link>
       </li>
       <li>
@@ -42,9 +43,7 @@ export function Nav() {
 
   return (
     <>
-      {/* fixed header */}
       <header className="fixed inset-x-0 top-0 z-50">
-        {/* translucent blur bar */}
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none"
@@ -99,8 +98,6 @@ export function Nav() {
           )}
         </AnimatePresence>
       </header>
-
-      {/* spacer to prevent content jump (match header height) */}
       <div aria-hidden className="h-[72px] md:h-[84px]" />
     </>
   );
