@@ -1,4 +1,3 @@
-// data/featured.json — FULL FILE
 {
   "projects": ["policy-visuals", "gov-tech-report", "motion-study"],
   "photos": ["urban-night", "faces-series", "field-notes"],
