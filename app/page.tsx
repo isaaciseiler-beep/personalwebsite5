@@ -1,3 +1,4 @@
+// app/page.tsx — FULL FILE
 import { PageTransition } from "@/components/PageTransition";
 import Reveal from "@/components/Reveal";
 import Hero from "@/components/Hero";
@@ -15,7 +16,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-5xl px-4">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl">featured</h2>
-            <Link href="/work" className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]" prefetch>see all</Link>
+            <Link href="/work" className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]" prefetch>
+              see all
+            </Link>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {featured.map((item, i) => (
