@@ -1,3 +1,4 @@
+// components/ThemeLogo.tsx — FULL FILE
 "use client";
 
 import Image from "next/image";
@@ -5,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 export default function ThemeLogo({ size = 42 }: { size?: number }) {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [fallbackStage, setFallbackStage] = useState<0 | 1 | 2>(0); // png -> svg -> box
+  const [fallbackStage, setFallbackStage] = useState<0 | 1 | 2>(0);
 
   useEffect(() => {
     const el = document.documentElement;
@@ -23,7 +24,9 @@ export default function ThemeLogo({ size = 42 }: { size?: number }) {
     return "";
   }, [theme, fallbackStage]);
 
-  if (!src) return <span className="inline-block h-[42px] w-[42px] rounded-full border border-subtle bg-card" aria-label="logo" />;
+  if (!src) {
+    return <span className="inline-block h-[42px] w-[42px] rounded-full border border-subtle bg-card" aria-label="logo" />;
+  }
 
   return (
     <Image
