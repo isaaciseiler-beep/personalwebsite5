@@ -1,3 +1,4 @@
+// components/Reveal.tsx — FULL FILE
 "use client";
 
 import { m, useReducedMotion } from "framer-motion";
@@ -10,6 +11,7 @@ export default function Reveal({ children, delay = 0, y = 10 }: Props) {
   const variants = prefersReduced
     ? { initial: { opacity: 1 }, animate: { opacity: 1 } }
     : { initial: { opacity: 0, y }, animate: { opacity: 1, y: 0 } };
+
   return (
     <m.div
       variants={variants}
