@@ -37,12 +37,13 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* translucent blur layer (no gradient) */}
+      {/* translucent blur (no gradient) */}
       <div aria-hidden className="absolute inset-0 pointer-events-none"
            style={{ background: "var(--color-bg)", opacity: 0.7, backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }} />
-      {/* bottom fade instead of line */}
+      {/* bottom fade (no hard line) */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-6"
            style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0), var(--color-bg))" }} />
+
       <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
         <a href="#content" className="skip-link">skip to content</a>
         <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
@@ -51,10 +52,12 @@ export function Nav() {
           </motion.div>
           <span className="sr-only">isaac</span>
         </Link>
+
         <nav className="hidden md:flex items-center gap-4">
           <NavLinks />
           <ThemeToggle />
         </nav>
+
         <div className="md:hidden flex items-center gap-2">
           <ThemeToggle />
           <button className="rounded-xl border border-subtle p-2" aria-label="toggle menu"
@@ -63,6 +66,7 @@ export function Nav() {
           </button>
         </div>
       </div>
+
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
