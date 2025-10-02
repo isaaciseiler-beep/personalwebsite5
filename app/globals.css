@@ -1,3 +1,5 @@
+/* app/globals.css — FULL REPLACEMENT */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -94,6 +96,10 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 }
 .popup-card{ font-size: 12px; }
 
+/* gradient overlay used when map is minimized (rendered by component) */
+/* no class needed here—kept for reference */
+/* .map-minimized-fade { background: linear-gradient(to bottom, rgba(0,0,0,0), var(--color-bg)); } */
+
 /* ===== MASONRY (magazine layout) ===== */
 .masonry{column-gap:1.5rem}
 @media (min-width:640px){.masonry{column-count:2}}
@@ -101,7 +107,7 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 .masonry-item{break-inside:avoid;margin-bottom:1.5rem}
 
 /* photo hover caption helper */
-.group .caption-bar{
+.caption-bar{
   transform:translateY(12px);
   opacity:0;
   transition:transform 200ms cubic-bezier(.2,0,0,1),opacity 200ms cubic-bezier(.2,0,0,1);
