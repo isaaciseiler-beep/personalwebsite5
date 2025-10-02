@@ -1,3 +1,4 @@
+// components/ScrollProgress.tsx — FULL FILE
 "use client";
 
 import { useEffect, useState } from "react";
