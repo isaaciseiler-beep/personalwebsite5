@@ -2,6 +2,7 @@
 
 import { PageTransition } from "@/components/PageTransition";
 import Reveal from "@/components/Reveal";
+import Hero from "@/components/Hero";
 import { Card } from "@/components/Card";
 import PhotoCard from "@/components/PhotoCard";
 import projectsData from "@/data/projects.json";
@@ -22,7 +23,10 @@ export default function HomePage() {
 
   return (
     <PageTransition>
-      {/* ===== featured projects ===== */}
+      {/* HERO at top */}
+      <Hero />
+
+      {/* featured projects */}
       <section className="py-8">
         <div className="mx-auto max-w-5xl px-4">
           <div className="mb-4 flex items-center justify-between">
@@ -43,7 +47,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== featured photos ===== */}
+      {/* featured photos */}
       <section className="pb-10">
         <div className="mx-auto max-w-5xl px-4">
           <div className="mb-4 flex items-center justify-between">
@@ -56,10 +60,7 @@ export default function HomePage() {
             {featuredPhotos.map((item, i) => (
               <Reveal key={item.slug} delay={i * 0.06}>
                 <div className="h-full">
-                  <PhotoCard
-                    item={item}
-                    onClick={() => setLightbox({ open: true, index: i })}
-                  />
+                  <PhotoCard item={item} onClick={() => setLightbox({ open: true, index: i })} />
                 </div>
               </Reveal>
             ))}
