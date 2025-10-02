@@ -7,5 +7,9 @@ export type Project = {
   tags?: string[];
   year?: number;
   url?: string;
-};
 
+  // photos: optional geotag + label
+  location?: string;   // e.g., "taipei, taiwan"
+  lat?: number;
+  lng?: number;
+};
