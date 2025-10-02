@@ -1,0 +1,10 @@
+// data/featured.json — FULL FILE
+{
+  "projects": ["policy-visuals", "gov-tech-report", "motion-study"],
+  "photos": ["urban-night", "faces-series", "field-notes"],
+  "filmstrip": ["urban-night", "faces-series", "field-notes"],
+  "press": [
+    { "name": "nyt", "url": "https://example.com/nyt", "logo": "/images/sample1.svg" },
+    { "name": "wired", "url": "https://example.com/wired", "logo": "/images/sample2.svg" }
+  ]
+}
