@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import CursorTilt from "@/components/CursorTilt";
+import ShimmerImage from "@/components/ShimmerImage";
 import type { Project } from "@/types/project";
 
 type CardProps = { item: Project; onPhotoClick?: (src: string, alt: string) => void };
@@ -12,7 +12,7 @@ export function Card({ item, onPhotoClick }: CardProps) {
     <CursorTilt className="h-full">
       <div className="card-hover flex h-[440px] flex-col overflow-hidden rounded-xl border border-subtle bg-card">
         {item.image && (
-          <Image
+          <ShimmerImage
             src={item.image}
             alt={item.title}
             width={800}
@@ -29,9 +29,7 @@ export function Card({ item, onPhotoClick }: CardProps) {
           {item.tags && (
             <div className="mt-3 flex flex-wrap gap-2">
               {item.tags.map(t => (
-                <span key={t} className="rounded-full border border-subtle px-2 py-0.5 text-xs text-muted">
-                  {t}
-                </span>
+                <span key={t} className="rounded-full border border-subtle px-2 py-0.5 text-xs text-muted">{t}</span>
               ))}
             </div>
           )}
