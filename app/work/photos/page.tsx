@@ -1,4 +1,4 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT (uses next/image instead of <img>)
+// app/work/photos/page.tsx — FULL REPLACEMENT (uses next/image in masonry; map toggle via chevron)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -56,19 +56,10 @@ export default function PhotosPage() {
     <PageTransition>
       <Reveal><h1 className="text-3xl md:text-4xl font-semibold tracking-tight">photos &amp; videos</h1></Reveal>
 
-      {/* map block */}
+      {/* map (compact with chevron toggle) */}
       <div className="mt-4">
-        <div className="mb-2 flex items-center justify-end gap-2">
-          <button
-            onClick={() => setMapExpanded((v) => !v)}
-            className="rounded-xl border border-subtle px-3 py-1.5 text-sm hover:border-[color:var(--color-accent)]/60"
-            aria-expanded={mapExpanded}
-          >
-            {mapExpanded ? "minimize map" : "expand map"}
-          </button>
-        </div>
         <Reveal>
-          <MapView photos={items} expanded={mapExpanded} />
+          <MapView photos={items} expanded={mapExpanded} onToggle={() => setMapExpanded(v => !v)} />
         </Reveal>
       </div>
 
@@ -99,7 +90,7 @@ export default function PhotosPage() {
         )}
       </AnimatePresence>
 
-      {/* magazine-style masonry with next/image */}
+      {/* magazine-style masonry with visible images + hover captions */}
       <div className="mt-6 masonry">
         {items.map((item, i) => (
           <div key={item.slug} className="masonry-item">
@@ -114,12 +105,13 @@ export default function PhotosPage() {
                     <Image
                       src={item.image}
                       alt={item.title}
-                      fill
+                      width={1200}
+                      height={800}
+                      className="h-full w-full object-cover transition-transform duration-200 ease-[cubic-bezier(.2,0,0,1)] group-hover:scale-[1.02]"
                       sizes="(min-width: 768px) 33vw, 100vw"
-                      className="object-cover transition-transform duration-200 ease-[cubic-bezier(.2,0,0,1)] group-hover:scale-[1.02]"
+                      loading="lazy"
                     />
                   )}
-                  {/* hover caption */}
                   <div className="caption-bar pointer-events-none absolute inset-x-0 bottom-0">
                     <div className="mx-2 mb-2 rounded-lg bg-[color:var(--color-bg)]/60 px-3 py-1.5 text-sm backdrop-blur">
                       <div className="flex items-center justify-between gap-2">
