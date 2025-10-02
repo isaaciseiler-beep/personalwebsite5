@@ -1,3 +1,4 @@
+// components/PageTransition.tsx — FULL FILE
 "use client";
 
 import React from "react";
