@@ -1,30 +1,45 @@
+// app/experience/page.tsx — FULL FILE
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
-import { TimelineItem } from "@/components/TimelineItem";
 import Reveal from "@/components/Reveal";
-import timeline from "@/data/timeline.json";
+import ExperienceEducation from "@/components/ExperienceEducation";
+import { TimelineItem } from "@/components/TimelineItem";
+import ExperienceSummary from "@/components/ExperienceSummary";
+import items from "@/data/timeline.json";
 import type { TimelineEvent } from "@/types/timeline";
 
-export default function AboutPage() {
-  const items = timeline as TimelineEvent[];
-
+export default function ExperiencePage() {
+  const events = items as TimelineEvent[];
   return (
     <PageTransition>
-      <Reveal>
-        <section className="prose-invert">
-          <h1 className="text-2xl font-semibold tracking-tight">about</h1>
-          <p className="mt-3 max-w-prose text-muted">
-            highlights and a straightforward timeline.
-          </p>
-        </section>
-      </Reveal>
+      {/* top breathing room + big header */}
+      <section className="mx-auto max-w-5xl px-4 pt-12 md:pt-16">
+        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">experience</h1>
+      </section>
 
-      <ol className="relative mt-8 space-y-6 border-l border-subtle pl-6">
-        {items.map((ev) => (
-          <TimelineItem key={`${ev.dates}-${ev.role}-${ev.org ?? ""}`} event={ev} />
-        ))}
-      </ol>
+      {/* education cell */}
+      <section className="mx-auto max-w-5xl px-4 mt-8">
+        <h2 className="text-xl mb-4">education</h2>
+        <ExperienceEducation />
+      </section>
+
+      {/* openai summary helper */}
+      <section className="mx-auto max-w-5xl px-4 mt-8">
+        <ExperienceSummary />
+      </section>
+
+      {/* professional experience */}
+      <section className="mx-auto max-w-5xl px-4 mt-10">
+        <h2 className="text-xl mb-4">professional experience</h2>
+        <ol className="relative space-y-6 border-l border-subtle pl-6">
+          {events.map((ev) => (
+            <Reveal key={`${ev.dates}-${ev.role}-${ev.org ?? ""}`}>
+              <TimelineItem event={ev} />
+            </Reveal>
+          ))}
+        </ol>
+      </section>
     </PageTransition>
   );
 }
