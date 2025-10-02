@@ -1,15 +1,15 @@
-// components/Lightbox.tsx — FULL FILE (zoom + pan + arrows/swipe)
+// components/Lightbox.tsx — FULL REPLACEMENT (cleaned effects)
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import { m, useReducedMotion } from "framer-motion";
 
 type Item = { src: string; alt: string };
-type Props =
-  | { open: boolean; src: string | null; alt: string; onClose: () => void }
-  | { open: boolean; items: Item[]; index: number; setIndex: (i: number) => void; onClose: () => void };
+type CarouselProps = { open: boolean; items: Item[]; index: number; setIndex: (i: number) => void; onClose: () => void };
+type SingleProps = { open: boolean; src: string | null; alt: string; onClose: () => void };
+type Props = CarouselProps | SingleProps;
 
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 3;
@@ -25,35 +25,37 @@ export function Lightbox(p: Props) {
   const [ty, setTy] = useState(0);
   const drag = useRef<{ x: number; y: number } | null>(null);
 
-  const isCarousel = (x: Props): x is Extract<Props, { items: Item[] }> =>
-    (x as any).items && typeof (x as any).index === "number";
+  const isCarousel = useMemo((): p is CarouselProps => (p as any).items && typeof (p as any).index === "number", [p]);
+  const isOpen = (p as any).open as boolean;
+  const currentKey = isCarousel ? `${p.index}-${p.items.length}` : (p as SingleProps).src ?? "";
 
   useEffect(() => setMounted(true), []);
+
   useEffect(() => {
+    if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") p.onClose();
-      if (isCarousel(p)) {
+      if (isCarousel) {
         if (e.key === "ArrowRight") p.setIndex((p.index + 1) % p.items.length);
         if (e.key === "ArrowLeft") p.setIndex((p.index - 1 + p.items.length) % p.items.length);
       }
     };
-    if ((p as any).open) document.addEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [p]);
+  }, [isOpen, isCarousel, p]);
 
   useEffect(() => {
-    // reset zoom on image change/open
-    if ((p as any).open) {
+    if (isOpen) {
       setZoom(1); setTx(0); setTy(0);
     }
-  }, [isCarousel(p) ? p.index : (p as any).src, (p as any).open]);
+  }, [isOpen, currentKey]);
 
-  if (!mounted || !(p as any).open) return null;
+  if (!mounted || !isOpen) return null;
 
-  const current: Item | null = isCarousel(p)
+  const current: Item | null = isCarousel
     ? p.items[p.index]
-    : (p as any).src
-    ? { src: (p as any).src, alt: (p as any).alt }
+    : (p as SingleProps).src
+    ? { src: (p as SingleProps).src!, alt: (p as SingleProps).alt }
     : null;
 
   if (!current) return null;
@@ -63,7 +65,6 @@ export function Lightbox(p: Props) {
     const delta = -e.deltaY * 0.0015;
     setZoom((z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z + delta)));
   };
-
   const onMouseDown: React.MouseEventHandler = (e) => {
     if (zoom === 1) return;
     drag.current = { x: e.clientX - tx, y: e.clientY - ty };
@@ -75,11 +76,9 @@ export function Lightbox(p: Props) {
   };
   const onMouseUp = () => (drag.current = null);
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    touchX.current = e.changedTouches[0].clientX;
-  };
+  const onTouchStart = (e: React.TouchEvent) => { touchX.current = e.changedTouches[0].clientX; };
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (!isCarousel(p) || touchX.current == null) return;
+    if (!isCarousel || touchX.current == null) return;
     const dx = e.changedTouches[0].clientX - touchX.current;
     const threshold = 40;
     if (dx < -threshold) p.setIndex((p.index + 1) % p.items.length);
@@ -137,7 +136,7 @@ export function Lightbox(p: Props) {
           close
         </button>
 
-        {isCarousel(p) && (
+        {isCarousel && (
           <>
             <button
               className="absolute left-2 top-1/2 -translate-y-1/2 rounded-md bg-card/80 px-3 py-1 text-sm"
