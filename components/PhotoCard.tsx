@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { m } from "framer-motion";
+import CursorTilt from "@/components/CursorTilt";
 import type { Project } from "@/types/project";
 
 type Props = { item: Project; onClick?: (src: string, alt: string) => void };
@@ -9,11 +9,7 @@ type Props = { item: Project; onClick?: (src: string, alt: string) => void };
 export default function PhotoCard({ item, onClick }: Props) {
   return (
     <button aria-label={`view ${item.title}`} className="block h-full text-left" onClick={() => onClick?.(item.image ?? "", item.title)}>
-      <m.div
-        whileHover={{ y: -2, scale: 1.01 }}
-        transition={{ type: "spring", stiffness: 260, damping: 24, mass: 0.6 }}
-        className="h-full"
-      >
+      <CursorTilt className="h-full" maxTiltDeg={5} scale={1.01}>
         <div className="overflow-hidden rounded-xl border border-subtle bg-card">
           {item.image && (
             <Image
@@ -32,7 +28,7 @@ export default function PhotoCard({ item, onClick }: Props) {
             )}
           </div>
         </div>
-      </m.div>
+      </CursorTilt>
     </button>
   );
 }
