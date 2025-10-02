@@ -1,3 +1,4 @@
+/* app/globals.css — FULL FILE */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -48,7 +49,7 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 }
 .link-underline:hover::after{transform:scaleX(1)}
 
-/* hover tilt baseline */
+/* hover baseline */
 .card-hover{transition:transform 150ms cubic-bezier(0.2,0,0,1), box-shadow 150ms cubic-bezier(0.2,0,0,1);transform:translateY(0) rotate(0)}
 .card-hover:hover{box-shadow:0 8px 30px rgba(0,0,0,.20)}
 
@@ -58,7 +59,7 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 /* clamp */
 .line-clamp-2{-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
 
-/* hero background (REQUIRED for gradient to render) */
+/* HERO GRADIENT (ensures background shows) */
 .hero-bg{
   position:relative;
   background:
@@ -72,10 +73,13 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   background-size:180px 180px;
 }
 
-/* maps under header */
+/* MAP STACKING */
 .leaflet-container,.mapboxgl-map{z-index:0}
 
-/* simple CSS masonry helpers */
+/* SCROLL PROGRESS (thicker) */
+.scroll-progress{position:fixed;top:0;left:0;height:3px;background:rgba(127,127,127,.35);transform-origin:left;z-index:59}
+
+/* MASONRY (magazine) */
 .masonry{column-gap:1.5rem}
 @media (min-width: 640px){ .masonry{column-count:2} }
 @media (min-width: 768px){ .masonry{column-count:3} }
