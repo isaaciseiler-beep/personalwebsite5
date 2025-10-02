@@ -8,26 +8,39 @@ import type { TimelineEvent } from "@/types/timeline";
 import { m, useReducedMotion } from "framer-motion";
 
 export default function AboutPage() {
-  const items = (timeline as TimelineEvent[]).map(ev => ({ group: "career", ...ev })); // default group
-  const groups: Record<Required<TimelineEvent>["group"], TimelineEvent[]> = {
-    career: items.filter(i => i.group === "career"),
-    creative: items.filter(i => i.group === "creative"),
-    research: items.filter(i => i.group === "research")
+  // enforce union type for group with a safe default
+  const items = (timeline as TimelineEvent[]).map((ev) => ({
+    ...ev,
+    group: ev.group ?? "career",
+  }));
+
+  const groups: Record<"career" | "creative" | "research", TimelineEvent[]> = {
+    career: items.filter((i) => i.group === "career"),
+    creative: items.filter((i) => i.group === "creative"),
+    research: items.filter((i) => i.group === "research"),
   };
+
   const prefersReduced = useReducedMotion();
 
   const Group = ({ title, list }: { title: string; list: TimelineEvent[] }) =>
     list.length === 0 ? null : (
       <section className="mt-8">
-        <Reveal><h2 className="text-xl">{title}</h2></Reveal>
+        <Reveal>
+          <h2 className="text-xl">{title}</h2>
+        </Reveal>
         <m.ol
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-10% 0px" }}
-          variants={{ hidden: {}, show: { transition: { staggerChildren: prefersReduced ? 0 : 0.06 } } }}
+          variants={{
+            hidden: {},
+            show: { transition: { staggerChildren: prefersReduced ? 0 : 0.06 } },
+          }}
           className="relative mt-4 space-y-6 border-l border-subtle pl-6"
         >
-          {list.map(ev => <TimelineItem key={ev.year + ev.role} event={ev} />)}
+          {list.map((ev) => (
+            <TimelineItem key={ev.year + ev.role} event={ev} />
+          ))}
         </m.ol>
       </section>
     );
@@ -37,7 +50,9 @@ export default function AboutPage() {
       <Reveal>
         <section className="prose-invert">
           <h1 className="text-2xl font-semibold tracking-tight">about</h1>
-          <p className="mt-3 max-w-prose text-muted">highlights and a grouped career timeline.</p>
+          <p className="mt-3 max-w-prose text-muted">
+            highlights and a grouped career timeline.
+          </p>
         </section>
       </Reveal>
       <Group title="career" list={groups.career} />
