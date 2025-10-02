@@ -2,21 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { m } from "framer-motion";
+import CursorTilt from "@/components/CursorTilt";
 import type { Project } from "@/types/project";
 
-type CardProps = {
-  item: Project;
-  onPhotoClick?: (src: string, alt: string) => void;
-};
+type CardProps = { item: Project; onPhotoClick?: (src: string, alt: string) => void };
 
 export function Card({ item, onPhotoClick }: CardProps) {
   const body = (
-    <m.div
-      whileHover={{ y: -2, scale: 1.015 }}
-      transition={{ type: "spring", stiffness: 260, damping: 24, mass: 0.6 }}
-      className="h-full"
-    >
+    <CursorTilt className="h-full">
       <div className="card-hover flex h-[440px] flex-col overflow-hidden rounded-xl border border-subtle bg-card">
         {item.image && (
           <Image
@@ -43,7 +36,7 @@ export function Card({ item, onPhotoClick }: CardProps) {
           )}
         </div>
       </div>
-    </m.div>
+    </CursorTilt>
   );
 
   if (item.kind === "photo" && onPhotoClick && item.image) {
