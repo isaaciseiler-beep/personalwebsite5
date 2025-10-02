@@ -3,7 +3,29 @@
   "photos": ["urban-night", "faces-series", "field-notes"],
   "filmstrip": ["urban-night", "faces-series", "field-notes"],
   "press": [
-    { "name": "nyt", "url": "https://example.com/nyt", "logo": "/images/sample1.svg" },
-    { "name": "wired", "url": "https://example.com/wired", "logo": "/images/sample2.svg" }
+    {
+      "name": "OpenAI — Introducing ChatGPT Pulse",
+      "url": "https://openai.com/index/introducing-chatgpt-pulse/"
+    },
+    {
+      "name": "Instagram Reel",
+      "url": "https://www.instagram.com/reel/DNyG5VvXEZM/?hl=en"
+    },
+    {
+      "name": "WashU Source — Seniors Darden, Seiler were Rhodes Scholars finalists",
+      "url": "https://source.washu.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/"
+    },
+    {
+      "name": "Ampersand — Junior Seiler awarded Truman Scholarship",
+      "url": "https://artsci.washu.edu/ampersand/junior-seiler-awarded-truman-scholarship"
+    },
+    {
+      "name": "WashU Source — Several alumni earn Fulbright awards",
+      "url": "https://source.washu.edu/2025/06/several-alumni-earn-fulbright-awards/"
+    },
+    {
+      "name": "Ampersand — Isaac Seiler setting his sights high",
+      "url": "https://artsci.washu.edu/ampersand/isaac-seiler-setting-his-sights-high"
+    }
   ]
 }
