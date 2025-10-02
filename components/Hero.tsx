@@ -1,10 +1,11 @@
-// components/Hero.tsx — FULL REPLACEMENT (no rainbow band)
+// components/Hero.tsx — FULL REPLACEMENT (no rainbow band; pills included)
 "use client";
 
 import { m, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { useRef } from "react";
 import ScrollCue from "@/components/ScrollCue";
+import HeroPressPills from "@/components/HeroPressPills";
 
 export default function Hero() {
   const prefers = useReducedMotion();
@@ -24,13 +25,25 @@ export default function Hero() {
             building at the edge of ai, policy, and visual storytelling. projects, photos, research.
           </p>
           <div className="mt-6 flex gap-3">
-            <Link href="/about" prefetch className="rounded-xl border border-subtle px-4 py-2 hover:border-[color:var(--color-accent)]/60">about</Link>
-            <Link href="/work" prefetch className="rounded-xl border border-subtle px-4 py-2 hover:border-[color:var(--color-accent)]/60">my work</Link>
+            <Link
+              href="/about"
+              prefetch
+              className="rounded-xl border border-subtle px-4 py-2 hover:border-[color:var(--color-accent)]/60"
+            >
+              about
+            </Link>
+            <Link
+              href="/work"
+              prefetch
+              className="rounded-xl border border-subtle px-4 py-2 hover:border-[color:var(--color-accent)]/60"
+            >
+              my work
+            </Link>
           </div>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {/* place the pills here if you want them inside hero */}
-            {/* or move them wherever you render the "featured" region */}
-          </div>
+
+          {/* pills only — in order, no extra text */}
+          <HeroPressPills />
+
           <ScrollCue />
         </m.div>
       </div>
