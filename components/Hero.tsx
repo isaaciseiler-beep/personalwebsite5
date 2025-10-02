@@ -3,12 +3,14 @@
 import { m, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import ScrollCue from "@/components/ScrollCue";
+import Particles from "@/components/Particles";
 
 export default function Hero() {
   const prefers = useReducedMotion();
   return (
     <section className="relative isolate overflow-hidden">
       <div className="hero-bg absolute inset-0" aria-hidden="true" />
+      <Particles density={36} />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40"
            style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, var(--color-bg) 80%)" }} aria-hidden />
       <div className="mx-auto max-w-5xl px-4 py-20 md:py-28">
