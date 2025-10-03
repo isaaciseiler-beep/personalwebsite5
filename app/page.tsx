@@ -1,4 +1,4 @@
-// app/page.tsx — FULL REPLACEMENT (featured photos restored; uses PhotoCard)
+// app/page.tsx — FULL REPLACEMENT (featured photos restored; uses PhotoCard + captions in lightbox)
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
@@ -78,7 +78,6 @@ export default function HomePage() {
       </section>
 
       <NowBar text={now.text ?? ""} />
-
       <Lightbox open={open} items={gallery} index={idx} setIndex={setIdx} onClose={() => setOpen(false)} />
     </PageTransition>
   );
