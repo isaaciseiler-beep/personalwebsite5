@@ -37,10 +37,7 @@ export default function ExperienceChatFab() {
       const reply = j?.reply || "…";
       setMsgs((m) => [...m, { role: "assistant", content: reply }]);
     } catch {
-      setMsgs((m) => [
-        ...m,
-        { role: "assistant", content: "sorry — I couldn’t respond just now." },
-      ]);
+      setMsgs((m) => [...m, { role: "assistant", content: "sorry — I couldn’t respond just now." }]);
     } finally {
       setBusy(false);
     }
@@ -48,22 +45,29 @@ export default function ExperienceChatFab() {
 
   return (
     <>
+      {/* morphing shell (button → panel) */}
       <div ref={shellRef} className={`chat-shell ${open ? "open" : "closed"}`}>
+        {/* floating pill (always animates while closed) */}
         <button
           className={`pill ${open ? "to-x" : ""}`}
           aria-label={open ? "close chat" : "Ask ChatGPT"}
           onClick={() => setOpen((v) => !v)}
         >
+          {/* keep on one line */}
           <span className="pill-label">Ask ChatGPT</span>
+          {/* black X icon */}
           <span className="pill-x" aria-hidden>
-            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="1.8" fill="none">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="#0b0b0c" strokeWidth="1.8" fill="none">
               <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
             </svg>
           </span>
         </button>
 
-        {/* chat panel */}
+        {/* dark, blurred panel that emerges from the pill */}
         <div className="panel" aria-hidden={!open}>
+          {/* header space so chat starts below X */}
+          <div className="panel-header" />
+
           <div className="scroll">
             {msgs.map((m, i) => (
               <div key={i} className={`row ${m.role === "assistant" ? "left" : "right"}`}>
@@ -84,6 +88,7 @@ export default function ExperienceChatFab() {
           </div>
 
           <div className="input">
+            {/* input height matches arrow button */}
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -101,112 +106,150 @@ export default function ExperienceChatFab() {
       </div>
 
       <style jsx>{`
+        /* container at bottom center */
         .chat-shell {
           position: fixed;
           left: 50%;
           bottom: 16px;
           transform: translateX(-50%);
           z-index: 60;
-          transition: all 400ms cubic-bezier(.2, .7, 0, 1);
+          transition:
+            width 360ms cubic-bezier(.2,.7,0,1),
+            height 360ms cubic-bezier(.2,.7,0,1),
+            border-radius 360ms cubic-bezier(.2,.7,0,1),
+            transform 320ms cubic-bezier(.2,.7,0,1),
+            opacity 200ms ease;
+        }
+        .chat-shell.closed { width: auto; height: 48px; }
+        .chat-shell.open {
+          width: min(92vw, 540px);
+          height: min(52vh, 400px); /* shorter popup */
+          border-radius: 16px;
         }
 
+        /* white pill with active float */
         .pill {
           white-space: nowrap;
-          background: #fff;
+          background: #ffffff;
           color: #0b0b0c;
           border-radius: 9999px;
           padding: 10px 20px;
-          border: 1px solid #ccc;
+          border: 1px solid var(--color-border);
           font-size: 0.9rem;
-          transition: all 300ms ease;
-          position: relative;
-          z-index: 65; /* stays on top */
-        }
-
-        .pill-label { display: inline; }
-        .pill-x { display: none; }
-
-        .open .pill {
           position: absolute;
-          top: 10px; right: 10px;
-          height: 28px; width: 28px;
-          padding: 0;
-          border-radius: 8px;
-          display: grid; place-items: center;
+          left: 50%;
+          bottom: 0;
+          transform: translate(-50%, 0);
+          transition:
+            transform 320ms cubic-bezier(.2,.7,0,1),
+            border-color 160ms ease,
+            background 160ms ease,
+            color 160ms ease,
+            width 320ms cubic-bezier(.2,.7,0,1),
+            height 320ms cubic-bezier(.2,.7,0,1);
+          animation: floaty 4.2s ease-in-out infinite;
+          z-index: 65; /* above panel */
         }
+        .pill:hover { transform: translate(-50%, -1px); }
+
+        /* morph to X in panel header */
+        .open .pill {
+          top: 10px; right: 10px; left: auto; bottom: auto;
+          height: 30px; width: 30px; padding: 0;
+          border-radius: 8px;
+          transform: translate(0, 0);
+          animation: none;
+        }
+        .pill-label { display: inline-block; }
+        .pill-x { display: none; }
         .open .pill-label { display: none; }
         .open .pill-x { display: inline-block; }
 
+        /* dark blurred panel; no blue accents anywhere */
         .panel {
+          position: absolute;
+          inset: 0;
+          border-radius: 16px;
+          border: 1px solid var(--color-border);
           background: rgba(0,0,0,0.82);
+          color: #e7e7ea;
           backdrop-filter: blur(14px) saturate(160%);
           -webkit-backdrop-filter: blur(14px) saturate(160%);
-          border-radius: 16px;
-          border: 1px solid #333;
-          height: 0;
-          width: 0;
-          opacity: 0;
           overflow: hidden;
-          transition: all 420ms cubic-bezier(.2, .7, 0, 1);
+          opacity: 0;
+          pointer-events: none;
+          transform-origin: bottom center;
+          transform: translateY(6px) scale(0.98);
+          transition:
+            opacity 240ms ease,
+            transform 360ms cubic-bezier(.2,.7,0,1);
         }
-        .open .panel {
-          width: min(92vw, 540px);
-          height: min(56vh, 420px);
-          opacity: 1;
-        }
+        .open .panel { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+
+        /* header spacer (chat starts below X) */
+        .panel-header { height: 48px; } /* space for the X */
 
         .scroll {
-          height: calc(100% - 56px);
+          height: calc(100% - 48px - 56px); /* minus header + input */
           overflow-y: auto;
           padding: 10px 12px;
           display: flex; flex-direction: column; gap: 10px;
         }
         .row { display: flex; }
-        .left { justify-content: flex-start; }
-        .right { justify-content: flex-end; }
+        .row.left { justify-content: flex-start; }
+        .row.right { justify-content: flex-end; }
 
         .bubble {
           max-width: 80%;
           border-radius: 18px;
-          padding: 8px 12px;
-          font-size: 0.92rem;
-          border: 1px solid #444;
+          padding: 10px 14px;
+          font-size: 0.94rem;
+          line-height: 1.5;
+          border: 1px solid var(--color-border);
           color: #e7e7ea;
         }
-        .assistant { background: #222; }
-        .user { background: transparent; border-color: #0ea5e9; }
+        .assistant { background: var(--color-card); }
+        .user { background: transparent; border-color: var(--color-border); }
 
         .input {
+          position: absolute;
+          left: 0; right: 0; bottom: 0;
           display: flex; gap: 8px; align-items: center;
-          border-top: 1px solid #333;
+          border-top: 1px solid var(--color-border);
           padding: 8px;
+          background: rgba(0,0,0,0.82);
+          backdrop-filter: blur(14px) saturate(160%);
+          -webkit-backdrop-filter: blur(14px) saturate(160%);
         }
         .input input {
           flex: 1;
+          height: 36px; /* same height as arrow */
           background: transparent;
-          border: 1px solid #444;
-          border-radius: 10px;
-          padding: 10px 12px;
           color: #e7e7ea;
+          border: 1px solid var(--color-border);
+          border-radius: 10px;
+          padding: 0 12px;
+          outline: none;
+          transition: border-color 150ms ease;
         }
+        /* neutral focus — no blue */
+        .input input:focus { border-color: var(--color-border); }
+
         .send {
           height: 36px; width: 36px;
-          border: 1px solid #444;
+          border: 1px solid var(--color-border);
           border-radius: 10px;
+          background: transparent; color: #e7e7ea;
           display: grid; place-items: center;
-          background: transparent;
-          color: #e7e7ea;
+          transition: transform 100ms ease, border-color 150ms ease;
         }
+        .send:hover { transform: translateY(-1px); }
+        .send:disabled { opacity: .5; transform: none; }
 
-        .dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          background: #e7e7ea;
-          animation: pulse 900ms infinite ease-in-out;
-          display: inline-block; opacity: 0.5;
-        }
-        @keyframes pulse {
-          0%,100% { transform: translateY(0); opacity: .5; }
-          50% { transform: translateY(-3px); opacity: 1; }
+        /* passive float (closed) */
+        @keyframes floaty {
+          0%, 100% { transform: translate(-50%, 0); }
+          50%     { transform: translate(-50%, -6px); }
         }
       `}</style>
     </>
