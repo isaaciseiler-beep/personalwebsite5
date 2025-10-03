@@ -44,18 +44,22 @@ export function Nav() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50">
-        {/* glass overlay with blur */}
+        {/* glass overlay with real blur; theme-aware */}
         <div
           aria-hidden
-          className="absolute inset-0 pointer-events-none"
+          className="
+            absolute inset-0 pointer-events-none
+            bg-white/70 dark:bg-neutral-900/60
+            border-b border-white/20 dark:border-white/10
+            supports-[backdrop-filter]:backdrop-blur-xl
+            supports-[backdrop-filter]:backdrop-saturate-150
+          "
           style={{
-            background: "var(--color-bg)",                 // uses white in light, black in dark
-            opacity: 0.75,                                 // tweak transparency
-            backdropFilter: "blur(16px) saturate(140%)",   // blur & glass effect
-            WebkitBackdropFilter: "blur(16px) saturate(140%)",
-            borderBottom: "1px solid var(--color-border)"
+            WebkitBackdropFilter: "blur(16px) saturate(140%)", // safari fallback
+            backdropFilter: "blur(16px) saturate(140%)",
           }}
         />
+
         <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
           <a href="#content" className="skip-link">skip to content</a>
 
@@ -77,7 +81,7 @@ export function Nav() {
               className="rounded-xl border border-subtle p-2"
               aria-label="toggle menu"
               aria-expanded={open}
-              onClick={() => setOpen(v => !v)}
+              onClick={() => setOpen((v) => !v)}
             >
               {open ? <X size={18} /> : <Menu size={18} />}
             </button>
