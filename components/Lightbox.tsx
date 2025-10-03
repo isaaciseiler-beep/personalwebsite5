@@ -1,4 +1,5 @@
-// components/Lightbox.tsx — FULL REPLACEMENT (no zoom, lock scroll, show caption)
+// components/Lightbox.tsx — FULL REPLACEMENT
+// no zoom (object-contain), freeze scroll, show caption, add filmstrip
 "use client";
 
 import { createPortal } from "react-dom";
@@ -24,7 +25,7 @@ export function Lightbox({
   const [mounted, setMounted] = useState(false);
   const prefers = useReducedMotion();
 
-  // lock scroll while open
+  // lock scroll
   useEffect(() => {
     setMounted(true);
     if (!open) return;
@@ -58,9 +59,9 @@ export function Lightbox({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
       role="dialog"
       aria-modal="true"
+      onClick={onClose}
       initial={prefers ? { opacity: 1 } : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      onClick={onClose}
     >
       <m.div
         onClick={(e) => e.stopPropagation()}
@@ -74,12 +75,29 @@ export function Lightbox({
           alt={current.alt}
           width={1600}
           height={1200}
-          className="h-auto w-auto max-h-[80vh] max-w-[92vw] rounded-xl border border-subtle object-contain"
+          className="h-auto w-auto max-h-[70vh] max-w-[92vw] rounded-xl border border-subtle object-contain"
           priority
         />
-        {/* caption / location */}
         {current.caption && (
           <div className="mt-2 text-center text-sm text-muted">{current.caption}</div>
+        )}
+
+        {/* filmstrip */}
+        {items.length > 1 && (
+          <div className="mt-3 flex max-w-[92vw] gap-2 overflow-x-auto">
+            {items.map((it, i) => (
+              <button
+                key={i}
+                onClick={() => setIndex(i)}
+                aria-label={`go to ${i + 1}`}
+                className={`relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-md border ${
+                  i === index ? "border-[color:var(--color-accent)]/60" : "border-subtle"
+                }`}
+              >
+                <Image src={it.src} alt={it.alt} fill className="object-cover" />
+              </button>
+            ))}
+          </div>
         )}
 
         {/* controls */}
