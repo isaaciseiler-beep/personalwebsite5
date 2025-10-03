@@ -19,7 +19,11 @@ import NowBar from "@/components/NowBar";
 export default function HomePage() {
   const all = projects as Project[];
   const featuredProjects = all.filter(p => p.kind === "project").slice(0, 3);
-  const photos = all.filter(p => p.kind === "photo").slice(0, 3);
+  // explicitly select by slug, in the desired order
+  const featuredPhotoSlugs = ["photo-08", "photo-12", "photo-10"];
+  const photos = featuredPhotoSlugs
+    .map(slug => all.find(p => p.slug === slug))
+    .filter(Boolean) as Project[];
 
   const gallery = photos.map(p => ({ src: p.image ?? "", alt: p.title, caption: p.location || p.title }));
   const [open, setOpen] = useState(false);
