@@ -1,6 +1,4 @@
-// components/MapView.tsx — FULL REPLACEMENT
-// Always shows a map container. Renders fallbacks if token or points are missing.
-
+// components/MapView.tsx — FULL REPLACEMENT (client-safe, no SSR "document")
 "use client";
 
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -9,12 +7,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/types/project";
 
 function useTheme(): "dark" | "light" {
-  const [t, setT] = useState<"dark" | "light">(
-    (document?.documentElement.getAttribute("data-theme") as "dark" | "light") || "dark"
-  );
+  const [t, setT] = useState<"dark" | "light">("dark"); // default, updated after mount
   useEffect(() => {
+    if (typeof document === "undefined") return;
     const el = document.documentElement;
-    const obs = new MutationObserver(() => setT(el.getAttribute("data-theme") === "light" ? "light" : "dark"));
+    const set = () => setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
+    set();
+    const obs = new MutationObserver(set);
     obs.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
     return () => obs.disconnect();
   }, []);
@@ -23,7 +22,7 @@ function useTheme(): "dark" | "light" {
 
 export default function MapView({
   photos,
-  height = 220
+  height = 220,
 }: {
   photos: Project[];
   height?: number;
@@ -37,20 +36,28 @@ export default function MapView({
     () =>
       (photos || [])
         .filter((p) => typeof p.lat === "number" && typeof p.lng === "number")
-        .map((p) => ({ slug: p.slug, title: p.title, location: p.location, lng: Number(p.lng), lat: Number(p.lat) })),
+        .map((p) => ({
+          slug: p.slug,
+          title: p.title,
+          location: p.location,
+          lng: Number(p.lng),
+          lat: Number(p.lat),
+        })),
     [photos]
   );
 
-  const initial = points.length
-    ? { longitude: points[0].lng, latitude: points[0].lat, zoom: 3 }
-    : { longitude: 0, latitude: 20, zoom: 1.5 }; // world fallback
+  const initial =
+    points.length > 0
+      ? { longitude: points[0].lng, latitude: points[0].lat, zoom: 3 }
+      : { longitude: 0, latitude: 20, zoom: 1.5 };
 
-  const mapStyle = theme === "light" ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11";
+  const mapStyle =
+    theme === "light" ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11";
 
-  // resize on mount to avoid invisible canvas
+  // ensure canvas sizes correctly on mount
   useEffect(() => {
-    const id = setTimeout(() => mapRef.current?.resize(), 150);
-    return () => clearTimeout(id);
+    const id = window.setTimeout(() => mapRef.current?.resize(), 150);
+    return () => window.clearTimeout(id);
   }, []);
 
   return (
@@ -102,8 +109,7 @@ export default function MapView({
             })()}
         </Map>
       )}
-
-      {token && !points.length && (
+      {token && points.length === 0 && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-muted">
           no geotagged photos to show
         </div>
