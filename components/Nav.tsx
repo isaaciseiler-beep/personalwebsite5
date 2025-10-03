@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (translucent + strong blur header)
+// components/Nav.tsx — FULL REPLACEMENT (theme-aware translucent + blur header)
 "use client";
 
 import Link from "next/link";
@@ -43,17 +43,17 @@ export function Nav() {
 
   return (
     <>
-      {/* fixed, translucent, strongly blurred header */}
       <header className="fixed inset-x-0 top-0 z-50">
-        {/* glass overlay (prevents readable text behind) */}
+        {/* glass overlay */}
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "rgba(0,0,0,0.55)",        // adjust alpha as desired
+            background: "var(--color-bg)",          // theme-aware: white in light, black in dark
+            opacity: 0.7,
             backdropFilter: "blur(16px) saturate(120%)",
             WebkitBackdropFilter: "blur(16px) saturate(120%)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
             borderBottom: "1px solid var(--color-border)"
           }}
         />
@@ -103,7 +103,7 @@ export function Nav() {
         </AnimatePresence>
       </header>
 
-      {/* spacer to offset fixed header height */}
+      {/* spacer to offset fixed header */}
       <div aria-hidden className="h-[72px] md:h-[84px]" />
     </>
   );
