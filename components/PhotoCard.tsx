@@ -1,4 +1,6 @@
 // components/PhotoCard.tsx — FULL REPLACEMENT
+// Supports ratio: "square" (default) or "video" (16:9)
+
 "use client";
 
 import Image from "next/image";
@@ -6,14 +8,17 @@ import type { Project } from "@/types/project";
 import CursorTilt from "@/components/CursorTilt";
 
 type Props = {
-  item: Project; // kind: "photo"
+  item: Project;                    // kind: "photo"
   onClick?: (src: string, alt: string, caption?: string) => void;
+  ratio?: "square" | "video";       // "video" => 16:9
 };
 
-export default function PhotoCard({ item, onClick }: Props) {
+export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
   const src = item.image || "";
   const alt = item.title || "photo";
   const caption = item.location || item.title;
+
+  const aspectClass = ratio === "video" ? "aspect-video" : "aspect-square";
 
   return (
     <button
@@ -22,13 +27,13 @@ export default function PhotoCard({ item, onClick }: Props) {
       onClick={() => src && onClick?.(src, alt, caption)}
     >
       <CursorTilt maxTiltDeg={4} scale={1.015} className="h-full">
-        <div className="card-hover relative aspect-square overflow-hidden rounded-xl border border-subtle bg-card">
+        <div className={`card-hover relative ${aspectClass} overflow-hidden rounded-xl border border-subtle bg-card`}>
           {src && (
             <Image
               src={src}
               alt={alt}
               fill
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              sizes="(min-width: 1024px) 50vw, (min-width: 640px) 50vw, 100vw"
               className="object-cover"
               placeholder="empty"
             />
