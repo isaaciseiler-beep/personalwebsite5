@@ -1,47 +1,66 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT (only the map feed changed)
+// app/work/photos/page.tsx — FULL REPLACEMENT (MapView via dynamic import, ssr:false)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { PageTransition } from "@/components/PageTransition";
 import Reveal from "@/components/Reveal";
 import PhotoCard from "@/components/PhotoCard";
-import MapView from "@/components/MapView";
 import data from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import { Lightbox } from "@/components/Lightbox";
 
+// IMPORTANT: avoid SSR for map (prevents "document is not defined")
+const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
+
 export default function PhotosPage() {
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const all = (data as Project[]).filter((p) => p.kind === "photo");
   const [visible, setVisible] = useState(12);
   const shown = useMemo(() => all.slice(0, visible), [all, visible]);
 
-  // map must get ALL geotagged photos, not just `shown`
+  // map should use all geotagged items, not just shown slice
   const withCoords = useMemo(
     () => all.filter((p) => typeof p.lat === "number" && typeof p.lng === "number"),
     [all]
   );
 
+  // lightbox
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
-  const items = shown.map((p) => ({ src: p.image ?? "", alt: p.title, caption: p.location || p.title }));
+  const items = shown.map((p) => ({
+    src: p.image ?? "",
+    alt: p.title,
+    caption: p.location || p.title,
+  }));
 
   return (
     <PageTransition>
-      <Reveal><h1 className="text-2xl font-semibold tracking-tight">photos</h1></Reveal>
+      <Reveal>
+        <h1 className="text-2xl font-semibold tracking-tight">photos</h1>
+      </Reveal>
 
-      {/* map now receives all geotagged items */}
-      <Reveal><div className="mt-6"><MapView photos={withCoords} /></div></Reveal>
+      {/* visible map (client-only) */}
+      <Reveal>
+        <div className="mt-6">
+          <MapView photos={withCoords} />
+        </div>
+      </Reveal>
 
-      {/* grid (16:9, two per row as requested previously) */}
+      {/* 16:9, two per row */}
       <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2">
         {shown.map((item, i) => (
           <Reveal key={item.slug} delay={i * 0.03}>
             <PhotoCard
               item={item}
               ratio="video"
-              onClick={() => { setIdx(i); setOpen(true); }}
+              onClick={() => {
+                setIdx(i);
+                setOpen(true);
+              }}
             />
           </Reveal>
         ))}
@@ -58,7 +77,13 @@ export default function PhotosPage() {
         </div>
       )}
 
-      <Lightbox open={open} items={items} index={idx} setIndex={setIdx} onClose={() => setOpen(false)} />
+      <Lightbox
+        open={open}
+        items={items}
+        index={idx}
+        setIndex={setIdx}
+        onClose={() => setOpen(false)}
+      />
     </PageTransition>
   );
 }
