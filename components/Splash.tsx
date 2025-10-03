@@ -18,24 +18,31 @@ function useTheme(): "dark" | "light" {
 }
 
 type Props = {
-  preloadUrls?: string[];
+  preloadUrls?: string[];          // image URLs to warm up
+  // NEW: header logo assets (small mark), defaults to typical names
+  logoLight?: string;              // shown on LIGHT theme (usually black mark)
+  logoDark?: string;               // shown on DARK theme  (usually white mark)
+  // legacy props kept for compatibility (ignored now)
   wordmarkDark?: string;
   wordmarkLight?: string;
   maxDurationMs?: number;
-  revealTargetId?: string; // e.g. "app-root"
+  revealTargetId?: string;         // element to unblur (e.g., "app-root")
 };
 
 export default function Splash({
   preloadUrls = [],
-  wordmarkDark = "/isaacseiler-darkmode.png",
-  wordmarkLight = "/isaacseiler-lightmode.png",
+  logoLight = "/logo-dark.png",    // light theme → dark logo
+  logoDark = "/logo-light.png",    // dark theme  → light logo
+  // legacy no-ops
+  wordmarkDark,
+  wordmarkLight,
   maxDurationMs = 2400,
   revealTargetId = "app-root"
 }: Props) {
   const theme = useTheme();
   const [visible, setVisible] = useState(true);
 
-  // progress 0..1 (simple, guaranteed movement)
+  // simple determinate progress (always moves)
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -43,12 +50,11 @@ export default function Splash({
     const urls = Array.from(new Set(preloadUrls)).filter(Boolean);
     const total = urls.length || 4;
 
-    // 1) time-based ramp so the bar always moves
+    // ramp so bar visibly moves even on cache hits
     const ramp = setInterval(() => {
-      setProgress((p) => Math.min(0.92, p + 0.02)); // ~1.6s to ~92%
+      setProgress((p) => Math.min(0.92, p + 0.02));
     }, 90);
 
-    // 2) real preloads nudge progress forward
     const step = () => {
       done += 1;
       const pct = Math.min(0.95, done / total);
@@ -63,12 +69,10 @@ export default function Splash({
         img.src = u;
       });
     } else {
-      // fake steps if none provided
       const fake = setInterval(step, 180);
       setTimeout(() => clearInterval(fake), 900);
     }
 
-    // 3) hard cap
     const cap = setTimeout(() => finish(), maxDurationMs);
 
     return () => {
@@ -83,12 +87,12 @@ export default function Splash({
     setTimeout(() => {
       setVisible(false);
       const el = document.getElementById(revealTargetId);
-      if (el) el.classList.add("ready"); // unblur + fade in (handled in AppRootStyles)
+      if (el) el.classList.add("ready"); // handled by AppRootStyles
     }, 220);
   }
 
   const pct = Math.round(progress * 100);
-  const wordmark = theme === "light" ? wordmarkLight : wordmarkDark;
+  const logoSrc = theme === "light" ? logoLight : logoDark;
 
   return (
     <AnimatePresence>
@@ -101,7 +105,7 @@ export default function Splash({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.45, ease: [0.2, 0, 0, 1] }}
         >
-          {/* FULL-SCREEN BACKDROP BLUR (content below is fully unreadable) */}
+          {/* FULL-SCREEN BLUR over page */}
           <div
             className="absolute inset-0"
             style={{
@@ -111,6 +115,7 @@ export default function Splash({
                 "radial-gradient(1200px 600px at 10% -10%, rgba(14,165,233,0.18), transparent 60%), radial-gradient(900px 480px at 90% 0%, rgba(255,255,255,0.10), transparent 60%), rgba(0,0,0,0.40)"
             }}
           />
+          {/* grain */}
           <div
             className="pointer-events-none absolute inset-0 opacity-70"
             style={{
@@ -120,19 +125,23 @@ export default function Splash({
             }}
           />
 
-          {/* CENTER: pulsing logo above a moving bar */}
+          {/* CENTER: small pulsing header logo above bar */}
           <div className="relative z-10 flex h-full flex-col items-center justify-center p-6">
-            {/* pulsing wordmark — always visible */}
+            {/* small mark (match header icon) */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={wordmark}
-              alt="isaac seiler"
-              className="max-w-[70vw] md:max-w-[46vw] select-none splash-pulse"
+              src={logoSrc}
+              alt="site logo"
+              width={88}
+              height={88}
+              className="select-none splash-pulse"
               draggable={false}
+              style={{ width: 88, height: 88, objectFit: "contain" }}
             />
 
-            {/* determinate progress bar */}
-            <div className="mt-8 w-[72vw] max-w-[560px]">
-              <div className="relative h-[4px] w-full overflow-hidden rounded-full border border-subtle/60 bg-[color:var(--color-bg)]/35 backdrop-blur">
+            {/* progress bar (NO outline) */}
+            <div className="mt-12 w-[72vw] max-w-[560px]">
+              <div className="relative h-[4px] w-full overflow-hidden rounded-full bg-white/35 backdrop-blur">
                 <div
                   className="absolute left-0 top-0 h-full"
                   style={{
@@ -141,7 +150,7 @@ export default function Splash({
                     background: "linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,.95))"
                   }}
                 />
-                {/* glow sweep (indeterminate accent) */}
+                {/* glow sweep */}
                 <div
                   className="pointer-events-none absolute inset-0"
                   style={{
@@ -162,12 +171,13 @@ export default function Splash({
             }
             @keyframes pulseLogo {
               0% { transform: scale(1); opacity: 1; }
-              50% { transform: scale(1.012); opacity: 0.96; }
+              50% { transform: scale(1.06); opacity: 0.95; } /* a touch stronger so it's visible */
               100% { transform: scale(1); opacity: 1; }
             }
             .splash-pulse {
-              animation: pulseLogo 1400ms ease-in-out infinite;
+              animation: pulseLogo 1200ms ease-in-out infinite;
               will-change: transform, opacity;
+              filter: drop-shadow(0 6px 14px rgba(0,0,0,.25));
             }
           `}</style>
         </m.div>
