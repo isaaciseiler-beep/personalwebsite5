@@ -1,4 +1,4 @@
-// app/page.tsx — FULL REPLACEMENT (featured photos render; 3 square cards)
+// app/page.tsx — FULL REPLACEMENT (featured photos restored; uses PhotoCard)
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
@@ -13,27 +13,23 @@ import { useState } from "react";
 import { Lightbox } from "@/components/Lightbox";
 import EdgeProgress from "@/components/EdgeProgress";
 import PinnedAbout from "@/components/PinnedAbout";
-import featured from "@/data/featured.json";
 import now from "@/data/now.json";
 import NowBar from "@/components/NowBar";
 
 export default function HomePage() {
   const all = projects as Project[];
-
   const featuredProjects = all.filter(p => p.kind === "project").slice(0, 3);
-  // fallback: if featured.json doesn’t list photos, take the first 3 photos
-  const listed = (featured as any)?.photos as string[] | undefined;
-  const photos = listed && listed.length
-    ? all.filter(p => p.kind === "photo" && listed.includes(p.slug)).slice(0, 3)
-    : all.filter(p => p.kind === "photo").slice(0, 3);
+  const photos = all.filter(p => p.kind === "photo").slice(0, 3);
 
-  const gallery = photos.map(p => ({ src: p.image ?? "", alt: p.title }));
-  const [lightbox, setLightbox] = useState<{ open: boolean; index: number }>({ open: false, index: 0 });
+  const gallery = photos.map(p => ({ src: p.image ?? "", alt: p.title, caption: p.location || p.title }));
+  const [open, setOpen] = useState(false);
+  const [idx, setIdx] = useState(0);
 
   return (
     <PageTransition>
       <EdgeProgress />
       <Hero />
+
       <PinnedAbout
         lines={[
           "designerly research at the edge of ai and policy.",
@@ -62,7 +58,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* photos: 3 squares */}
+      {/* featured photos */}
       <section className="pb-8">
         <div className="mx-auto max-w-5xl px-4">
           <div className="mb-4 flex items-center justify-between">
@@ -74,7 +70,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {photos.map((item, i) => (
               <Reveal key={item.slug} delay={i * 0.06}>
-                <PhotoCard item={item} onClick={() => setLightbox({ open: true, index: i })} />
+                <PhotoCard item={item} onClick={() => { setIdx(i); setOpen(true); }} />
               </Reveal>
             ))}
           </div>
@@ -82,13 +78,8 @@ export default function HomePage() {
       </section>
 
       <NowBar text={now.text ?? ""} />
-      <Lightbox
-        open={lightbox.open}
-        items={gallery}
-        index={lightbox.index}
-        setIndex={(i) => setLightbox(s => ({ ...s, index: i }))}
-        onClose={() => setLightbox({ open: false, index: 0 })}
-      />
+
+      <Lightbox open={open} items={gallery} index={idx} setIndex={setIdx} onClose={() => setOpen(false)} />
     </PageTransition>
   );
 }
