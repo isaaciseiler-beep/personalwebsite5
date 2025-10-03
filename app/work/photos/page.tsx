@@ -1,4 +1,4 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT
+// app/work/photos/page.tsx — FULL REPLACEMENT (3-column square grid + load more)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -23,7 +23,7 @@ export default function PhotosPage() {
     <PageTransition>
       <Reveal><h1 className="text-2xl font-semibold tracking-tight">photos</h1></Reveal>
 
-      {/* square grid: 3 per row on md+ */}
+      {/* 3 per row on md+; square cards via aspect-square in PhotoCard */}
       <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
         {shown.map((item, i) => (
           <Reveal key={item.slug} delay={i * 0.03}>
