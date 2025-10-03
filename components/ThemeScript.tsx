@@ -1,18 +1,15 @@
-// runs before paint to prevent theme FOUC
+// components/ThemeScript.tsx
 export default function ThemeScript() {
   const code = `
-(function() {
-  try {
-    const ls = localStorage.getItem('theme');
-    const sys = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    const theme = (ls === 'light' || ls === 'dark') ? ls : sys;
-    document.documentElement.setAttribute('data-theme', theme);
-    // keep color-scheme in sync for UA widgets
-    document.documentElement.style.colorScheme = theme;
-  } catch (e) {
-    document.documentElement.setAttribute('data-theme','dark');
-    document.documentElement.style.colorScheme = 'dark';
-  }
-})();`;
+  (function() {
+    try {
+      // Temporarily force dark as default
+      var theme = "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+      document.documentElement.style.colorScheme = "dark";
+      // Persist so refresh stays dark while the toggle is removed
+      try { localStorage.setItem("theme", theme); } catch(e){}
+    } catch(e){}
+  })();`;
   return <script dangerouslySetInnerHTML={{ __html: code }} suppressHydrationWarning />;
 }
