@@ -1,157 +1,185 @@
 // components/MapView.tsx — FULL REPLACEMENT
+// Theme-aware, smooth expand/collapse, fit-to-points, pulsing pins,
+// click popups (location-only), custom zoom controls, no wheel zoom.
+// Works even if some photos have no lat/lng.
+
 "use client";
 
 import "mapbox-gl/dist/mapbox-gl.css";
-import Map, { Marker, Popup, MapRef } from "react-map-gl";
+import Map, { Marker, Popup, MapRef, ViewState, LngLatBounds } from "react-map-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { m } from "framer-motion";
 import type { Project } from "@/types/project";
 
+// ---- theme hook (reads <html data-theme="...">) -----------------------------
 function useTheme(): "dark" | "light" {
-  const [t, setT] = useState<"dark" | "light">("dark");
+  const [t, setT] = useState<"dark" | "light">(
+    (typeof document !== "undefined" &&
+      (document.documentElement.getAttribute("data-theme") as "dark" | "light")) || "dark"
+  );
   useEffect(() => {
     const el = document.documentElement;
-    const cb = () => setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
-    cb();
-    const obs = new MutationObserver(cb);
+    const obs = new MutationObserver(() => {
+      setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
+    });
     obs.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
     return () => obs.disconnect();
   }, []);
   return t;
 }
 
+// ---- helpers ----------------------------------------------------------------
+function fitBoundsToPoints(points: Array<{ lng: number; lat: number }>) {
+  if (points.length === 0) return undefined;
+  if (points.length === 1) {
+    return { longitude: points[0].lng, latitude: points[0].lat, zoom: 6 } as ViewState;
+  }
+  const b = new LngLatBounds();
+  points.forEach((p) => b.extend([p.lng, p.lat]));
+  const sw = b.getSouthWest();
+  const ne = b.getNorthEast();
+  // center
+  const longitude = (sw.lng + ne.lng) / 2;
+  const latitude = (sw.lat + ne.lat) / 2;
+  return { longitude, latitude, zoom: 3.5 } as ViewState;
+}
+
 export default function MapView({
   photos,
-  expanded = false,
-  onToggle
+  collapsedHeight = 220,
+  expandedHeight = 420
 }: {
   photos: Project[];
-  expanded?: boolean;
-  onToggle?: () => void;
+  collapsedHeight?: number;
+  expandedHeight?: number;
 }) {
   const theme = useTheme();
+  const mapRef = useRef<MapRef | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [zoom, setZoom] = useState(3);
+  const [sel, setSel] = useState<string | null>(null);
+
   const points = useMemo(
-    () => photos.filter(p => typeof p.lat === "number" && typeof p.lng === "number"),
+    () =>
+      photos
+        .filter((p) => typeof p.lat === "number" && typeof p.lng === "number")
+        .map((p) => ({
+          slug: p.slug,
+          title: p.title,
+          location: p.location,
+          lng: Number(p.lng),
+          lat: Number(p.lat)
+        })),
     [photos]
   );
 
-  // hooks unconditionally
-  const mapRef = useRef<MapRef | null>(null);
-  const [zoom, setZoom] = useState(3);
-  const [selected, setSelected] = useState<string | null>(null);
+  const initial = useMemo(() => fitBoundsToPoints(points.map(({ lng, lat }) => ({ lng, lat }))), [points]);
+  const mapStyle = theme === "light" ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11";
 
-  const center = useMemo(() => {
-    if (points.length > 0) return { longitude: points[0].lng as number, latitude: points[0].lat as number };
-    return { longitude: 0, latitude: 0 };
-  }, [points]);
-
-  const styleId = theme === "light" ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11";
-
-  // ensure map resizes after container height animation
+  // resize/fit on expand
   useEffect(() => {
-    const id = setTimeout(() => mapRef.current?.resize(), 240);
-    return () => clearTimeout(id);
-  }, [expanded]);
+    if (!mapRef.current) return;
+    const id = window.setTimeout(() => {
+      mapRef.current?.resize();
+      if (points.length > 1 && initial) {
+        mapRef.current?.fitBounds(
+          [
+            [Math.min(...points.map((p) => p.lng)), Math.min(...points.map((p) => p.lat))],
+            [Math.max(...points.map((p) => p.lng)), Math.max(...points.map((p) => p.lat))]
+          ],
+          { padding: 40, duration: 300 }
+        );
+      }
+    }, 260);
+    return () => window.clearTimeout(id);
+  }, [expanded, initial, points]);
 
-  const zoomBy = (delta: number) => {
-    const z = Math.min(14, Math.max(1, zoom + delta));
-    setZoom(z);
-    mapRef.current?.flyTo({ zoom: z, duration: 200 });
-  };
+  if (points.length === 0) return null;
 
   return (
-    <m.div
-      className="relative overflow-hidden rounded-xl border border-subtle"
-      initial={false}
-      animate={{ height: expanded ? 420 : 220 }}
-      transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
-      style={{ height: expanded ? 420 : 220 }}
+    <div
+      className="relative overflow-hidden rounded-xl border border-subtle transition-[height] duration-200 ease-[cubic-bezier(.2,0,0,1)]"
+      style={{ height: expanded ? expandedHeight : collapsedHeight }}
     >
       <Map
         ref={mapRef}
-        initialViewState={{ ...center, zoom }}
+        initialViewState={initial || { longitude: points[0].lng, latitude: points[0].lat, zoom }}
+        mapStyle={mapStyle}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
         style={{ width: "100%", height: "100%" }}
-        mapStyle={styleId}
         scrollZoom={false}
         doubleClickZoom={false}
         touchZoomRotate={false}
         dragRotate={false}
-        attributionControl={true}  // keep for license; styled in CSS
+        attributionControl
       >
-        {/* zoom controls */}
+        {/* zoom controls (top-right) */}
         <div className="absolute right-2 top-2 z-10 flex flex-col gap-2">
           <button
-            onClick={() => zoomBy(+0.6)}
-            className="rounded-md bg-[color:var(--color-bg)]/70 px-2 py-1 text-sm backdrop-blur hover:bg-[color:var(--color-bg)]/85"
+            onClick={() => {
+              const z = Math.min(14, zoom + 0.6);
+              setZoom(z);
+              mapRef.current?.flyTo({ zoom: z, duration: 200 });
+            }}
+            className="rounded-md border border-subtle bg-[color:var(--color-bg)]/70 px-2 py-1 text-sm backdrop-blur hover:border-[color:var(--color-accent)]/60"
             aria-label="zoom in"
           >
             +
           </button>
           <button
-            onClick={() => zoomBy(-0.6)}
-            className="rounded-md bg-[color:var(--color-bg)]/70 px-2 py-1 text-sm backdrop-blur hover:bg-[color:var(--color-bg)]/85"
+            onClick={() => {
+              const z = Math.max(1, zoom - 0.6);
+              setZoom(z);
+              mapRef.current?.flyTo({ zoom: z, duration: 200 });
+            }}
+            className="rounded-md border border-subtle bg-[color:var(--color-bg)]/70 px-2 py-1 text-sm backdrop-blur hover:border-[color:var(--color-accent)]/60"
             aria-label="zoom out"
           >
             −
           </button>
         </div>
 
-        {/* pulsing pins + click-to-select */}
+        {/* pulsing pins */}
         {points.map((p) => (
-          <Marker key={p.slug} longitude={p.lng as number} latitude={p.lat as number}>
+          <Marker key={p.slug} longitude={p.lng} latitude={p.lat}>
             <button
-              onClick={() => setSelected(p.slug)}
-              className="relative"
-              aria-label={`show location ${p.location ?? ""}`}
+              className="relative h-3.5 w-3.5 rounded-full bg-white shadow-[0_0_0_2px_rgba(14,165,233,0.9)]"
+              onClick={() => setSel(p.slug)}
+              aria-label={`show ${p.location ?? p.title}`}
             >
-              <div className="h-3.5 w-3.5 rounded-full bg-white shadow-[0_0_0_2px_rgba(14,165,233,0.9)]" />
-              <div className="pointer-events-none absolute inset-0 rounded-full animate-ping bg-[color:var(--color-accent)]/40" />
+              <span className="pointer-events-none absolute inset-0 animate-ping rounded-full bg-[color:var(--color-accent)]/40" />
             </button>
           </Marker>
         ))}
 
         {/* location-only popup */}
-        {selected && (() => {
-          const p = points.find((x) => x.slug === selected)!;
-          return (
-            <Popup
-              longitude={p.lng as number}
-              latitude={p.lat as number}
-              closeButton
-              offset={16}
-              anchor="bottom"
-              onClose={() => setSelected(null)}
-            >
-              <div className="popup-card">{p.location ?? "location"}</div>
-            </Popup>
-          );
-        })()}
+        {sel &&
+          (() => {
+            const p = points.find((x) => x.slug === sel)!;
+            return (
+              <Popup
+                longitude={p.lng}
+                latitude={p.lat}
+                onClose={() => setSel(null)}
+                closeButton
+                closeOnClick={false}
+                offset={10}
+                anchor="bottom"
+              >
+                <div className="text-sm">{p.location ?? p.title}</div>
+              </Popup>
+            );
+          })()}
       </Map>
 
-      {/* bottom gradient when minimized */}
-      {!expanded && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-10"
-          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0), var(--color-bg))" }}
-        />
-      )}
-
-      {/* chevron toggle */}
+      {/* expand/collapse chevron (bottom-center) */}
       <button
-        onClick={onToggle}
-        className="absolute inset-x-0 bottom-0 z-10 mx-auto mb-1 flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--color-bg)]/70 text-[color:var(--color-fg)] backdrop-blur hover:bg-[color:var(--color-bg)]/85"
+        onClick={() => setExpanded((v) => !v)}
+        className="absolute bottom-1 left-1/2 z-10 -translate-x-1/2 rounded-full border border-subtle bg-[color:var(--color-bg)]/70 px-2 py-0.5 text-xs backdrop-blur hover:border-[color:var(--color-accent)]/60"
         aria-label={expanded ? "minimize map" : "expand map"}
+        title={expanded ? "minimize map" : "expand map"}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-          {expanded ? (
-            <path d="M6 15l6-6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          ) : (
-            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          )}
-        </svg>
+        {expanded ? "▾" : "▴"}
       </button>
-    </m.div>
+    </div>
   );
 }
