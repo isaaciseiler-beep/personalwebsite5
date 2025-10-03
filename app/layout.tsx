@@ -1,3 +1,4 @@
+// app/layout.tsx — FULL REPLACEMENT
 import type { Metadata } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
@@ -8,7 +9,6 @@ import ThemeScript from "@/components/ThemeScript";
 import Splash from "@/components/Splash";
 import projects from "@/data/projects.json";
 
-// grab a few above-the-fold photo URLs to preload in splash
 const preloadUrls = (projects as Array<any>)
   .filter((p) => p.kind === "photo" && typeof p.image === "string")
   .slice(0, 6)
@@ -32,27 +32,49 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" data-theme="dark">
       <head>
         <ThemeScript />
-        {/* preconnect to R2 for faster first image */}
         <link rel="preconnect" href="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev" crossOrigin="" />
       </head>
       <body className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-fg)] selection:bg-[color:var(--color-accent)]/20 selection:text-[var(--color-fg)]">
-        {/* cinematic splash (fires on each hard load / fresh visit) */}
+        {/* cinematic splash blocks interaction, then reveals app-root */}
         <Splash
           preloadUrls={preloadUrls}
           wordmarkDark="/isaacseiler-darkmode.png"
           wordmarkLight="/isaacseiler-lightmode.png"
-          maxDurationMs={2500}
+          maxDurationMs={2400}
+          revealTargetId="app-root"
         />
 
         <RouteProgress />
         <ScrollProgress />
         <Nav />
-        <main id="content" className="mx-auto max-w-5xl px-4 py-10">
-          {children}
-        </main>
-        <div className="mx-auto max-w-5xl px-4">
-          <Footer />
+
+        {/* this container is blurred/hidden until Splash finishes */}
+        <div id="app-root" className="app-root">
+          <main id="content" className="mx-auto max-w-5xl px-4 py-10">
+            {children}
+          </main>
+          <div className="mx-auto max-w-5xl px-4">
+            <Footer />
+          </div>
         </div>
+
+        {/* minimal global to handle reveal */}
+        <style jsx global>{`
+          .app-root {
+            opacity: 0;
+            filter: blur(12px);
+            transform: translateY(6px);
+            transition:
+              opacity 520ms cubic-bezier(.2,0,0,1),
+              filter 560ms cubic-bezier(.2,0,0,1),
+              transform 520ms cubic-bezier(.2,0,0,1);
+          }
+          .app-root.ready {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
+          }
+        `}</style>
       </body>
     </html>
   );
