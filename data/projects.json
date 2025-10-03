@@ -29,7 +29,7 @@
     "year": 2023
   },
 
-  { "slug": "photo-01", "kind": "photo", "title": "photo 1", "image": "https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev/images/photo-01.jpg", "location": "Cape Bitou, Taiwan" },
+  { "slug": "photo-01", "kind": "photo", "title": "photo 1", "image": "https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev/photo-01.jpg", "location": "Cape Bitou, Taiwan" },
   { "slug": "photo-02", "kind": "photo", "title": "photo 2", "image": "https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev/images/photo-02.jpg", "location": "St. Louis, MO" },
   { "slug": "photo-03", "kind": "photo", "title": "photo 3", "image": "https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev/images/photo-03.jpg", "location": "Skaftafell, Iceland" },
   { "slug": "photo-04", "kind": "photo", "title": "photo 4", "image": "https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev/images/photo-04.jpg", "location": "Víkingaþorpið, Iceland" },
