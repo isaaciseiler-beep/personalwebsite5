@@ -1,17 +1,16 @@
+// next.config.mjs — FULL REPLACEMENT
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: { unoptimized: true },
-  async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" }
-        ]
-      }
-    ];
+  images: {
+    unoptimized: false,
+    remotePatterns: [
+      { protocol: "https", hostname: "isaacs-portfolio.r2.dev" },
+      // if you later add a custom domain like media.example.com, add it here too:
+      // { protocol: "https", hostname: "media.example.com" }
+    ]
+  },
+  experimental: {
+    optimizePackageImports: ["framer-motion", "lucide-react"]
   }
 };
 export default nextConfig;
