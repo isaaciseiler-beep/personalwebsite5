@@ -7,6 +7,7 @@ import RouteProgress from "@/components/RouteProgress";
 import ScrollProgress from "@/components/ScrollProgress";
 import ThemeScript from "@/components/ThemeScript";
 import Splash from "@/components/Splash";
+import AppRootStyles from "@/components/AppRootStyles";
 import projects from "@/data/projects.json";
 
 const preloadUrls = (projects as Array<any>)
@@ -32,10 +33,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" data-theme="dark">
       <head>
         <ThemeScript />
-        <link rel="preconnect" href="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev" crossOrigin="" />
+        <link
+          rel="preconnect"
+          href="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev"
+          crossOrigin=""
+        />
       </head>
       <body className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-fg)] selection:bg-[color:var(--color-accent)]/20 selection:text-[var(--color-fg)]">
-        {/* cinematic splash blocks interaction, then reveals app-root */}
+        {/* cinematic splash; reveals #app-root when done */}
         <Splash
           preloadUrls={preloadUrls}
           wordmarkDark="/isaacseiler-darkmode.png"
@@ -44,11 +49,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           revealTargetId="app-root"
         />
 
+        {/* global reveal styles injected as a client component (avoids styled-jsx in Server Component) */}
+        <AppRootStyles />
+
         <RouteProgress />
         <ScrollProgress />
         <Nav />
 
-        {/* this container is blurred/hidden until Splash finishes */}
         <div id="app-root" className="app-root">
           <main id="content" className="mx-auto max-w-5xl px-4 py-10">
             {children}
@@ -57,24 +64,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Footer />
           </div>
         </div>
-
-        {/* minimal global to handle reveal */}
-        <style jsx global>{`
-          .app-root {
-            opacity: 0;
-            filter: blur(12px);
-            transform: translateY(6px);
-            transition:
-              opacity 520ms cubic-bezier(.2,0,0,1),
-              filter 560ms cubic-bezier(.2,0,0,1),
-              transform 520ms cubic-bezier(.2,0,0,1);
-          }
-          .app-root.ready {
-            opacity: 1;
-            filter: blur(0);
-            transform: translateY(0);
-          }
-        `}</style>
       </body>
     </html>
   );
