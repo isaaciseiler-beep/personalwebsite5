@@ -5,43 +5,56 @@ import { useEffect, useRef, useState } from "react";
 type Msg = { role: "user" | "assistant"; content: string };
 
 export default function ExperienceChatFab() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);       // panel state
+  const [closing, setClosing] = useState(false); // drive reverse animation
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const streamTimer = useRef<number | null>(null);
 
-  // Outside click closes
+  const DUR = 360; // ms, keep in sync with CSS transitions
+
+  // Outside click → close (with reverse morph)
   useEffect(() => {
     function onDoc(e: MouseEvent) {
-      if (!open || !shellRef.current) return;
+      if (!(open || closing) || !shellRef.current) return;
       if (!shellRef.current.contains(e.target as Node)) handleClose();
     }
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, closing]);
 
-  // Scroll lock when open
+  // Lock scroll while open OR closing (so it doesn't jump during reverse)
   useEffect(() => {
-    if (!open) return;
-    const prev = document.documentElement.style.overflow;
+    const lock = open || closing;
+    if (!lock) return;
+    const prevHtml = document.documentElement.style.overflow;
     const prevBody = document.body.style.overflow;
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
     return () => {
-      document.documentElement.style.overflow = prev;
+      document.documentElement.style.overflow = prevHtml;
       document.body.style.overflow = prevBody;
     };
-  }, [open]);
+  }, [open, closing]);
+
+  function handleOpen() {
+    setClosing(false);
+    setOpen(true);
+  }
 
   function handleClose() {
-    setOpen(false);
+    // stop streaming if any
     if (streamTimer.current) {
       window.clearInterval(streamTimer.current);
       streamTimer.current = null;
     }
+    // trigger reverse morph
+    setClosing(true);
+    setOpen(false);
+    // after animation finishes, clear closing
+    window.setTimeout(() => setClosing(false), DUR + 40);
   }
 
   async function send() {
@@ -59,11 +72,11 @@ export default function ExperienceChatFab() {
       const j = await r.json();
       const reply: string = j?.reply || "…";
 
-      // Streaming / typewriter effect
+      // streaming / typewriter effect
       let i = 0;
       setMsgs((m) => [...m, { role: "assistant", content: "" }]);
       streamTimer.current = window.setInterval(() => {
-        i += Math.max(1, Math.floor(reply.length / 120)); // faster on long texts
+        i += Math.max(1, Math.floor(reply.length / 120));
         const slice = reply.slice(0, i);
         setMsgs((m) => {
           const copy = m.slice();
@@ -89,40 +102,45 @@ export default function ExperienceChatFab() {
 
   return (
     <>
-      {/* Blurred/dim backdrop (click to close) */}
-      {open && (
+      {/* blurred/dim backdrop (stays while closing for smooth reverse) */}
+      {(open || closing) && (
         <button
           aria-label="close chat"
-          className="fixed inset-0 z-50 cursor-default transition-opacity duration-200"
+          className={`backdrop ${open ? "visible" : closing ? "closing" : ""}`}
           onClick={handleClose}
-          style={{
-            backdropFilter: "blur(8px)",
-            WebkitBackdropFilter: "blur(8px)",
-            background: "linear-gradient(to bottom, rgba(0,0,0,.14), rgba(0,0,0,.22))"
-          }}
         />
       )}
 
-      {/* Morphing shell (bottom center) */}
-      <div ref={shellRef} className={`chat-shell ${open ? "open" : "closed"}`}>
-
-        {/* White pill → morphs to black X (centered) */}
+      {/* morphing shell */}
+      <div
+        ref={shellRef}
+        className={`chat-shell ${open ? "open" : ""} ${closing ? "closing" : ""}`}
+        aria-live="polite"
+      >
+        {/* floating pill (white). Becomes centered black X when open */}
         <button
           className={`pill ${open ? "to-x" : ""}`}
           aria-label={open ? "close chat" : "Ask ChatGPT"}
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => (open ? handleClose() : handleOpen())}
         >
           <span className="pill-label">Ask ChatGPT</span>
           <span className="pill-x" aria-hidden>
-            <svg viewBox="0 0 24 24" width="14" height="14" stroke="#0b0b0c" strokeWidth="1.8" fill="none">
+            <svg
+              viewBox="0 0 24 24"
+              width="14"
+              height="14"
+              stroke="#0b0b0c"
+              strokeWidth="1.8"
+              fill="none"
+            >
               <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
             </svg>
           </span>
         </button>
 
-        {/* Panel (compact, dark, blurred) — emerges from pill, below the X area */}
-        <div className="panel" aria-hidden={!open}>
-          <div className="panel-header" /> {/* spacer so chat starts below close button */}
+        {/* panel (dark, blurred) — emerges from the pill; reverses back on close */}
+        <div className="panel" aria-hidden={!open && !closing}>
+          <div className="panel-header" /> {/* keep chat below X area */}
 
           <div className="scroll">
             {msgs.map((m, i) => (
@@ -133,7 +151,9 @@ export default function ExperienceChatFab() {
             {busy && msgs.length === 0 && (
               <div className="row left">
                 <div className="bubble assistant skeleton">
-                  <div className="sk sk1" /><div className="sk sk2" /><div className="sk sk3" />
+                  <div className="sk sk1" />
+                  <div className="sk sk2" />
+                  <div className="sk sk3" />
                 </div>
               </div>
             )}
@@ -147,7 +167,7 @@ export default function ExperienceChatFab() {
               placeholder="ask about my experience…"
               aria-label="Message"
             />
-            <button className="send" onClick={send} disabled={busy} aria-label="Send">
+            <button className="send" onClick={send} disabled={busy} aria-label="Send" title="Send">
               {/* up arrow */}
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.8" fill="none">
                 <path d="M12 5v14M12 5l6 6M12 5L6 11" strokeLinecap="round" />
@@ -158,30 +178,44 @@ export default function ExperienceChatFab() {
       </div>
 
       <style jsx>{`
-        /* --- Shell placement & liquid morph --- */
+        /* Backdrop with smooth fade both ways */
+        .backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 50;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          background: linear-gradient(to bottom, rgba(0,0,0,.14), rgba(0,0,0,.22));
+          opacity: 0;
+          transition: opacity ${DUR}ms cubic-bezier(.2,.7,0,1);
+        }
+        .backdrop.visible { opacity: 1; }
+        .backdrop.closing { opacity: 0; }
+
+        /* Shell placement & morph */
         .chat-shell {
           position: fixed;
           left: 50%;
           bottom: 16px;
           transform: translateX(-50%);
-          z-index: 60; /* panel above backdrop (50), pill above panel content via local z */
+          z-index: 60;
           transition:
-            width 360ms cubic-bezier(.2,.7,0,1),
-            height 360ms cubic-bezier(.2,.7,0,1),
-            border-radius 360ms cubic-bezier(.2,.7,0,1),
+            width ${DUR}ms cubic-bezier(.2,.7,0,1),
+            height ${DUR}ms cubic-bezier(.2,.7,0,1),
+            border-radius ${DUR}ms cubic-bezier(.2,.7,0,1),
             transform 320ms cubic-bezier(.2,.7,0,1),
             opacity 200ms ease;
         }
-        .chat-shell.closed { width: auto; height: 48px; }
+        .chat-shell:not(.open) { width: auto; height: 48px; }
         .chat-shell.open {
           width: min(92vw, 540px);
           height: min(52vh, 400px);
           border-radius: 16px;
         }
 
-        /* --- Floating white pill --- */
+        /* Floating white pill (one line). Smooth reverse on close. */
         .pill {
-          white-space: nowrap;  /* keep on one line */
+          white-space: nowrap;
           background: #ffffff;
           color: #0b0b0c;
           border-radius: 9999px;
@@ -193,22 +227,17 @@ export default function ExperienceChatFab() {
           bottom: 0;
           transform: translate(-50%, 0);
           transition:
-            transform 320ms cubic-bezier(.2,.7,0,1),
-            width 320ms cubic-bezier(.2,.7,0,1),
-            height 320ms cubic-bezier(.2,.7,0,1),
-            border-radius 320ms cubic-bezier(.2,.7,0,1),
+            transform ${DUR}ms cubic-bezier(.2,.7,0,1),
+            width ${DUR}ms cubic-bezier(.2,.7,0,1),
+            height ${DUR}ms cubic-bezier(.2,.7,0,1),
+            border-radius ${DUR}ms cubic-bezier(.2,.7,0,1),
             opacity 200ms ease;
           animation: floaty 4.2s ease-in-out infinite;
-          z-index: 70; /* on top so X is never behind */
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
+          z-index: 70;
+          display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
         .pill:hover { transform: translate(-50%, -1px); }
-
-        /* morph to perfectly centered X button */
-        .open .pill {
+        .chat-shell.open .pill {
           top: 10px; right: 10px; left: auto; bottom: auto;
           height: 30px; width: 30px; padding: 0;
           border-radius: 8px;
@@ -217,13 +246,12 @@ export default function ExperienceChatFab() {
         }
         .pill-label { display: inline-block; }
         .pill-x { display: none; line-height: 0; }
-        .open .pill-label { display: none; }
-        .open .pill-x { display: grid; place-items: center; }
+        .chat-shell.open .pill-label { display: none; }
+        .chat-shell.open .pill-x { display: grid; place-items: center; }
 
-        /* --- Panel (dark, blurred, compact) --- */
+        /* Panel (dark, blurred). Morphs in and out. */
         .panel {
-          position: absolute;
-          inset: 0;
+          position: absolute; inset: 0;
           border-radius: 16px;
           border: 1px solid var(--color-border);
           background: rgba(0,0,0,0.82);
@@ -231,21 +259,24 @@ export default function ExperienceChatFab() {
           backdrop-filter: blur(14px) saturate(160%);
           -webkit-backdrop-filter: blur(14px) saturate(160%);
           overflow: hidden;
-          opacity: 0;
-          pointer-events: none;
+          opacity: 0; pointer-events: none;
           transform-origin: bottom center;
           transform: translateY(6px) scale(0.98);
           transition:
-            opacity 240ms ease,
-            transform 360ms cubic-bezier(.2,.7,0,1);
+            opacity ${DUR - 120}ms ease,
+            transform ${DUR}ms cubic-bezier(.2,.7,0,1);
         }
-        .open .panel { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+        .chat-shell.open .panel,
+        .chat-shell.closing .panel {
+          opacity: 1; pointer-events: auto; transform: translateY(0) scale(1);
+        }
+        .chat-shell.closing .panel { opacity: 0; transform: translateY(6px) scale(0.98); }
 
-        /* Chat begins below X area */
+        /* Header spacer (chat starts below X) */
         .panel-header { height: 48px; }
 
         .scroll {
-          height: calc(100% - 48px - 56px); /* header + input */
+          height: calc(100% - 48px - 56px);
           overflow-y: auto;
           padding: 10px 12px;
           display: flex; flex-direction: column; gap: 10px;
@@ -259,15 +290,14 @@ export default function ExperienceChatFab() {
           max-width: 80%;
           border-radius: 18px;
           padding: 10px 14px;
-          font-size: 0.94rem;
-          line-height: 1.5;
+          font-size: 0.94rem; line-height: 1.5;
           border: 1px solid var(--color-border);
           color: #e7e7ea;
         }
         .assistant { background: var(--color-card); }
         .user { background: transparent; border-color: var(--color-border); }
 
-        /* skeleton loading (when first busy) */
+        /* Skeleton loading & shimmer */
         .skeleton .sk {
           height: 10px; border-radius: 9999px;
           background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.18), rgba(255,255,255,.08));
@@ -278,10 +308,7 @@ export default function ExperienceChatFab() {
         .skeleton .sk1 { width: 72%; }
         .skeleton .sk2 { width: 92%; }
         .skeleton .sk3 { width: 56%; }
-        @keyframes shimmer {
-          0% { background-position: 0% 0; }
-          100% { background-position: -200% 0; }
-        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         .input {
           position: absolute; left: 0; right: 0; bottom: 0;
@@ -293,32 +320,26 @@ export default function ExperienceChatFab() {
           -webkit-backdrop-filter: blur(14px) saturate(160%);
         }
         .input input {
-          flex: 1;
-          height: 36px; /* match arrow button */
-          background: transparent;
-          color: #e7e7ea;
-          border: 1px solid var(--color-border);
-          border-radius: 10px;
-          padding: 0 12px;
-          outline: none;
+          flex: 1; height: 36px; background: transparent;
+          color: #e7e7ea; border: 1px solid var(--color-border);
+          border-radius: 10px; padding: 0 12px; outline: none;
           transition: border-color 150ms ease;
         }
         .input input:focus { border-color: var(--color-border); }
-
         .send {
-          height: 36px; width: 36px;
-          border: 1px solid var(--color-border);
-          border-radius: 10px;
-          background: transparent; color: #e7e7ea;
+          height: 36px; width: 36px; border: 1px solid var(--color-border);
+          border-radius: 10px; background: transparent; color: #e7e7ea;
           display: grid; place-items: center;
           transition: transform 100ms ease, border-color 150ms ease;
         }
         .send:hover { transform: translateY(-1px); }
         .send:disabled { opacity: .5; transform: none; }
 
-        /* Smooth floating when closed */
-        @keyframes floaty { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -6px); } }
-        .chat-shell.closed .pill { animation: floaty 4.2s ease-in-out infinite; }
+        /* float animation when closed */
+        @keyframes floaty {
+          0%, 100% { transform: translate(-50%, 0); }
+          50% { transform: translate(-50%, -6px); }
+        }
       `}</style>
     </>
   );
