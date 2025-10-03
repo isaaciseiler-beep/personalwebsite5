@@ -1,4 +1,4 @@
-// components/PhotoCard.tsx — FULL REPLACEMENT (tilt + hover, square cover)
+// components/PhotoCard.tsx — FULL REPLACEMENT
 "use client";
 
 import Image from "next/image";
@@ -6,7 +6,7 @@ import type { Project } from "@/types/project";
 import CursorTilt from "@/components/CursorTilt";
 
 type Props = {
-  item: Project;                    // kind: "photo"
+  item: Project; // kind: "photo"
   onClick?: (src: string, alt: string, caption?: string) => void;
 };
 
