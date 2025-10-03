@@ -1,4 +1,3 @@
-// app/layout.tsx — FULL REPLACEMENT
 import type { Metadata } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
@@ -43,13 +42,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* cinematic splash; reveals #app-root when done */}
         <Splash
           preloadUrls={preloadUrls}
-          wordmarkDark="/isaacseiler-darkmode.png"
-          wordmarkLight="/isaacseiler-lightmode.png"
+          logoDark="/logo-light.png"   // dark theme → light logo
+          logoLight="/logo-dark.png"   // light theme → dark logo
           maxDurationMs={2400}
           revealTargetId="app-root"
         />
 
-        {/* global reveal styles injected as a client component (avoids styled-jsx in Server Component) */}
+        {/* global reveal styles */}
         <AppRootStyles />
 
         <RouteProgress />
