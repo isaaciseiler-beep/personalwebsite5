@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (rename About → Experience)
+// components/Nav.tsx — FULL REPLACEMENT (translucent + strong blur header)
 "use client";
 
 import Link from "next/link";
@@ -43,15 +43,18 @@ export function Nav() {
 
   return (
     <>
+      {/* fixed, translucent, strongly blurred header */}
       <header className="fixed inset-x-0 top-0 z-50">
+        {/* glass overlay (prevents readable text behind) */}
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "var(--color-bg)",
-            opacity: 0.7,
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)"
+            background: "rgba(0,0,0,0.55)",        // adjust alpha as desired
+            backdropFilter: "blur(16px) saturate(120%)",
+            WebkitBackdropFilter: "blur(16px) saturate(120%)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+            borderBottom: "1px solid var(--color-border)"
           }}
         />
         <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
@@ -82,6 +85,7 @@ export function Nav() {
           </div>
         </div>
 
+        {/* mobile drawer */}
         <AnimatePresence initial={false}>
           {open && (
             <motion.div
@@ -98,6 +102,8 @@ export function Nav() {
           )}
         </AnimatePresence>
       </header>
+
+      {/* spacer to offset fixed header height */}
       <div aria-hidden className="h-[72px] md:h-[84px]" />
     </>
   );
