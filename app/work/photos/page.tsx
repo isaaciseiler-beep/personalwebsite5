@@ -1,4 +1,4 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT (map visible + grid + lightbox captions)
+// app/work/photos/page.tsx — FULL REPLACEMENT (map visible + square grid + lightbox with captions)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -26,7 +26,7 @@ export default function PhotosPage() {
     <PageTransition>
       <Reveal><h1 className="text-2xl font-semibold tracking-tight">photos</h1></Reveal>
 
-      {/* visible map */}
+      {/* visible map with clusters */}
       <Reveal><div className="mt-6"><MapView photos={shown} /></div></Reveal>
 
       {/* 3-col square grid */}
