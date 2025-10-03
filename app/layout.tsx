@@ -1,8 +1,8 @@
-// app/layout.tsx — FULL REPLACEMENT
+// app/layout.tsx — FULL REPLACEMENT (adds <link rel="preconnect">)
 import type { Metadata } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
-import Footer from "@/components/Footer"; // <-- default import
+import Footer from "@/components/Footer";
 import RouteProgress from "@/components/RouteProgress";
 import ScrollProgress from "@/components/ScrollProgress";
 import ThemeScript from "@/components/ThemeScript";
@@ -22,9 +22,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark">
       <head>
         <ThemeScript />
+        {/* preconnect to R2 for faster first image */}
+        <link
+          rel="preconnect"
+          href="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev"
+          crossOrigin=""
+        />
       </head>
       <body className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-fg)] selection:bg-[color:var(--color-accent)]/20 selection:text-[var(--color-fg)]">
         <RouteProgress />
