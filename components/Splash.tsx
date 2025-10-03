@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { m, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { m, AnimatePresence } from "framer-motion";
 
 function useTheme(): "dark" | "light" {
   const [t, setT] = useState<"dark" | "light">("dark");
@@ -33,47 +33,26 @@ export default function Splash({
   revealTargetId = "app-root"
 }: Props) {
   const theme = useTheme();
-  const prefersReduced = useReducedMotion();
   const [visible, setVisible] = useState(true);
 
-  // progress 0..1 with smooth tween
+  // progress 0..1 (simple, guaranteed movement)
   const [progress, setProgress] = useState(0);
-  const targetRef = useRef(0);
-  const rafRef = useRef<number | null>(null);
 
-  const tween = () => {
-    setProgress((p) => {
-      const next = p + (targetRef.current - p) * 0.16;
-      if (Math.abs(next - targetRef.current) < 0.003) return targetRef.current;
-      rafRef.current = requestAnimationFrame(tween);
-      return next;
-    });
-  };
-
-  // preload real assets AND time-based ramp so bar always moves
   useEffect(() => {
-    if (prefersReduced) {
-      const id = setTimeout(finish, 500);
-      return () => clearTimeout(id);
-    }
-
-    // 1) time-based ramp to 90%
-    const ramp = setInterval(() => {
-      const cap = 0.92;
-      targetRef.current = Math.min(cap, targetRef.current + 0.02);
-      if (!rafRef.current) rafRef.current = requestAnimationFrame(tween);
-    }, 90);
-
-    // 2) real preloads push target further
-    const urls = Array.from(new Set(preloadUrls)).filter(Boolean);
     let done = 0;
+    const urls = Array.from(new Set(preloadUrls)).filter(Boolean);
     const total = urls.length || 4;
 
+    // 1) time-based ramp so the bar always moves
+    const ramp = setInterval(() => {
+      setProgress((p) => Math.min(0.92, p + 0.02)); // ~1.6s to ~92%
+    }, 90);
+
+    // 2) real preloads nudge progress forward
     const step = () => {
       done += 1;
-      const pct = done / total;
-      targetRef.current = Math.max(targetRef.current, Math.min(0.95, pct));
-      if (!rafRef.current) rafRef.current = requestAnimationFrame(tween);
+      const pct = Math.min(0.95, done / total);
+      setProgress((p) => (pct > p ? pct : p));
     };
 
     if (urls.length) {
@@ -84,30 +63,27 @@ export default function Splash({
         img.src = u;
       });
     } else {
-      // fake steps if nothing provided
+      // fake steps if none provided
       const fake = setInterval(step, 180);
       setTimeout(() => clearInterval(fake), 900);
     }
 
     // 3) hard cap
-    const cap = setTimeout(finish, maxDurationMs);
+    const cap = setTimeout(() => finish(), maxDurationMs);
 
     return () => {
       clearInterval(ramp);
       clearTimeout(cap);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preloadUrls, prefersReduced, maxDurationMs]);
+  }, [preloadUrls, maxDurationMs]);
 
   function finish() {
-    targetRef.current = 1;
-    if (!rafRef.current) rafRef.current = requestAnimationFrame(tween);
+    setProgress(1);
     setTimeout(() => {
       setVisible(false);
-      // unblur + reveal app root
       const el = document.getElementById(revealTargetId);
-      if (el) el.classList.add("ready");
+      if (el) el.classList.add("ready"); // unblur + fade in (handled in AppRootStyles)
     }, 220);
   }
 
@@ -123,20 +99,18 @@ export default function Splash({
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: prefersReduced ? 0.2 : 0.45, ease: [0.2, 0, 0, 1] }}
+          transition={{ duration: 0.45, ease: [0.2, 0, 0, 1] }}
         >
-          {/* FULL-SCREEN BACKDROP BLUR over the entire page */}
+          {/* FULL-SCREEN BACKDROP BLUR (content below is fully unreadable) */}
           <div
             className="absolute inset-0"
             style={{
-              backdropFilter: "blur(22px) saturate(150%)",
-              WebkitBackdropFilter: "blur(22px) saturate(150%)",
+              backdropFilter: "blur(24px) saturate(160%)",
+              WebkitBackdropFilter: "blur(24px) saturate(160%)",
               background:
-                "radial-gradient(1200px 600px at 10% -10%, rgba(14,165,233,0.18), transparent 60%), radial-gradient(900px 480px at 90% 0%, rgba(255,255,255,0.10), transparent 60%), rgba(0,0,0,0.35)"
+                "radial-gradient(1200px 600px at 10% -10%, rgba(14,165,233,0.18), transparent 60%), radial-gradient(900px 480px at 90% 0%, rgba(255,255,255,0.10), transparent 60%), rgba(0,0,0,0.40)"
             }}
           />
-
-          {/* subtle grain (prevents banding) */}
           <div
             className="pointer-events-none absolute inset-0 opacity-70"
             style={{
@@ -148,36 +122,26 @@ export default function Splash({
 
           {/* CENTER: pulsing logo above a moving bar */}
           <div className="relative z-10 flex h-full flex-col items-center justify-center p-6">
-            <m.img
+            {/* pulsing wordmark — always visible */}
+            <img
               src={wordmark}
               alt="isaac seiler"
-              className="max-w-[70vw] md:max-w-[46vw] select-none"
+              className="max-w-[70vw] md:max-w-[46vw] select-none splash-pulse"
               draggable={false}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: [1, 1.012, 1] }}
-              transition={{
-                duration: prefersReduced ? 0.2 : 1.4,
-                ease: [0.2, 0, 0, 1],
-                repeat: prefersReduced ? 0 : Infinity,
-                repeatDelay: 1.6
-              }}
             />
 
-            {/* progress bar */}
+            {/* determinate progress bar */}
             <div className="mt-8 w-[72vw] max-w-[560px]">
               <div className="relative h-[4px] w-full overflow-hidden rounded-full border border-subtle/60 bg-[color:var(--color-bg)]/35 backdrop-blur">
-                <m.div
+                <div
                   className="absolute left-0 top-0 h-full"
                   style={{
                     width: `${pct}%`,
-                    background:
-                      "linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,.95))"
+                    transition: "width 180ms ease",
+                    background: "linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,.95))"
                   }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.18 }}
                 />
-                {/* glow sweep */}
+                {/* glow sweep (indeterminate accent) */}
                 <div
                   className="pointer-events-none absolute inset-0"
                   style={{
@@ -195,6 +159,15 @@ export default function Splash({
             @keyframes sweep {
               0% { background-position: 200% 0; }
               100% { background-position: -200% 0; }
+            }
+            @keyframes pulseLogo {
+              0% { transform: scale(1); opacity: 1; }
+              50% { transform: scale(1.012); opacity: 0.96; }
+              100% { transform: scale(1); opacity: 1; }
+            }
+            .splash-pulse {
+              animation: pulseLogo 1400ms ease-in-out infinite;
+              will-change: transform, opacity;
             }
           `}</style>
         </m.div>
