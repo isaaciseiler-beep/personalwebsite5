@@ -26,7 +26,7 @@
     "summary": "micro-interactions for clarity and delight.",
     "image": "/images/sample4.svg",
     "tags": ["ui", "motion"],
-    "year": 2023"
+    "year": 2023
   },
 
   { "slug": "photo-01", "kind": "photo", "title": "photo 1", "image": "https://isaacs-portfolio.r2.dev/images/photo-01.jpg", "location": "Cape Bitou, Taiwan" },
