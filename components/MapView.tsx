@@ -1,24 +1,20 @@
 // components/MapView.tsx — FULL REPLACEMENT
-// Visible, cluster-enabled map at top of photos page.
-// Uses Source/Layer for clustering; no wheel zoom; theme-aware.
+// Always shows a map container. Renders fallbacks if token or points are missing.
 
 "use client";
 
 import "mapbox-gl/dist/mapbox-gl.css";
-import Map, { MapRef, Marker, Popup, Source, Layer } from "react-map-gl";
+import Map, { MapRef, Marker, Popup } from "react-map-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/types/project";
 
 function useTheme(): "dark" | "light" {
   const [t, setT] = useState<"dark" | "light">(
-    (typeof document !== "undefined" &&
-      (document.documentElement.getAttribute("data-theme") as "dark" | "light")) || "dark"
+    (document?.documentElement.getAttribute("data-theme") as "dark" | "light") || "dark"
   );
   useEffect(() => {
     const el = document.documentElement;
-    const obs = new MutationObserver(() => {
-      setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
-    });
+    const obs = new MutationObserver(() => setT(el.getAttribute("data-theme") === "light" ? "light" : "dark"));
     obs.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
     return () => obs.disconnect();
   }, []);
@@ -32,87 +28,86 @@ export default function MapView({
   photos: Project[];
   height?: number;
 }) {
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const theme = useTheme();
   const mapRef = useRef<MapRef | null>(null);
   const [sel, setSel] = useState<string | null>(null);
 
   const points = useMemo(
     () =>
-      photos
+      (photos || [])
         .filter((p) => typeof p.lat === "number" && typeof p.lng === "number")
-        .map((p) => ({
-          type: "Feature",
-          geometry: { type: "Point", coordinates: [Number(p.lng), Number(p.lat)] },
-          properties: { slug: p.slug, title: p.title, location: p.location }
-        })),
+        .map((p) => ({ slug: p.slug, title: p.title, location: p.location, lng: Number(p.lng), lat: Number(p.lat) })),
     [photos]
   );
 
-  if (points.length === 0) return null;
+  const initial = points.length
+    ? { longitude: points[0].lng, latitude: points[0].lat, zoom: 3 }
+    : { longitude: 0, latitude: 20, zoom: 1.5 }; // world fallback
 
   const mapStyle = theme === "light" ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11";
-  const geojson = { type: "FeatureCollection", features: points } as any;
+
+  // resize on mount to avoid invisible canvas
+  useEffect(() => {
+    const id = setTimeout(() => mapRef.current?.resize(), 150);
+    return () => clearTimeout(id);
+  }, []);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-subtle" style={{ height }}>
-      <Map
-        ref={mapRef}
-        initialViewState={{ longitude: (points[0].geometry.coordinates as number[])[0], latitude: (points[0].geometry.coordinates as number[])[1], zoom: 3 }}
-        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-        mapStyle={mapStyle}
-        style={{ width: "100%", height: "100%" }}
-        scrollZoom={false}
-        doubleClickZoom={false}
-        touchZoomRotate={false}
-        dragRotate={false}
-        attributionControl
-      >
-        {/* cluster source */}
-        <Source
-          id="photos"
-          type="geojson"
-          data={geojson}
-          cluster={true}
-          clusterMaxZoom={9}
-          clusterRadius={40}
+    <div className="relative overflow-hidden rounded-xl border border-subtle" style={{ height }}>
+      {!token ? (
+        <div className="flex h-full items-center justify-center text-sm text-muted">
+          set NEXT_PUBLIC_MAPBOX_TOKEN to show the map
+        </div>
+      ) : (
+        <Map
+          ref={mapRef}
+          initialViewState={initial}
+          mapboxAccessToken={token}
+          mapStyle={mapStyle}
+          style={{ width: "100%", height: "100%" }}
+          scrollZoom={false}
+          doubleClickZoom={false}
+          touchZoomRotate={false}
+          dragRotate={false}
+          attributionControl
         >
-          {/* cluster circles */}
-          <Layer
-            id="clusters"
-            type="circle"
-            filter={["has", "point_count"]}
-            paint={{
-              "circle-color": theme === "light" ? "#0b0b0c" : "#ffffff",
-              "circle-opacity": 0.7,
-              "circle-radius": 14
-            }}
-          />
-          {/* cluster count */}
-          <Layer
-            id="cluster-count"
-            type="symbol"
-            filter={["has", "point_count"]}
-            layout={{ "text-field": "{point_count_abbreviated}", "text-size": 12 }}
-            paint={{ "text-color": theme === "light" ? "#ffffff" : "#0b0b0c" }}
-          />
-          {/* unclustered points */}
-          <Layer
-            id="unclustered-point"
-            type="circle"
-            filter={["!", ["has", "point_count"]]}
-            paint={{
-              "circle-color": theme === "light" ? "#0b0b0c" : "#ffffff",
-              "circle-radius": 6,
-              "circle-stroke-width": 2,
-              "circle-stroke-color": theme === "light" ? "#ffffff" : "#0b0b0c"
-            }}
-          />
-        </Source>
+          {points.map((p) => (
+            <Marker key={p.slug} longitude={p.lng} latitude={p.lat}>
+              <button
+                className="relative h-3.5 w-3.5 rounded-full bg-white shadow-[0_0_0_2px_rgba(14,165,233,0.9)]"
+                aria-label={`show ${p.location ?? p.title}`}
+                onClick={() => setSel(p.slug)}
+              >
+                <span className="pointer-events-none absolute inset-0 animate-ping rounded-full bg-[color:var(--color-accent)]/40" />
+              </button>
+            </Marker>
+          ))}
+          {sel &&
+            (() => {
+              const p = points.find((x) => x.slug === sel)!;
+              return (
+                <Popup
+                  longitude={p.lng}
+                  latitude={p.lat}
+                  onClose={() => setSel(null)}
+                  closeButton
+                  closeOnClick={false}
+                  offset={10}
+                  anchor="bottom"
+                >
+                  <div className="text-sm">{p.location ?? p.title}</div>
+                </Popup>
+              );
+            })()}
+        </Map>
+      )}
 
-        {/* click popups from rendered features */}
-        <div className="hidden" />{/* keep React happy */}
-        {/* we attach a click handler via onClick prop */}
-      </Map>
+      {token && !points.length && (
+        <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-muted">
+          no geotagged photos to show
+        </div>
+      )}
     </div>
   );
 }
