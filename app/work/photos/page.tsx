@@ -1,10 +1,11 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT (3-column square grid + load more)
+// app/work/photos/page.tsx — FULL REPLACEMENT (map visible + grid + lightbox captions)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { PageTransition } from "@/components/PageTransition";
 import Reveal from "@/components/Reveal";
 import PhotoCard from "@/components/PhotoCard";
+import MapView from "@/components/MapView";
 import data from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import { Lightbox } from "@/components/Lightbox";
@@ -16,21 +17,23 @@ export default function PhotosPage() {
   const [visible, setVisible] = useState(12);
   const shown = useMemo(() => all.slice(0, visible), [all, visible]);
 
-  const [lightbox, setLightbox] = useState<{ open: boolean; index: number }>({ open: false, index: 0 });
-  const gallery = shown.map((p) => ({ src: p.image ?? "", alt: p.title }));
+  // lightbox
+  const [open, setOpen] = useState(false);
+  const [idx, setIdx] = useState(0);
+  const items = shown.map((p) => ({ src: p.image ?? "", alt: p.title, caption: p.location || p.title }));
 
   return (
     <PageTransition>
       <Reveal><h1 className="text-2xl font-semibold tracking-tight">photos</h1></Reveal>
 
-      {/* 3 per row on md+; square cards via aspect-square in PhotoCard */}
+      {/* visible map */}
+      <Reveal><div className="mt-6"><MapView photos={shown} /></div></Reveal>
+
+      {/* 3-col square grid */}
       <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
         {shown.map((item, i) => (
           <Reveal key={item.slug} delay={i * 0.03}>
-            <PhotoCard
-              item={item}
-              onClick={() => setLightbox({ open: true, index: i })}
-            />
+            <PhotoCard item={item} onClick={() => { setIdx(i); setOpen(true); }} />
           </Reveal>
         ))}
       </div>
@@ -46,13 +49,7 @@ export default function PhotosPage() {
         </div>
       )}
 
-      <Lightbox
-        open={lightbox.open}
-        items={gallery}
-        index={lightbox.index}
-        setIndex={(i) => setLightbox((s) => ({ ...s, index: i }))}
-        onClose={() => setLightbox({ open: false, index: 0 })}
-      />
+      <Lightbox open={open} items={items} index={idx} setIndex={setIdx} onClose={() => setOpen(false)} />
     </PageTransition>
   );
 }
