@@ -1,35 +1,42 @@
+// components/PhotoCard.tsx — FULL REPLACEMENT
 "use client";
 
-import ShimmerImage from "@/components/ShimmerImage";
-import CursorTilt from "@/components/CursorTilt";
+import Image from "next/image";
 import type { Project } from "@/types/project";
 
-type Props = { item: Project; onClick?: (src: string, alt: string) => void };
+type Props = {
+  item: Project;                    // kind: "photo"
+  onClick?: (src: string, alt: string) => void;
+};
 
 export default function PhotoCard({ item, onClick }: Props) {
+  const src = item.image || "";
+
   return (
-    <button aria-label={`view ${item.title}`} className="block h-full text-left" onClick={() => onClick?.(item.image ?? "", item.title)}>
-      <CursorTilt className="h-full" maxTiltDeg={5} scale={1.01}>
-        <div className="overflow-hidden rounded-xl border border-subtle bg-card">
-          {item.image && (
-            <ShimmerImage
-              src={item.image}
-              alt={item.title}
-              width={1600}
-              height={1200}
-              className="h-72 w-full object-cover"
-              loading="lazy"
-              sizes="(min-width: 768px) 33vw, 100vw"
-            />
-          )}
-          <div className="flex items-center justify-between p-3">
-            <div className="text-sm text-muted">{item.title}</div>
-            {item.location && (
-              <span className="rounded-full border border-subtle px-2 py-0.5 text-xs text-muted">{item.location}</span>
-            )}
+    <button
+      aria-label={`view ${item.title}`}
+      className="block w-full text-left"
+      onClick={() => onClick?.(src, item.title)}
+    >
+      <div className="relative aspect-square overflow-hidden rounded-xl border border-subtle bg-card">
+        {/* image fills the square; centered */}
+        {src && (
+          <Image
+            src={src}
+            alt={item.title}
+            fill
+            sizes="(min-width: 768px) 33vw, 100vw"
+            className="object-cover"
+            priority={false}
+          />
+        )}
+        {/* bottom label */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2">
+          <div className="rounded-full border border-subtle bg-[color:var(--color-bg)]/60 px-2 py-0.5 text-xs backdrop-blur">
+            {item.location || item.title}
           </div>
         </div>
-      </CursorTilt>
+      </div>
     </button>
   );
 }
