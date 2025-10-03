@@ -1,4 +1,3 @@
-// app/layout.tsx — FULL REPLACEMENT (adds <link rel="preconnect">)
 import type { Metadata } from "next";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
@@ -6,6 +5,14 @@ import Footer from "@/components/Footer";
 import RouteProgress from "@/components/RouteProgress";
 import ScrollProgress from "@/components/ScrollProgress";
 import ThemeScript from "@/components/ThemeScript";
+import Splash from "@/components/Splash";
+import projects from "@/data/projects.json";
+
+// grab a few above-the-fold photo URLs to preload in splash
+const preloadUrls = (projects as Array<any>)
+  .filter((p) => p.kind === "photo" && typeof p.image === "string")
+  .slice(0, 6)
+  .map((p) => p.image);
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://personalwebsite5.vercel.app"),
@@ -26,13 +33,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <ThemeScript />
         {/* preconnect to R2 for faster first image */}
-        <link
-          rel="preconnect"
-          href="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev"
-          crossOrigin=""
-        />
+        <link rel="preconnect" href="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev" crossOrigin="" />
       </head>
       <body className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-fg)] selection:bg-[color:var(--color-accent)]/20 selection:text-[var(--color-fg)]">
+        {/* cinematic splash (fires on each hard load / fresh visit) */}
+        <Splash
+          preloadUrls={preloadUrls}
+          wordmarkDark="/isaacseiler-darkmode.png"
+          wordmarkLight="/isaacseiler-lightmode.png"
+          maxDurationMs={2500}
+        />
+
         <RouteProgress />
         <ScrollProgress />
         <Nav />
