@@ -1,4 +1,6 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT (map visible + square grid + lightbox with captions)
+// app/work/photos/page.tsx — FULL REPLACEMENT
+// Two-per-row 16:9 grid, map visible on top, lightbox unchanged.
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -29,11 +31,15 @@ export default function PhotosPage() {
       {/* visible map with clusters */}
       <Reveal><div className="mt-6"><MapView photos={shown} /></div></Reveal>
 
-      {/* 3-col square grid */}
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+      {/* 16:9 grid, 2 per row on sm+ */}
+      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2">
         {shown.map((item, i) => (
           <Reveal key={item.slug} delay={i * 0.03}>
-            <PhotoCard item={item} onClick={() => { setIdx(i); setOpen(true); }} />
+            <PhotoCard
+              item={item}
+              ratio="video"
+              onClick={() => { setIdx(i); setOpen(true); }}
+            />
           </Reveal>
         ))}
       </div>
