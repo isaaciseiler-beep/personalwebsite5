@@ -1,16 +1,14 @@
 // components/MapView.tsx — FULL REPLACEMENT
-// Theme-aware, smooth expand/collapse, fit-to-points, pulsing pins,
-// click popups (location-only), custom zoom controls, no wheel zoom.
-// Works even if some photos have no lat/lng.
+// (uses mapbox-gl's LngLatBounds; no other behavior changed)
 
 "use client";
 
 import "mapbox-gl/dist/mapbox-gl.css";
-import Map, { Marker, Popup, MapRef, ViewState, LngLatBounds } from "react-map-gl";
+import Map, { Marker, Popup, MapRef, ViewState } from "react-map-gl";
+import mapboxgl from "mapbox-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/types/project";
 
-// ---- theme hook (reads <html data-theme="...">) -----------------------------
 function useTheme(): "dark" | "light" {
   const [t, setT] = useState<"dark" | "light">(
     (typeof document !== "undefined" &&
@@ -27,17 +25,15 @@ function useTheme(): "dark" | "light" {
   return t;
 }
 
-// ---- helpers ----------------------------------------------------------------
 function fitBoundsToPoints(points: Array<{ lng: number; lat: number }>) {
   if (points.length === 0) return undefined;
   if (points.length === 1) {
     return { longitude: points[0].lng, latitude: points[0].lat, zoom: 6 } as ViewState;
   }
-  const b = new LngLatBounds();
+  const b = new mapboxgl.LngLatBounds();
   points.forEach((p) => b.extend([p.lng, p.lat]));
   const sw = b.getSouthWest();
   const ne = b.getNorthEast();
-  // center
   const longitude = (sw.lng + ne.lng) / 2;
   const latitude = (sw.lat + ne.lat) / 2;
   return { longitude, latitude, zoom: 3.5 } as ViewState;
@@ -62,36 +58,25 @@ export default function MapView({
     () =>
       photos
         .filter((p) => typeof p.lat === "number" && typeof p.lng === "number")
-        .map((p) => ({
-          slug: p.slug,
-          title: p.title,
-          location: p.location,
-          lng: Number(p.lng),
-          lat: Number(p.lat)
-        })),
+        .map((p) => ({ slug: p.slug, title: p.title, location: p.location, lng: Number(p.lng), lat: Number(p.lat) })),
     [photos]
   );
 
   const initial = useMemo(() => fitBoundsToPoints(points.map(({ lng, lat }) => ({ lng, lat }))), [points]);
   const mapStyle = theme === "light" ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11";
 
-  // resize/fit on expand
   useEffect(() => {
     if (!mapRef.current) return;
     const id = window.setTimeout(() => {
       mapRef.current?.resize();
-      if (points.length > 1 && initial) {
-        mapRef.current?.fitBounds(
-          [
-            [Math.min(...points.map((p) => p.lng)), Math.min(...points.map((p) => p.lat))],
-            [Math.max(...points.map((p) => p.lng)), Math.max(...points.map((p) => p.lat))]
-          ],
-          { padding: 40, duration: 300 }
-        );
+      if (points.length > 1) {
+        const b = new mapboxgl.LngLatBounds();
+        points.forEach((p) => b.extend([p.lng, p.lat]));
+        mapRef.current?.fitBounds(b, { padding: 40, duration: 300 });
       }
     }, 260);
     return () => window.clearTimeout(id);
-  }, [expanded, initial, points]);
+  }, [expanded, points]);
 
   if (points.length === 0) return null;
 
@@ -112,7 +97,6 @@ export default function MapView({
         dragRotate={false}
         attributionControl
       >
-        {/* zoom controls (top-right) */}
         <div className="absolute right-2 top-2 z-10 flex flex-col gap-2">
           <button
             onClick={() => {
@@ -138,7 +122,6 @@ export default function MapView({
           </button>
         </div>
 
-        {/* pulsing pins */}
         {points.map((p) => (
           <Marker key={p.slug} longitude={p.lng} latitude={p.lat}>
             <button
@@ -151,7 +134,6 @@ export default function MapView({
           </Marker>
         ))}
 
-        {/* location-only popup */}
         {sel &&
           (() => {
             const p = points.find((x) => x.slug === sel)!;
@@ -171,7 +153,6 @@ export default function MapView({
           })()}
       </Map>
 
-      {/* expand/collapse chevron (bottom-center) */}
       <button
         onClick={() => setExpanded((v) => !v)}
         className="absolute bottom-1 left-1/2 z-10 -translate-x-1/2 rounded-full border border-subtle bg-[color:var(--color-bg)]/70 px-2 py-0.5 text-xs backdrop-blur hover:border-[color:var(--color-accent)]/60"
