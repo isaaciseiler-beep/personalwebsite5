@@ -1,7 +1,3 @@
-// components/Splash.tsx — FULL REPLACEMENT
-// World-class splash: full-screen blur field, pulsing wordmark, real progress bar,
-// no skip, dissolves to the app by un-blurring #app-root.
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -40,37 +36,44 @@ export default function Splash({
   const prefersReduced = useReducedMotion();
   const [visible, setVisible] = useState(true);
 
-  const [progress, setProgress] = useState(0); // 0..1
+  // progress 0..1 with smooth tween
+  const [progress, setProgress] = useState(0);
   const targetRef = useRef(0);
   const rafRef = useRef<number | null>(null);
 
-  // smooth tween toward target
-  const tick = () => {
+  const tween = () => {
     setProgress((p) => {
       const next = p + (targetRef.current - p) * 0.16;
       if (Math.abs(next - targetRef.current) < 0.003) return targetRef.current;
-      rafRef.current = requestAnimationFrame(tick);
+      rafRef.current = requestAnimationFrame(tween);
       return next;
     });
   };
 
-  // preload real assets & drive bar
+  // preload real assets AND time-based ramp so bar always moves
   useEffect(() => {
     if (prefersReduced) {
-      // no motion: short hold then reveal
-      const id = setTimeout(() => finish(), 400);
+      const id = setTimeout(finish, 500);
       return () => clearTimeout(id);
     }
 
+    // 1) time-based ramp to 90%
+    const ramp = setInterval(() => {
+      const cap = 0.92;
+      targetRef.current = Math.min(cap, targetRef.current + 0.02);
+      if (!rafRef.current) rafRef.current = requestAnimationFrame(tween);
+    }, 90);
+
+    // 2) real preloads push target further
     const urls = Array.from(new Set(preloadUrls)).filter(Boolean);
-    const total = urls.length || 4;
     let done = 0;
+    const total = urls.length || 4;
 
     const step = () => {
       done += 1;
-      // grow to 95% max; final jump to 100 at finish()
-      targetRef.current = Math.min(0.95, Math.max(targetRef.current, done / total));
-      if (!rafRef.current) rafRef.current = requestAnimationFrame(tick);
+      const pct = done / total;
+      targetRef.current = Math.max(targetRef.current, Math.min(0.95, pct));
+      if (!rafRef.current) rafRef.current = requestAnimationFrame(tween);
     };
 
     if (urls.length) {
@@ -86,22 +89,23 @@ export default function Splash({
       setTimeout(() => clearInterval(fake), 900);
     }
 
-    // hard cap
-    const cap = setTimeout(() => finish(), maxDurationMs);
+    // 3) hard cap
+    const cap = setTimeout(finish, maxDurationMs);
+
     return () => {
+      clearInterval(ramp);
       clearTimeout(cap);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preloadUrls, prefersReduced, maxDurationMs]);
 
-  // reveal function: push progress to 100, then hide splash and reveal app root
   function finish() {
     targetRef.current = 1;
-    if (!rafRef.current) rafRef.current = requestAnimationFrame(tick);
+    if (!rafRef.current) rafRef.current = requestAnimationFrame(tween);
     setTimeout(() => {
       setVisible(false);
-      // reveal app content
+      // unblur + reveal app root
       const el = document.getElementById(revealTargetId);
       if (el) el.classList.add("ready");
     }, 220);
@@ -121,31 +125,29 @@ export default function Splash({
           exit={{ opacity: 0 }}
           transition={{ duration: prefersReduced ? 0.2 : 0.45, ease: [0.2, 0, 0, 1] }}
         >
-          {/* full-screen blur field */}
-          <div className="absolute inset-0">
-            <div
-              className="absolute inset-0 opacity-95"
-              style={{
-                background:
-                  "radial-gradient(1200px 600px at 10% -10%, rgba(14,165,233,0.18), transparent 60%), radial-gradient(900px 480px at 90% 0%, rgba(255,255,255,0.10), transparent 60%)",
-                filter: "blur(28px) saturate(150%)"
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.02'/></svg>\")",
-                backgroundSize: "180px 180px"
-              }}
-            />
-            {/* subtle dark veil so content beneath is unreadable */}
-            <div className="absolute inset-0 bg-black/50" />
-          </div>
+          {/* FULL-SCREEN BACKDROP BLUR over the entire page */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backdropFilter: "blur(22px) saturate(150%)",
+              WebkitBackdropFilter: "blur(22px) saturate(150%)",
+              background:
+                "radial-gradient(1200px 600px at 10% -10%, rgba(14,165,233,0.18), transparent 60%), radial-gradient(900px 480px at 90% 0%, rgba(255,255,255,0.10), transparent 60%), rgba(0,0,0,0.35)"
+            }}
+          />
 
-          {/* centered content */}
+          {/* subtle grain (prevents banding) */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-70"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.02'/></svg>\")",
+              backgroundSize: "180px 180px"
+            }}
+          />
+
+          {/* CENTER: pulsing logo above a moving bar */}
           <div className="relative z-10 flex h-full flex-col items-center justify-center p-6">
-            {/* pulsing wordmark */}
             <m.img
               src={wordmark}
               alt="isaac seiler"
@@ -161,7 +163,7 @@ export default function Splash({
               }}
             />
 
-            {/* progress bar with real width */}
+            {/* progress bar */}
             <div className="mt-8 w-[72vw] max-w-[560px]">
               <div className="relative h-[4px] w-full overflow-hidden rounded-full border border-subtle/60 bg-[color:var(--color-bg)]/35 backdrop-blur">
                 <m.div
