@@ -1,11 +1,10 @@
-// components/Nav.tsx — FULL REPLACEMENT (blurred, theme-aware translucent header)
+// components/Nav.tsx
 "use client";
 
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import ThemeToggle from "@/components/ThemeToggle";
 import ThemeLogo from "@/components/ThemeLogo";
 
 const MotionSpan = motion.span;
@@ -44,22 +43,19 @@ export function Nav() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50">
-        {/* glass overlay with real blur; theme-aware */}
+        {/* theme-aware glass overlay (keeps blur) */}
         <div
           aria-hidden
-          className="
-            absolute inset-0 pointer-events-none
-            bg-white/70 dark:bg-neutral-900/60
-            border-b border-white/20 dark:border-white/10
-            supports-[backdrop-filter]:backdrop-blur-xl
-            supports-[backdrop-filter]:backdrop-saturate-150
-          "
+          className="absolute inset-0 pointer-events-none"
           style={{
-            WebkitBackdropFilter: "blur(16px) saturate(140%)", // safari fallback
+            background: "var(--color-bg)",
+            opacity: 0.75,
             backdropFilter: "blur(16px) saturate(140%)",
+            WebkitBackdropFilter: "blur(16px) saturate(140%)",
+            borderBottom: "1px solid var(--color-border)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.15)"
           }}
         />
-
         <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
           <a href="#content" className="skip-link">skip to content</a>
 
@@ -72,16 +68,14 @@ export function Nav() {
 
           <nav className="hidden md:flex items-center gap-4">
             <NavLinks />
-            <ThemeToggle />
           </nav>
 
           <div className="md:hidden flex items-center gap-2">
-            <ThemeToggle />
             <button
               className="rounded-xl border border-subtle p-2"
               aria-label="toggle menu"
               aria-expanded={open}
-              onClick={() => setOpen((v) => !v)}
+              onClick={() => setOpen(v => !v)}
             >
               {open ? <X size={18} /> : <Menu size={18} />}
             </button>
