@@ -1,6 +1,4 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT
-// Two-per-row 16:9 grid, map visible on top, lightbox unchanged.
-
+// app/work/photos/page.tsx — FULL REPLACEMENT (only the map feed changed)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -19,7 +17,12 @@ export default function PhotosPage() {
   const [visible, setVisible] = useState(12);
   const shown = useMemo(() => all.slice(0, visible), [all, visible]);
 
-  // lightbox
+  // map must get ALL geotagged photos, not just `shown`
+  const withCoords = useMemo(
+    () => all.filter((p) => typeof p.lat === "number" && typeof p.lng === "number"),
+    [all]
+  );
+
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
   const items = shown.map((p) => ({ src: p.image ?? "", alt: p.title, caption: p.location || p.title }));
@@ -28,10 +31,10 @@ export default function PhotosPage() {
     <PageTransition>
       <Reveal><h1 className="text-2xl font-semibold tracking-tight">photos</h1></Reveal>
 
-      {/* visible map with clusters */}
-      <Reveal><div className="mt-6"><MapView photos={shown} /></div></Reveal>
+      {/* map now receives all geotagged items */}
+      <Reveal><div className="mt-6"><MapView photos={withCoords} /></div></Reveal>
 
-      {/* 16:9 grid, 2 per row on sm+ */}
+      {/* grid (16:9, two per row as requested previously) */}
       <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2">
         {shown.map((item, i) => (
           <Reveal key={item.slug} delay={i * 0.03}>
