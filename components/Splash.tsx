@@ -1,16 +1,14 @@
 // components/Splash.tsx — FULL REPLACEMENT
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { m, AnimatePresence } from "framer-motion";
 
 function useTheme(): "dark" | "light" {
   const [t, setT] = useState<"dark" | "light">("dark");
   useEffect(() => {
-    if (typeof document === "undefined") return;
     const el = document.documentElement;
-    const set = () =>
-      setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
+    const set = () => setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
     set();
     const obs = new MutationObserver(set);
     obs.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
@@ -19,12 +17,26 @@ function useTheme(): "dark" | "light" {
   return t;
 }
 
+function useReducedMotion() {
+  const [pref, setPref] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setPref(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return pref;
+}
+
 type Props = {
   preloadUrls?: string[];
   logoLight?: string;
   logoDark?: string;
   maxDurationMs?: number;
   revealTargetId?: string;
+  onDone?: () => void;
+  showSkip?: boolean;
 };
 
 export default function Splash({
@@ -33,10 +45,28 @@ export default function Splash({
   logoDark = "/logo-light.png",
   maxDurationMs = 2400,
   revealTargetId = "app-root",
+  onDone,
+  showSkip = true,
 }: Props) {
   const theme = useTheme();
+  const reduce = useReducedMotion();
   const [visible, setVisible] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [canSkip, setCanSkip] = useState(false);
+  const [flash, setFlash] = useState(false);
+  const doneRef = useRef(false);
+
+  const steps = useMemo(
+    () => [
+      "Warming up UI",
+      "Linking modules",
+      " priming models",
+      "Optimizing assets",
+      "Final checks",
+    ],
+    []
+  );
+  const stepIndex = Math.min(steps.length - 1, Math.floor(progress * steps.length));
 
   useEffect(() => {
     let done = 0;
@@ -44,7 +74,12 @@ export default function Splash({
     const total = urls.length || 4;
 
     const ramp = setInterval(() => {
-      setProgress((p) => Math.min(0.92, p + 0.02));
+      setProgress((p) => {
+        // ease toward 0.98 asymptotically
+        const target = 0.98;
+        const next = p + (target - p) * 0.08;
+        return Math.min(next, target);
+      });
     }, 90);
 
     const step = () => {
@@ -63,21 +98,44 @@ export default function Splash({
     }
 
     const cap = setTimeout(() => finish(), maxDurationMs);
+    const allowSkip = setTimeout(() => setCanSkip(true), 900);
+
     return () => {
       clearInterval(ramp);
       clearTimeout(cap);
+      clearTimeout(allowSkip);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preloadUrls, maxDurationMs]);
 
+  function completeAndHide() {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    setVisible(false);
+    const el = document.getElementById(revealTargetId);
+    if (el) el.classList.add("ready");
+    onDone?.();
+  }
+
   function finish() {
     setProgress(1);
-    setTimeout(() => {
-      setVisible(false);
-      const el = document.getElementById(revealTargetId);
-      if (el) el.classList.add("ready");
-    }, 220);
+    // brief flash effect
+    if (!reduce) {
+      setFlash(true);
+      setTimeout(() => setFlash(false), 220);
+    }
+    setTimeout(completeAndHide, 240);
   }
+
+  // Keyboard: Enter/Escape to skip when allowed
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!canSkip || !visible) return;
+      if (e.key === "Enter" || e.key === "Escape") finish();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [canSkip, visible]);
 
   const pct = Math.round(progress * 100);
   const logoSrc = theme === "light" ? logoLight : logoDark;
@@ -87,39 +145,61 @@ export default function Splash({
       {visible && (
         <m.div
           className="fixed inset-0 z-[100] overflow-hidden"
-          aria-hidden
+          aria-hidden={false}
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.45, ease: [0.2, 0, 0, 1] }}
+          transition={{ duration: 0.38, ease: [0.2, 0, 0, 1] }}
         >
           {/* blurred backdrop */}
           <div
             className="absolute inset-0"
             style={{
-              backdropFilter: "blur(24px) saturate(160%)",
-              WebkitBackdropFilter: "blur(24px) saturate(160%)",
+              backdropFilter: reduce ? "none" : "blur(24px) saturate(160%)",
+              WebkitBackdropFilter: reduce ? "none" : "blur(24px) saturate(160%)",
               background:
                 "radial-gradient(1200px 600px at 10% -10%, rgba(14,165,233,0.18), transparent 60%), radial-gradient(900px 480px at 90% 0%, rgba(255,255,255,0.10), transparent 60%), rgba(0,0,0,0.40)",
             }}
           />
 
+          {/* ambient gradient drift */}
+          {!reduce && (
+            <div
+              className="pointer-events-none absolute -inset-8 opacity-30"
+              style={{
+                background:
+                  "radial-gradient(60% 40% at 70% 30%, rgba(14,165,233,0.12), transparent 60%), radial-gradient(40% 30% at 20% 70%, rgba(255,255,255,0.06), transparent 60%)",
+                animation: "bg-drift 14s ease-in-out infinite",
+              }}
+            />
+          )}
+
           {/* content */}
           <div className="relative z-10 flex h-full flex-col items-center justify-center p-6">
+            {/* logo */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <m.img
               src={logoSrc}
               alt="site logo"
-              width={44} // 50% smaller than before (was 88)
-              height={44}
-              className="select-none splash-pulse"
+              width={52}
+              height={52}
+              className="select-none"
               draggable={false}
-              style={{ width: 44, height: 44, objectFit: "contain" }}
+              style={{ width: 52, height: 52, objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25))" }}
+              animate={reduce ? {} : { scale: [1, 1.06, 1] }}
+              transition={reduce ? {} : { duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            {/* progress bar (no outline) */}
+            {/* progress bar + a11y */}
             <div className="mt-12 w-[72vw] max-w-[560px]">
-              <div className="relative h-[4px] w-full overflow-hidden rounded-full bg-white/30 backdrop-blur">
+              <div
+                className="relative h-[4px] w-full overflow-hidden rounded-full bg-white/30 backdrop-blur"
+                role="progressbar"
+                aria-label="Loading"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={pct}
+              >
                 <div
                   className="absolute left-0 top-0 h-full"
                   style={{
@@ -129,46 +209,74 @@ export default function Splash({
                       "linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,.95))",
                   }}
                 />
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,0) 90%)",
-                    backgroundSize: "200% 100%",
-                    animation: "sweep 1.3s linear infinite",
-                  }}
-                />
+                {!reduce && (
+                  <div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.10) 45%, rgba(255,255,255,0) 90%)",
+                      backgroundSize: "200% 100%",
+                      animation: "sweep 1.3s linear infinite",
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* status line */}
+              <div className="mt-3 flex items-center justify-between text-xs text-white/70">
+                <AnimatePresence mode="wait">
+                  <m.span
+                    key={stepIndex}
+                    initial={{ y: 8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -8, opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    {steps[stepIndex]}
+                  </m.span>
+                </AnimatePresence>
+                <span aria-hidden>{pct}%</span>
               </div>
             </div>
+
+            {/* skip */}
+            {showSkip && canSkip && (
+              <button
+                type="button"
+                onClick={finish}
+                className="mt-10 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs text-white/80 backdrop-blur hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"
+              >
+                Skip
+              </button>
+            )}
           </div>
+
+          {/* outro flash */}
+          <AnimatePresence>
+            {flash && !reduce && (
+              <m.div
+                className="pointer-events-none absolute inset-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.55 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.22 }}
+                style={{
+                  background:
+                    "radial-gradient(600px 600px at 50% 50%, rgba(255,255,255,0.9), rgba(255,255,255,0.0) 60%)",
+                }}
+              />
+            )}
+          </AnimatePresence>
 
           <style jsx global>{`
             @keyframes sweep {
-              0% {
-                background-position: 200% 0;
-              }
-              100% {
-                background-position: -200% 0;
-              }
+              0% { background-position: 200% 0; }
+              100% { background-position: -200% 0; }
             }
-            @keyframes pulseLogo {
-              0% {
-                transform: scale(1);
-                opacity: 1;
-              }
-              50% {
-                transform: scale(1.08);
-                opacity: 0.92;
-              }
-              100% {
-                transform: scale(1);
-                opacity: 1;
-              }
-            }
-            .splash-pulse {
-              animation: pulseLogo 1200ms ease-in-out infinite;
-              will-change: transform, opacity;
-              filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+            @keyframes bg-drift {
+              0% { transform: translate3d(0,0,0) }
+              50% { transform: translate3d(0,-2%,0) }
+              100% { transform: translate3d(0,0,0) }
             }
           `}</style>
         </m.div>
