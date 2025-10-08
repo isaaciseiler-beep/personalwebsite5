@@ -1,4 +1,4 @@
-// components/Nav.tsx
+// components/Nav.tsx — FULL REPLACEMENT (opaque header)
 "use client";
 
 import Link from "next/link";
@@ -17,12 +17,20 @@ export function Nav() {
   const NavLinks = () => (
     <ul className="flex flex-col md:flex-row gap-6 md:gap-4 items-start md:items-center">
       <li>
-        <Link href="/experience" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
+        <Link
+          href="/experience"
+          prefetch
+          className="link-underline hover:text-[color:var(--color-accent)]"
+        >
           <MotionSpan whileHover={linkHover}>experience</MotionSpan>
         </Link>
       </li>
       <li>
-        <Link href="/work" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
+        <Link
+          href="/work"
+          prefetch
+          className="link-underline hover:text-[color:var(--color-accent)]"
+        >
           <MotionSpan whileHover={linkHover}>work</MotionSpan>
         </Link>
       </li>
@@ -43,23 +51,30 @@ export function Nav() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50">
-        {/* theme-aware glass overlay (keeps blur) */}
+        {/* solid opaque header background */}
         <div
           aria-hidden
           className="absolute inset-0 pointer-events-none"
           style={{
             background: "var(--color-bg)",
-            opacity: 0.75,
-            backdropFilter: "blur(16px) saturate(140%)",
-            WebkitBackdropFilter: "blur(16px) saturate(140%)",
+            opacity: 1,
+            backdropFilter: "none",
+            WebkitBackdropFilter: "none",
             borderBottom: "1px solid var(--color-border)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.15)"
+            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
           }}
         />
-        <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
-          <a href="#content" className="skip-link">skip to content</a>
 
-          <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
+        <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
+          <a href="#content" className="skip-link">
+            skip to content
+          </a>
+
+          <Link
+            href="/"
+            prefetch
+            className="flex items-center gap-2 font-semibold tracking-tight text-lg"
+          >
             <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
               <ThemeLogo size={42} />
             </motion.div>
@@ -75,7 +90,7 @@ export function Nav() {
               className="rounded-xl border border-subtle p-2"
               aria-label="toggle menu"
               aria-expanded={open}
-              onClick={() => setOpen(v => !v)}
+              onClick={() => setOpen((v) => !v)}
             >
               {open ? <X size={18} /> : <Menu size={18} />}
             </button>
