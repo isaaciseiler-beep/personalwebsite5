@@ -1,4 +1,4 @@
-// components/Splash.tsx — FULL REPLACEMENT
+// components/Splash.tsx — FULL REPLACEMENT (no Skip button)
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -36,7 +36,6 @@ type Props = {
   maxDurationMs?: number;
   revealTargetId?: string;
   onDone?: () => void;
-  showSkip?: boolean;
 };
 
 export default function Splash({
@@ -46,13 +45,11 @@ export default function Splash({
   maxDurationMs = 2400,
   revealTargetId = "app-root",
   onDone,
-  showSkip = true,
 }: Props) {
   const theme = useTheme();
   const reduce = useReducedMotion();
   const [visible, setVisible] = useState(true);
   const [progress, setProgress] = useState(0);
-  const [canSkip, setCanSkip] = useState(false);
   const [flash, setFlash] = useState(false);
   const doneRef = useRef(false);
 
@@ -60,7 +57,7 @@ export default function Splash({
     () => [
       "Warming up UI",
       "Linking modules",
-      " priming models",
+      "Priming models",
       "Optimizing assets",
       "Final checks",
     ],
@@ -75,7 +72,6 @@ export default function Splash({
 
     const ramp = setInterval(() => {
       setProgress((p) => {
-        // ease toward 0.98 asymptotically
         const target = 0.98;
         const next = p + (target - p) * 0.08;
         return Math.min(next, target);
@@ -98,12 +94,10 @@ export default function Splash({
     }
 
     const cap = setTimeout(() => finish(), maxDurationMs);
-    const allowSkip = setTimeout(() => setCanSkip(true), 900);
 
     return () => {
       clearInterval(ramp);
       clearTimeout(cap);
-      clearTimeout(allowSkip);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preloadUrls, maxDurationMs]);
@@ -119,23 +113,12 @@ export default function Splash({
 
   function finish() {
     setProgress(1);
-    // brief flash effect
     if (!reduce) {
       setFlash(true);
       setTimeout(() => setFlash(false), 220);
     }
     setTimeout(completeAndHide, 240);
   }
-
-  // Keyboard: Enter/Escape to skip when allowed
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (!canSkip || !visible) return;
-      if (e.key === "Enter" || e.key === "Escape") finish();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [canSkip, visible]);
 
   const pct = Math.round(progress * 100);
   const logoSrc = theme === "light" ? logoLight : logoDark;
@@ -185,12 +168,17 @@ export default function Splash({
               height={52}
               className="select-none"
               draggable={false}
-              style={{ width: 52, height: 52, objectFit: "contain", filter: "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25))" }}
+              style={{
+                width: 52,
+                height: 52,
+                objectFit: "contain",
+                filter: "drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25))",
+              }}
               animate={reduce ? {} : { scale: [1, 1.06, 1] }}
               transition={reduce ? {} : { duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            {/* progress bar + a11y */}
+            {/* progress bar + status */}
             <div className="mt-12 w-[72vw] max-w-[560px]">
               <div
                 className="relative h-[4px] w-full overflow-hidden rounded-full bg-white/30 backdrop-blur"
@@ -238,17 +226,6 @@ export default function Splash({
                 <span aria-hidden>{pct}%</span>
               </div>
             </div>
-
-            {/* skip */}
-            {showSkip && canSkip && (
-              <button
-                type="button"
-                onClick={finish}
-                className="mt-10 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs text-white/80 backdrop-blur hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"
-              >
-                Skip
-              </button>
-            )}
           </div>
 
           {/* outro flash */}
@@ -270,13 +247,23 @@ export default function Splash({
 
           <style jsx global>{`
             @keyframes sweep {
-              0% { background-position: 200% 0; }
-              100% { background-position: -200% 0; }
+              0% {
+                background-position: 200% 0;
+              }
+              100% {
+                background-position: -200% 0;
+              }
             }
             @keyframes bg-drift {
-              0% { transform: translate3d(0,0,0) }
-              50% { transform: translate3d(0,-2%,0) }
-              100% { transform: translate3d(0,0,0) }
+              0% {
+                transform: translate3d(0, 0, 0);
+              }
+              50% {
+                transform: translate3d(0, -2%, 0);
+              }
+              100% {
+                transform: translate3d(0, 0, 0);
+              }
             }
           `}</style>
         </m.div>
