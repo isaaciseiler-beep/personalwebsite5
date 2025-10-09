@@ -183,3 +183,27 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 /* ========== UTILITIES ========== */
 .shadow-subtle{ box-shadow:0 8px 30px rgba(0,0,0,.20); }
 .bg-card-blur{ background-color:color-mix(in oklab, var(--color-bg) 60%, transparent); backdrop-filter:blur(6px); }
+
+/* app/globals.css — ADD these at the end (utilities for press effect) */
+@layer utilities {
+  .pressable {
+    position: relative;
+    transform: translateZ(0);
+    transition: transform 120ms ease, opacity 120ms ease, filter 120ms ease;
+  }
+  .pressable:active { transform: scale(0.97); }
+  .pressable:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in oklab, currentColor 60%, transparent); }
+
+  .pressable-ripple {
+    position: absolute;
+    border-radius: 9999px;
+    transform: scale(0);
+    opacity: .25;
+    background: currentColor;
+    pointer-events: none;
+    animation: pr 450ms ease-out;
+  }
+  @keyframes pr {
+    to { transform: scale(1); opacity: 0; }
+  }
+}
