@@ -1,4 +1,4 @@
-// providers/SearchProvider.tsx — FULL FILE REPLACEMENT (left card, no suggestions)
+// providers/SearchProvider.tsx — FULL FILE REPLACEMENT (type-safe + left-card + dynamic text)
 "use client";
 
 import React, {
@@ -7,7 +7,9 @@ import React, {
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-type Anchor = { x: number; y: number; w: number; h: number } | null;
+type Anchor =
+  | { x: number; y: number; width: number; height: number }
+  | null;
 
 type Ctx = {
   openFromRect: (rect: DOMRect) => void;
@@ -29,10 +31,13 @@ export default function SearchProvider({ children }: { children: React.ReactNode
   useEffect(() => setMounted(true), []);
 
   const openFromRect = useCallback((rect: DOMRect) => {
-    setAnchor({ x: rect.left, y: rect.top, w: rect.width, h: rect.height });
+    setAnchor({ x: rect.left, y: rect.top, width: rect.width, height: rect.height });
     setOpen(true);
   }, []);
-  const openFromEl = useCallback((el: Element) => openFromRect(el.getBoundingClientRect()), [openFromRect]);
+  const openFromEl = useCallback(
+    (el: Element) => openFromRect(el.getBoundingClientRect()),
+    [openFromRect]
+  );
   const close = useCallback(() => setOpen(false), []);
 
   // optional global event trigger
@@ -102,17 +107,16 @@ function SearchOverlay({
   const start =
     anchor ??
     (typeof window !== "undefined"
-      ? new DOMRect(window.innerWidth - 72, 12, 48, 40)
-      : new DOMRect(0, 0, 0, 0));
+      ? { x: window.innerWidth - 72, y: 12, width: 48, height: 40 }
+      : { x: 0, y: 0, width: 0, height: 0 });
 
-  // target card position: left column, under header
   const target = useMemo(
     () => ({
       x: 16,
-      y: 96, // roughly below your nav
-      w: 560, // max-w
-      h: 160,
-      r: 16,
+      y: 96,
+      width: 560,
+      height: 160,
+      borderRadius: 16,
     }),
     []
   );
@@ -121,7 +125,7 @@ function SearchOverlay({
     <AnimatePresence>
       {open && (
         <>
-          {/* blur-only backdrop */}
+          {/* subtle blur backdrop */}
           <motion.div
             aria-hidden
             initial={{ opacity: 0 }}
@@ -129,14 +133,33 @@ function SearchOverlay({
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[70] supports-[backdrop-filter]:backdrop-blur-sm"
           />
-          {/* morph from button → left card */}
+
+          {/* morph from button to left card */}
           <motion.div
             role="dialog"
             aria-modal="true"
             aria-label="Site search"
-            initial={{ x: start.x, y: start.y, width: start.w, height: start.h, borderRadius: 12 }}
-            animate={{ x: target.x, y: target.y, width: target.w, height: target.h, borderRadius: target.r }}
-            exit={{ x: start.x, y: start.y, width: start.w, height: start.h, borderRadius: 12 }}
+            initial={{
+              x: start.x,
+              y: start.y,
+              width: start.width,
+              height: start.height,
+              borderRadius: 12,
+            }}
+            animate={{
+              x: target.x,
+              y: target.y,
+              width: target.width,
+              height: target.height,
+              borderRadius: target.borderRadius,
+            }}
+            exit={{
+              x: start.x,
+              y: start.y,
+              width: start.width,
+              height: start.height,
+              borderRadius: 12,
+            }}
             transition={{ type: "tween", duration: 0.22 }}
             className="fixed z-[80]"
           >
@@ -161,9 +184,10 @@ function SearchOverlay({
                 />
                 <kbd className="rounded bg-white/10 px-1.5 text-[10px] leading-4">Esc</kbd>
               </div>
-              {/* no suggestions list */}
+
+              {/* body, no suggestions */}
               <div className="flex-1 px-4 py-3 text-sm text-current/60">
-                Type to search. Press Enter to submit or Esc to close.
+                Type to search. Press Enter or Esc to close.
               </div>
             </div>
           </motion.div>
