@@ -1,13 +1,20 @@
-// providers/SearchProvider.tsx — NEW (global, site-wide search via portal)
+// providers/SearchProvider.tsx — FULL FILE REPLACEMENT (SSR-safe)
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 type Anchor = { x: number; y: number; w: number; h: number } | null;
-
 type Item = { href: string; label: string };
 
 type Ctx = {
@@ -26,21 +33,28 @@ export const useSearch = () => {
 export default function SearchProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<Anchor>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const openFromRect = useCallback((rect: DOMRect) => {
     setAnchor({ x: rect.left, y: rect.top, w: rect.width, h: rect.height });
     setOpen(true);
   }, []);
-  const openFromEl = useCallback((el: Element) => openFromRect(el.getBoundingClientRect()), [openFromRect]);
+  const openFromEl = useCallback(
+    (el: Element) => openFromRect(el.getBoundingClientRect()),
+    [openFromRect]
+  );
   const close = useCallback(() => setOpen(false), []);
 
-  // expose global event for convenience
+  // Optional: global event to open search
   useEffect(() => {
     const handler = (e: Event) => {
       const el = (e as CustomEvent<Element | DOMRect | undefined>).detail;
       if (el instanceof Element) openFromEl(el);
-      else if (el && "x" in el) openFromRect(el as DOMRect);
-      else openFromRect(new DOMRect(window.innerWidth - 72, 12, 48, 40));
+      else if (el && "x" in (el as any)) openFromRect(el as DOMRect);
+      else if (typeof window !== "undefined")
+        openFromRect(new DOMRect(window.innerWidth - 72, 12, 48, 40));
     };
     window.addEventListener("app:open-search", handler as any);
     return () => window.removeEventListener("app:open-search", handler as any);
@@ -49,7 +63,12 @@ export default function SearchProvider({ children }: { children: React.ReactNode
   return (
     <SearchCtx.Provider value={{ openFromRect, openFromEl, close }}>
       {children}
-      {createPortal(<SearchOverlay open={open} anchor={anchor} onClose={close} />, document.body)}
+      {/* SSR-safe: only portal after mount */}
+      {mounted && typeof document !== "undefined" &&
+        createPortal(
+          <SearchOverlay open={open} anchor={anchor} onClose={close} />,
+          document.body
+        )}
     </SearchCtx.Provider>
   );
 }
@@ -62,14 +81,12 @@ function useSiteIndex(open: boolean) {
     const dedup = new Map<string, string>();
     links.forEach((a) => {
       const href = a.getAttribute("href") || "";
-      if (!href.startsWith("#") && href !== "" && !href.startsWith("javascript:")) {
-        const label = (a.textContent || href).trim().replace(/\s+/g, " ");
-        // prefer longer labels
-        const prev = dedup.get(href);
-        if (!prev || label.length > prev.length) dedup.set(href, label);
-      }
+      if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
+      const label = (a.textContent || href).trim().replace(/\s+/g, " ");
+      const prev = dedup.get(href);
+      if (!prev || label.length > prev.length) dedup.set(href, label);
     });
-    setItems(Array.from(dedup.entries()).map(([href, label]) => ({ href, label })));
+    setItems(Array.from(dedup, ([href, label]) => ({ href, label })));
   }, [open]);
   return items;
 }
@@ -88,19 +105,19 @@ function SearchOverlay({
   const items = useSiteIndex(open);
 
   useEffect(() => {
-    if (open) {
-      setQ("");
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
+    if (!open) return;
+    setQ("");
+    requestAnimationFrame(() => inputRef.current?.focus());
   }, [open]);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return items.slice(0, 50);
-    return items.filter((it) => it.label.toLowerCase().includes(s) || it.href.toLowerCase().includes(s)).slice(0, 50);
+    return items
+      .filter((it) => it.label.toLowerCase().includes(s) || it.href.toLowerCase().includes(s))
+      .slice(0, 50);
   }, [items, q]);
 
-  // close on outside click or Esc
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -116,13 +133,16 @@ function SearchOverlay({
     };
   }, [open, onClose]);
 
-  const start = anchor ?? { x: window.innerWidth - 72, y: 12, w: 48, h: 40 };
+  const start =
+    anchor ??
+    (typeof window !== "undefined"
+      ? { x: window.innerWidth - 72, y: 12, w: 48, h: 40 }
+      : { x: 0, y: 0, w: 0, h: 0 });
 
   return (
     <AnimatePresence>
       {open && (
         <>
-          {/* backdrop without tint color, only blur */}
           <motion.div
             aria-hidden
             initial={{ opacity: 0 }}
@@ -134,27 +154,9 @@ function SearchOverlay({
             role="dialog"
             aria-modal="true"
             aria-label="Site search"
-            initial={{
-              x: start.x,
-              y: start.y,
-              width: start.w,
-              height: start.h,
-              borderRadius: 12,
-            }}
-            animate={{
-              x: 0,
-              y: 0,
-              width: "100%",
-              height: "100%",
-              borderRadius: 0,
-            }}
-            exit={{
-              x: start.x,
-              y: start.y,
-              width: start.w,
-              height: start.h,
-              borderRadius: 12,
-            }}
+            initial={{ x: start.x, y: start.y, width: start.w, height: start.h, borderRadius: 12 }}
+            animate={{ x: 0, y: 0, width: "100%", height: "100%", borderRadius: 0 }}
+            exit={{ x: start.x, y: start.y, width: start.w, height: start.h, borderRadius: 12 }}
             transition={{ type: "tween", duration: 0.22 }}
             className="fixed inset-0 z-[80] p-4 sm:p-6 lg:p-8"
           >
@@ -163,7 +165,12 @@ function SearchOverlay({
               className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-transparent supports-[backdrop-filter]:backdrop-blur-md"
             >
               <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.49 21.49 20zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    fill="currentColor"
+                    d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79L20 21.49 21.49 20zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"
+                  />
+                </svg>
                 <input
                   ref={inputRef}
                   value={q}
