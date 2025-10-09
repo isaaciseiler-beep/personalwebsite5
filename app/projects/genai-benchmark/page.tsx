@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import ShimmerImage from "@/components/ShimmerImage";
 
 const ScoreChart = dynamic(() => import("./ScoreChart"), { ssr: false });
-const USMap = dynamic(() => import("./USMap"), { ssr: false });
 const RadarProfile = dynamic(() => import("./RadarProfile"), { ssr: false });
 const TimelineChart = dynamic(() => import("./TimelineChart"), { ssr: false });
 
