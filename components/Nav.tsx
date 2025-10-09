@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL FILE REPLACEMENT (dynamic, translucent blur, no tint)
+// components/Nav.tsx — FULL FILE REPLACEMENT (exports default and named `Nav`)
 "use client";
 
 import Link from "next/link";
@@ -29,7 +29,7 @@ const NAV_LINKS: Array<{ href: string; label: string; keywords?: string[] }> = [
   { href: "/about", label: "About", keywords: ["bio", "me"] },
 ];
 
-export default function Nav() {
+function Nav() {
   const theme = useTheme();
   const pathname = usePathname() || "/";
   const [open, setOpen] = useState(false);
@@ -39,25 +39,20 @@ export default function Nav() {
   const announceRef = useRef<HTMLDivElement>(null);
   const lastY = useRef(0);
 
-  // Hide on scroll down, show on scroll up. No background tint.
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
       const dy = y - lastY.current;
       const preferReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      // header visibility
       if (y > 16 && dy > 0) setHidden(true);
       else setHidden(false);
       lastY.current = y;
 
-      // page progress
       const h = document.documentElement;
       const max = (h.scrollHeight - h.clientHeight) || 1;
-      const pct = Math.min(100, Math.max(0, (y / max) * 100));
-      setProgress(pct);
+      setProgress(Math.min(100, Math.max(0, (y / max) * 100)));
 
-      // disable jitter if reduced motion
       if (preferReduced) setHidden(false);
     };
     onScroll();
@@ -69,14 +64,12 @@ export default function Nav() {
     };
   }, []);
 
-  // Lock scroll when mobile menu or cmdk is open
   useEffect(() => {
     const anyOpen = open || cmdkOpen;
     document.documentElement.style.overflow = anyOpen ? "hidden" : "";
     return () => { document.documentElement.style.overflow = ""; };
   }, [open, cmdkOpen]);
 
-  // Cmd/Ctrl+K for quick switcher
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const isMac = navigator.platform.toUpperCase().includes("MAC");
@@ -93,7 +86,6 @@ export default function Nav() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Announce route changes for screen readers
   useEffect(() => {
     const region = announceRef.current;
     if (!region) return;
@@ -101,7 +93,6 @@ export default function Nav() {
   }, [pathname]);
 
   const active = useMemo(() => {
-    // highlight parent path segments too
     return (href: string) =>
       href === "/"
         ? pathname === "/"
@@ -110,7 +101,6 @@ export default function Nav() {
 
   return (
     <>
-      {/* Skip link */}
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-black/80 focus:px-3 focus:py-2 focus:text-white"
@@ -118,40 +108,30 @@ export default function Nav() {
         Skip to content
       </a>
 
-      {/* Live region for announcements */}
       <div ref={announceRef} className="sr-only" aria-live="polite" />
 
       <header
         className={[
           "fixed inset-x-0 top-0 z-50",
           "supports-[backdrop-filter]:backdrop-blur-md",
-          "bg-transparent", // strict: no tint
+          "bg-transparent",
           "transition-transform duration-200 will-change-transform",
           hidden ? "-translate-y-full" : "translate-y-0",
         ].join(" ")}
         aria-label="Main"
       >
-        {/* top progress bar */}
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-0.5"
-          aria-hidden
-        >
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5" aria-hidden>
           <div
             className={`h-full ${theme === "light" ? "bg-black/40" : "bg-white/40"}`}
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        {/* hairline and subtle bottom shadow without tint */}
         <div
           className={[
             "pointer-events-none absolute inset-x-0 top-0 h-px",
             theme === "light" ? "bg-black/10" : "bg-white/10",
           ].join(" ")}
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-black/0"
           aria-hidden
         />
 
@@ -161,7 +141,6 @@ export default function Nav() {
               <ThemeLogo />
             </Link>
 
-            {/* desktop links */}
             <div className="hidden md:flex items-center gap-2">
               {NAV_LINKS.map((l) => (
                 <Link
@@ -175,7 +154,6 @@ export default function Nav() {
                   ].join(" ")}
                 >
                   <span>{l.label}</span>
-                  {/* active underline */}
                   <span
                     aria-hidden
                     className={[
@@ -187,7 +165,6 @@ export default function Nav() {
                 </Link>
               ))}
 
-              {/* quick switcher button */}
               <button
                 onClick={() => setCmdkOpen(true)}
                 className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus:outline-none focus:ring"
@@ -195,13 +172,10 @@ export default function Nav() {
               >
                 <Search size={16} />
                 <span className="hidden lg:inline">Quick switch</span>
-                <kbd className="ml-1 rounded bg-white/10 px-1.5 text-[10px] leading-4">
-                  ⌘K
-                </kbd>
+                <kbd className="ml-1 rounded bg-white/10 px-1.5 text-[10px] leading-4">⌘K</kbd>
               </button>
             </div>
 
-            {/* mobile menu button */}
             <button
               aria-label={open ? "Close menu" : "Open menu"}
               className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 focus:outline-none focus:ring"
@@ -212,7 +186,6 @@ export default function Nav() {
           </div>
         </nav>
 
-        {/* mobile drawer */}
         <AnimatePresence>
           {open && (
             <motion.div
@@ -245,7 +218,6 @@ export default function Nav() {
                   ))}
                 </ul>
 
-                {/* mobile quick switcher trigger */}
                 <button
                   onClick={() => setCmdkOpen(true)}
                   className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-current/90 focus:outline-none focus:ring"
@@ -262,10 +234,8 @@ export default function Nav() {
         </AnimatePresence>
       </header>
 
-      {/* spacer for layout */}
       <div aria-hidden className="h-[64px]" />
 
-      {/* Quick Switcher (no deps, native dialog) */}
       <QuickSwitcher
         open={cmdkOpen}
         onClose={() => setCmdkOpen(false)}
@@ -327,7 +297,7 @@ function QuickSwitcher({
       className={[
         "m-0 w-full max-w-lg rounded-2xl p-0 outline-none",
         "supports-[backdrop-filter]:backdrop-blur-md",
-        "bg-transparent", // no tint
+        "bg-transparent",
         "open:animate-in open:fade-in-0",
       ].join(" ")}
       onClose={onClose}
@@ -366,3 +336,6 @@ function QuickSwitcher({
     </dialog>
   );
 }
+
+export default Nav;
+export { Nav };
