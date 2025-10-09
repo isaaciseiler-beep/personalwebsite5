@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL FILE REPLACEMENT (hooks into global search + removes blue focus)
+// components/Nav.tsx — FULL FILE REPLACEMENT (uses simplified SearchProvider API)
 "use client";
 
 import Link from "next/link";
@@ -57,12 +57,10 @@ function Nav() {
   const theme = useTheme();
   const pathname = normalize(usePathname() || "/");
   const [open, setOpen] = useState(false);
-  const [cmdkOpen, setCmdkOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const scrolled = useScrolled(24);
   const announceRef = useRef<HTMLDivElement>(null);
   const search = useSearch();
-  const searchBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const onScroll = () => setProgress(progressPct());
@@ -74,13 +72,6 @@ function Nav() {
       window.removeEventListener("resize", onScroll);
     };
   }, []);
-
-  // lock scroll if overlays open
-  useEffect(() => {
-    const anyOpen = open || cmdkOpen;
-    document.documentElement.style.overflow = anyOpen ? "hidden" : "";
-    return () => { document.documentElement.style.overflow = ""; };
-  }, [open, cmdkOpen]);
 
   useEffect(() => {
     const region = announceRef.current;
@@ -102,8 +93,8 @@ function Nav() {
   return (
     <>
       <a
-    href="#content"
-    className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-black/80 focus:px-3 focus:py-2 focus:text-white"
+        href="#content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-black/80 focus:px-3 focus:py-2 focus:text-white"
       >
         Skip to content
       </a>
@@ -120,11 +111,16 @@ function Nav() {
         style={{ height: navH }}
         aria-label="Main"
       >
+        {/* progress */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5" aria-hidden>
           <div className={theme === "light" ? "h-full bg-black/40" : "h-full bg-white/40"} style={{ width: `${progress}%` }} />
         </div>
 
-        <div className={["pointer-events-none absolute inset-x-0 top-0 h-px", theme === "light" ? "bg-black/10" : "bg-white/10"].join(" ")} aria-hidden />
+        {/* hairline */}
+        <div
+          className={["pointer-events-none absolute inset-x-0 top-0 h-px", theme === "light" ? "bg-black/10" : "bg-white/10"].join(" ")}
+          aria-hidden
+        />
 
         <nav className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex h-full items-center justify-between gap-4">
@@ -134,6 +130,7 @@ function Nav() {
               </motion.div>
             </Link>
 
+            {/* desktop */}
             <div className="hidden md:flex items-center gap-2">
               {NAV_LINKS.map((l) => {
                 const active = isActive(l.href);
@@ -162,16 +159,18 @@ function Nav() {
                 );
               })}
 
-          <button
-            onClick={search.open}
-            className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
-            aria-label="Open search"
-          >
-            <Search size={16} />
-            <span className="hidden lg:inline">Search</span>
-          </button>
+              {/* search */}
+              <button
+                onClick={search.open}
+                className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
+                aria-label="Open search"
+              >
+                <Search size={16} />
+                <span className="hidden lg:inline">Search</span>
+              </button>
             </div>
 
+            {/* mobile btn */}
             <button
               aria-label={open ? "Close menu" : "Open menu"}
               className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
@@ -182,6 +181,7 @@ function Nav() {
           </div>
         </nav>
 
+        {/* mobile drawer */}
         <AnimatePresence>
           {open && (
             <motion.div
@@ -209,7 +209,7 @@ function Nav() {
                 <button
                   onClick={() => {
                     setOpen(false);
-                    search.openFromRect(new DOMRect(window.innerWidth - 72, 12, 48, 40));
+                    search.open();
                   }}
                   className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-current/90 focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
                 >
@@ -217,7 +217,7 @@ function Nav() {
                     <Search size={16} />
                     Search
                   </span>
-                  <kbd className="rounded bg-white/10 px-1.5 text-[10px] leading-4">⌘K</kbd>
+                  <kbd className="rounded bg-white/10 px-1.5 text-[10px] leading-4">Esc</kbd>
                 </button>
               </div>
             </motion.div>
