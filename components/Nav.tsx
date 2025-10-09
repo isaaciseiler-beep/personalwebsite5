@@ -133,31 +133,44 @@ function Nav() {
             {/* desktop */}
             <div className="hidden md:flex items-center gap-2">
               {NAV_LINKS.map((l) => {
-                const active = isActive(l.href);
-                return (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    className={[
-                      "group relative rounded-lg px-3 py-2 text-sm font-medium pressable text-reactive",
-                      "focus-visible:outline-none focus-visible:ring-0",
-                      active ? "text-current" : "text-current/80 hover:text-current",
-                      "transition-[color,opacity] duration-150",
-                    ].join(" ")}
-                  >
-                    <span>{l.label}</span>
-                    <span aria-hidden className="pointer-events-none absolute left-2 right-2 -bottom-0.5 h-[2px] overflow-hidden">
-                      <span
-                        className={[
-                          "block h-full origin-left transition-transform duration-200",
-                          active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
-                          theme === "light" ? "bg-black/70" : "bg-white/70",
-                        ].join(" ")}
-                      />
-                    </span>
-                  </Link>
-                );
-              })}
+  const active = isActive(l.href);
+  return (
+    <Link
+      key={l.href}
+      href={l.href}
+      className={[
+        "group relative rounded-lg px-3 py-2 text-sm font-medium pressable text-reactive",
+        "focus-visible:outline-none focus-visible:ring-0",
+        active ? "text-current" : "text-current/80 hover:text-current",
+        "transition-[color,opacity] duration-150",
+      ].join(" ")}
+    >
+      <span>{l.label}</span>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute left-2 right-2 -bottom-0.5 h-[2px] overflow-hidden"
+      >
+        <span
+          className={[
+            "block h-full origin-left transition-transform duration-200",
+            active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
+            theme === "light" ? "bg-black/70" : "bg-white/70",
+          ].join(" ")}
+        />
+      </span>
+    </Link>
+  );
+})}
+
+{/* LinkedIn button (after About) */}
+<a
+  href="https://www.linkedin.com/in/isaacseiler/"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
+>
+  LinkedIn
+</a>
 
               {/* search */}
               <button
