@@ -1,6 +1,10 @@
+// app/projects/genai-benchmark/USMap.tsx — FULL FILE REPLACEMENT
 "use client";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
-import geoUrl from "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
+
+// IMPORTANT: use a string URL (runtime fetch), not an ES import
+const geoUrl =
+  "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
 const scores: Record<string, number> = {
   MD: 100, CA: 87, AZ: 85, GA: 85, PA: 84, AL: 76, UT: 72, NJ: 72, MA: 71, DC: 71,
@@ -13,16 +17,14 @@ export default function USMap() {
         <Geographies geography={geoUrl}>
           {({ geographies }) =>
             geographies.map((geo) => {
-              const code = geo.properties.postal;
-              const score = scores[code];
-              const fill = !score
+              // react-simple-maps exposes USPS code as geo.properties.postal
+              const code = (geo.properties as any).postal as string | undefined;
+              const score = code ? scores[code] : undefined;
+              const fill = score == null
                 ? "#1e293b"
-                : score > 80
-                ? "#7dd3fc"
-                : score > 60
-                ? "#38bdf8"
-                : score > 40
-                ? "#0ea5e9"
+                : score > 80 ? "#7dd3fc"
+                : score > 60 ? "#38bdf8"
+                : score > 40 ? "#0ea5e9"
                 : "#172554";
               return (
                 <Geography
