@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL FILE REPLACEMENT (uses simplified SearchProvider API)
+// components/Nav.tsx — FULL FILE REPLACEMENT
 "use client";
 
 import Link from "next/link";
@@ -28,6 +28,7 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/experience", label: "Experience" },
   { href: "/about", label: "About" },
+  { href: "https://www.linkedin.com/in/isaacseiler/", label: "LinkedIn", external: true },
 ];
 
 function normalize(p: string) {
@@ -53,7 +54,7 @@ function progressPct() {
   return Math.min(100, Math.max(0, (y / max) * 100));
 }
 
-function Nav() {
+export default function Nav() {
   const theme = useTheme();
   const pathname = normalize(usePathname() || "/");
   const [open, setOpen] = useState(false);
@@ -111,9 +112,12 @@ function Nav() {
         style={{ height: navH }}
         aria-label="Main"
       >
-        {/* progress */}
+        {/* progress bar */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5" aria-hidden>
-          <div className={theme === "light" ? "h-full bg-black/40" : "h-full bg-white/40"} style={{ width: `${progress}%` }} />
+          <div
+            className={theme === "light" ? "h-full bg-black/40" : "h-full bg-white/40"}
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
         {/* hairline */}
@@ -124,58 +128,64 @@ function Nav() {
 
         <nav className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex h-full items-center justify-between gap-4">
-            <Link href="/" className="shrink-0 focus-visible:outline-none focus-visible:ring-0 pressable text-reactive">
-              <motion.div style={{ originY: 0.5, originX: 0.5 }} animate={{ scale: logoScale }} transition={{ type: "tween", duration: 0.18 }}>
+            {/* Logo */}
+            <Link
+              href="/"
+              className="shrink-0 focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
+            >
+              <motion.div
+                style={{ originY: 0.5, originX: 0.5 }}
+                animate={{ scale: logoScale }}
+                transition={{ type: "tween", duration: 0.18 }}
+              >
                 <ThemeLogo />
               </motion.div>
             </Link>
 
-            {/* desktop */}
+            {/* Desktop links */}
             <div className="hidden md:flex items-center gap-2">
               {NAV_LINKS.map((l) => {
-  const active = isActive(l.href);
-  return (
-    <Link
-      key={l.href}
-      href={l.href}
-      className={[
-        "group relative rounded-lg px-3 py-2 text-sm font-medium pressable text-reactive",
-        "focus-visible:outline-none focus-visible:ring-0",
-        active ? "text-current" : "text-current/80 hover:text-current",
-        "transition-[color,opacity] duration-150",
-      ].join(" ")}
-    >
-      <span>{l.label}</span>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-2 right-2 -bottom-0.5 h-[2px] overflow-hidden"
-      >
-        <span
-          className={[
-            "block h-full origin-left transition-transform duration-200",
-            active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
-            theme === "light" ? "bg-black/70" : "bg-white/70",
-          ].join(" ")}
-        />
-      </span>
-    </Link>
-  );
-})}
+                const active = isActive(l.href);
+                const baseClasses = [
+                  "group relative rounded-lg px-3 py-2 text-sm font-medium pressable text-reactive",
+                  "focus-visible:outline-none focus-visible:ring-0",
+                  active ? "text-current" : "text-current/80 hover:text-current",
+                  "transition-[color,opacity] duration-150",
+                ].join(" ");
 
-{/* LinkedIn button (after About) */}
-<a
-  href="https://www.linkedin.com/in/isaacseiler/"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
->
-  LinkedIn
-</a>
+                return l.external ? (
+                  <a
+                    key={l.href}
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={baseClasses}
+                  >
+                    <span>{l.label}</span>
+                  </a>
+                ) : (
+                  <Link key={l.href} href={l.href} className={baseClasses}>
+                    <span>{l.label}</span>
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute left-2 right-2 -bottom-0.5 h-[2px] overflow-hidden"
+                    >
+                      <span
+                        className={[
+                          "block h-full origin-left transition-transform duration-200",
+                          active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
+                          theme === "light" ? "bg-black/70" : "bg-white/70",
+                        ].join(" ")}
+                      />
+                    </span>
+                  </Link>
+                );
+              })}
 
-              {/* search */}
+              {/* Search */}
               <button
-                onClick={search.open}
-                className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
+                onClick={() => search.open()}
+                className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current pressable text-reactive"
                 aria-label="Open search"
               >
                 <Search size={16} />
@@ -183,7 +193,7 @@ function Nav() {
               </button>
             </div>
 
-            {/* mobile btn */}
+            {/* Mobile menu toggle */}
             <button
               aria-label={open ? "Close menu" : "Open menu"}
               className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
@@ -194,7 +204,7 @@ function Nav() {
           </div>
         </nav>
 
-        {/* mobile drawer */}
+        {/* Mobile drawer */}
         <AnimatePresence>
           {open && (
             <motion.div
@@ -202,19 +212,37 @@ function Nav() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ type: "tween", duration: 0.18 }}
-              className={["md:hidden supports-[backdrop-filter]:backdrop-blur-md bg-transparent", theme === "light" ? "border-t border-black/10" : "border-t border-white/10"].join(" ")}
+              className={[
+                "md:hidden supports-[backdrop-filter]:backdrop-blur-md bg-transparent",
+                theme === "light" ? "border-t border-black/10" : "border-t border-white/10",
+              ].join(" ")}
             >
               <div className="mx-auto max-w-6xl px-4 py-3">
                 <ul className="flex flex-col">
                   {NAV_LINKS.map((l) => (
                     <li key={l.href}>
-                      <Link
-                        href={l.href}
-                        onClick={() => setOpen(false)}
-                        className={["block rounded-lg px-2 py-2 text-base focus-visible:outline-none focus-visible:ring-0 pressable text-reactive", isActive(l.href) ? "text-current" : "text-current/90"].join(" ")}
-                      >
-                        {l.label}
-                      </Link>
+                      {l.external ? (
+                        <a
+                          href={l.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setOpen(false)}
+                          className="block rounded-lg px-2 py-2 text-base focus-visible:outline-none focus-visible:ring-0 pressable text-reactive text-current/90"
+                        >
+                          {l.label}
+                        </a>
+                      ) : (
+                        <Link
+                          href={l.href}
+                          onClick={() => setOpen(false)}
+                          className={[
+                            "block rounded-lg px-2 py-2 text-base focus-visible:outline-none focus-visible:ring-0 pressable text-reactive",
+                            isActive(l.href) ? "text-current" : "text-current/90",
+                          ].join(" ")}
+                        >
+                          {l.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -224,7 +252,7 @@ function Nav() {
                     setOpen(false);
                     search.open();
                   }}
-                  className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-current/90 focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
+                  className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-current/90 pressable text-reactive"
                 >
                   <span className="flex items-center gap-2">
                     <Search size={16} />
@@ -242,6 +270,3 @@ function Nav() {
     </>
   );
 }
-
-export default Nav;
-export { Nav };
