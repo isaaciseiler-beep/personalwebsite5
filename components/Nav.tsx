@@ -1,144 +1,368 @@
-// components/Nav.tsx — FULL REPLACEMENT (fogged/tinted glass header)
+// components/Nav.tsx — FULL FILE REPLACEMENT (dynamic, translucent blur, no tint)
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Menu, X, Search } from "lucide-react";
 import ThemeLogo from "@/components/ThemeLogo";
+import { motion, AnimatePresence } from "framer-motion";
 
-const MotionSpan = motion.span;
+type Theme = "dark" | "light";
 
-function useTheme(): "dark" | "light" {
-  const [t, setT] = useState<"dark" | "light">("dark");
+function useTheme(): Theme {
+  const [t, setT] = useState<Theme>("dark");
   useEffect(() => {
     const el = document.documentElement;
-    const set = () => setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
-    set();
-    const obs = new MutationObserver(set);
+    const read = () => setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
+    read();
+    const obs = new MutationObserver(read);
     obs.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
     return () => obs.disconnect();
   }, []);
   return t;
 }
 
-export function Nav() {
-  const [open, setOpen] = useState(false);
+const NAV_LINKS: Array<{ href: string; label: string; keywords?: string[] }> = [
+  { href: "/", label: "Home", keywords: ["start", "landing"] },
+  { href: "/experience", label: "Experience", keywords: ["work", "resume"] },
+  { href: "/about", label: "About", keywords: ["bio", "me"] },
+];
+
+export default function Nav() {
   const theme = useTheme();
-  const linkedin = process.env.NEXT_PUBLIC_LINKEDIN_URL || "#";
-  const linkHover = { y: -1, transition: { duration: 0.12, ease: [0.2, 0, 0, 1] } };
+  const pathname = usePathname() || "/";
+  const [open, setOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [cmdkOpen, setCmdkOpen] = useState(false);
+  const announceRef = useRef<HTMLDivElement>(null);
+  const lastY = useRef(0);
 
-  const NavLinks = () => (
-    <ul className="flex flex-col md:flex-row gap-6 md:gap-4 items-start md:items-center">
-      <li>
-        <Link href="/experience" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
-          <MotionSpan whileHover={linkHover}>experience</MotionSpan>
-        </Link>
-      </li>
-      <li>
-        <Link href="/work" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
-          <MotionSpan whileHover={linkHover}>work</MotionSpan>
-        </Link>
-      </li>
-      <li>
-        <a
-          href={linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-underline hover:text-[color:var(--color-accent)]"
-          aria-label="linkedin"
-        >
-          <MotionSpan whileHover={linkHover}>linkedin</MotionSpan>
-        </a>
-      </li>
-    </ul>
-  );
+  // Hide on scroll down, show on scroll up. No background tint.
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      const dy = y - lastY.current;
+      const preferReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // thematic tint for fogged glass
-  const tint =
-    theme === "light"
-      ? "color-mix(in srgb, var(--color-bg) 70%, transparent)" // light: milkier
-      : "color-mix(in srgb, var(--color-bg) 55%, transparent)"; // dark: slightly clearer
+      // header visibility
+      if (y > 16 && dy > 0) setHidden(true);
+      else setHidden(false);
+      lastY.current = y;
 
-  // SVG noise data URI (very subtle)
-  const noise =
-    "url('data:image/svg+xml;utf8,\
-<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"160\" height=\"160\" viewBox=\"0 0 160 160\">\
-<filter id=\"n\"><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.9\" numOctaves=\"2\" stitchTiles=\"stitch\"/></filter>\
-<rect width=\"160\" height=\"160\" filter=\"url(%23n)\" opacity=\"0.035\"/>\
-</svg>')";
+      // page progress
+      const h = document.documentElement;
+      const max = (h.scrollHeight - h.clientHeight) || 1;
+      const pct = Math.min(100, Math.max(0, (y / max) * 100));
+      setProgress(pct);
+
+      // disable jitter if reduced motion
+      if (preferReduced) setHidden(false);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
+  // Lock scroll when mobile menu or cmdk is open
+  useEffect(() => {
+    const anyOpen = open || cmdkOpen;
+    document.documentElement.style.overflow = anyOpen ? "hidden" : "";
+    return () => { document.documentElement.style.overflow = ""; };
+  }, [open, cmdkOpen]);
+
+  // Cmd/Ctrl+K for quick switcher
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      if ((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCmdkOpen((v) => !v);
+      }
+      if (e.key === "Escape") {
+        setCmdkOpen(false);
+        setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  // Announce route changes for screen readers
+  useEffect(() => {
+    const region = announceRef.current;
+    if (!region) return;
+    region.textContent = `Navigated to ${NAV_LINKS.find(l => l.href === pathname)?.label ?? "page"}`;
+  }, [pathname]);
+
+  const active = useMemo(() => {
+    // highlight parent path segments too
+    return (href: string) =>
+      href === "/"
+        ? pathname === "/"
+        : pathname === href || pathname.startsWith(href + "/");
+  }, [pathname]);
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50">
-        {/* fogged/tinted glass overlay */}
+      {/* Skip link */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-black/80 focus:px-3 focus:py-2 focus:text-white"
+      >
+        Skip to content
+      </a>
+
+      {/* Live region for announcements */}
+      <div ref={announceRef} className="sr-only" aria-live="polite" />
+
+      <header
+        className={[
+          "fixed inset-x-0 top-0 z-50",
+          "supports-[backdrop-filter]:backdrop-blur-md",
+          "bg-transparent", // strict: no tint
+          "transition-transform duration-200 will-change-transform",
+          hidden ? "-translate-y-full" : "translate-y-0",
+        ].join(" ")}
+        aria-label="Main"
+      >
+        {/* top progress bar */}
         <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-0.5"
           aria-hidden
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            // heavy blur to obscure underlying text/images
-            backdropFilter: "blur(22px) saturate(160%)",
-            WebkitBackdropFilter: "blur(22px) saturate(160%)",
-            // tint to ensure contrast and readability
-            background: `
-              ${tint},
-              radial-gradient(120% 120% at 10% -20%, rgba(14,165,233,0.10), transparent 60%),
-              radial-gradient(100% 80% at 90% -10%, rgba(255,255,255,0.08), transparent 60%)
-            `,
-            // subtle noise grain to sell the glass effect
-            backgroundImage: `${noise}`,
-            backgroundBlendMode: "overlay, normal, normal, normal",
-            borderBottom: "1px solid var(--color-border)",
-            boxShadow: "0 10px 28px rgba(0,0,0,0.18)",
-          }}
-        />
-
-        <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
-          <a href="#content" className="skip-link">skip to content</a>
-
-          <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
-            <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
-              <ThemeLogo size={42} />
-            </motion.div>
-            <span className="sr-only">isaac</span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-4">
-            <NavLinks />
-          </nav>
-
-          <div className="md:hidden flex items-center gap-2">
-            <button
-              className="rounded-xl border border-subtle p-2"
-              aria-label="toggle menu"
-              aria-expanded={open}
-              onClick={() => setOpen(v => !v)}
-            >
-              {open ? <X size={18} /> : <Menu size={18} />}
-            </button>
-          </div>
+        >
+          <div
+            className={`h-full ${theme === "light" ? "bg-black/40" : "bg-white/40"}`}
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
+        {/* hairline and subtle bottom shadow without tint */}
+        <div
+          className={[
+            "pointer-events-none absolute inset-x-0 top-0 h-px",
+            theme === "light" ? "bg-black/10" : "bg-white/10",
+          ].join(" ")}
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-black/0"
+          aria-hidden
+        />
+
+        <nav className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-[64px] items-center justify-between gap-4">
+            <Link href="/" className="shrink-0 focus:outline-none focus:ring">
+              <ThemeLogo />
+            </Link>
+
+            {/* desktop links */}
+            <div className="hidden md:flex items-center gap-2">
+              {NAV_LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={[
+                    "relative rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring",
+                    "text-current/80 hover:text-current",
+                    active(l.href) ? "text-current" : "",
+                    "transition-[color,opacity] duration-150",
+                  ].join(" ")}
+                >
+                  <span>{l.label}</span>
+                  {/* active underline */}
+                  <span
+                    aria-hidden
+                    className={[
+                      "absolute left-2 right-2 -bottom-0.5 h-px",
+                      active(l.href) ? (theme === "light" ? "bg-black/60" : "bg-white/60") : "bg-transparent",
+                      "transition-colors duration-150",
+                    ].join(" ")}
+                  />
+                </Link>
+              ))}
+
+              {/* quick switcher button */}
+              <button
+                onClick={() => setCmdkOpen(true)}
+                className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus:outline-none focus:ring"
+                aria-label="Open quick switcher"
+              >
+                <Search size={16} />
+                <span className="hidden lg:inline">Quick switch</span>
+                <kbd className="ml-1 rounded bg-white/10 px-1.5 text-[10px] leading-4">
+                  ⌘K
+                </kbd>
+              </button>
+            </div>
+
+            {/* mobile menu button */}
+            <button
+              aria-label={open ? "Close menu" : "Open menu"}
+              className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 focus:outline-none focus:ring"
+              onClick={() => setOpen((v) => !v)}
+            >
+              {open ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </nav>
+
         {/* mobile drawer */}
-        <AnimatePresence initial={false}>
+        <AnimatePresence>
           {open && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
-              className="relative md:hidden overflow-hidden"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ type: "tween", duration: 0.18 }}
+              className={[
+                "md:hidden",
+                "supports-[backdrop-filter]:backdrop-blur-md",
+                "bg-transparent",
+                theme === "light" ? "border-t border-black/10" : "border-t border-white/10",
+              ].join(" ")}
             >
-              <div className="mx-auto max-w-5xl px-4 py-4">
-                <NavLinks />
+              <div className="mx-auto max-w-6xl px-4 py-3">
+                <ul className="flex flex-col">
+                  {NAV_LINKS.map((l) => (
+                    <li key={l.href}>
+                      <Link
+                        href={l.href}
+                        onClick={() => setOpen(false)}
+                        className={[
+                          "block rounded-lg px-2 py-2 text-base focus:outline-none focus:ring",
+                          active(l.href) ? "text-current" : "text-current/90",
+                        ].join(" ")}
+                      >
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* mobile quick switcher trigger */}
+                <button
+                  onClick={() => setCmdkOpen(true)}
+                  className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-current/90 focus:outline-none focus:ring"
+                >
+                  <span className="flex items-center gap-2">
+                    <Search size={16} />
+                    Quick switch
+                  </span>
+                  <kbd className="rounded bg-white/10 px-1.5 text-[10px] leading-4">⌘K</kbd>
+                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </header>
 
-      {/* spacer to offset header height */}
-      <div aria-hidden className="h-[72px] md:h-[84px]" />
+      {/* spacer for layout */}
+      <div aria-hidden className="h-[64px]" />
+
+      {/* Quick Switcher (no deps, native dialog) */}
+      <QuickSwitcher
+        open={cmdkOpen}
+        onClose={() => setCmdkOpen(false)}
+        links={NAV_LINKS}
+        theme={theme}
+      />
     </>
+  );
+}
+
+/** Minimal command palette using <dialog>. No tint. */
+function QuickSwitcher({
+  open,
+  onClose,
+  links,
+  theme,
+}: {
+  open: boolean;
+  onClose: () => void;
+  links: Array<{ href: string; label: string; keywords?: string[] }>;
+  theme: Theme;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [q, setQ] = useState("");
+
+  useEffect(() => {
+    const dlg = ref.current;
+    if (!dlg) return;
+    if (open && !dlg.open) {
+      dlg.showModal();
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+    if (!open && dlg.open) dlg.close();
+  }, [open]);
+
+  useEffect(() => {
+    const dlg = ref.current;
+    if (!dlg) return;
+    const onCancel = (e: Event) => {
+      e.preventDefault();
+      onClose();
+    };
+    dlg.addEventListener("cancel", onCancel);
+    return () => dlg.removeEventListener("cancel", onCancel);
+  }, [onClose]);
+
+  const filtered = useMemo(() => {
+    const qq = q.trim().toLowerCase();
+    if (!qq) return links;
+    return links.filter((l) =>
+      [l.label, l.href, ...(l.keywords ?? [])].some((s) => s.toLowerCase().includes(qq))
+    );
+  }, [q, links]);
+
+  return (
+    <dialog
+      ref={ref}
+      className={[
+        "m-0 w-full max-w-lg rounded-2xl p-0 outline-none",
+        "supports-[backdrop-filter]:backdrop-blur-md",
+        "bg-transparent", // no tint
+        "open:animate-in open:fade-in-0",
+      ].join(" ")}
+      onClose={onClose}
+    >
+      <div className="rounded-2xl border border-white/10">
+        <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+          <Search size={16} />
+          <input
+            ref={inputRef}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Type to filter…"
+            className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-current/50"
+            aria-label="Filter destinations"
+          />
+          <kbd className="rounded bg-white/10 px-1.5 text-[10px] leading-4">Esc</kbd>
+        </div>
+        <ul className="max-h-72 overflow-auto px-1 py-1">
+          {filtered.length === 0 && (
+            <li className="px-3 py-2 text-sm text-current/60">No matches</li>
+          )}
+          {filtered.map((l) => (
+            <li key={l.href}>
+              <Link
+                href={l.href}
+                className="block rounded-lg px-3 py-2 text-sm text-current/90 hover:text-current focus:outline-none focus:ring"
+                onClick={onClose}
+              >
+                {l.label}
+                <span className="ml-2 text-xs opacity-60">{l.href}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </dialog>
   );
 }
