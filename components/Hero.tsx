@@ -69,26 +69,50 @@ export default function Hero() {
 }
 
 function AnimatedName({ text }: { text: string }) {
-  // Split to letters for subtle stagger. Keeps it performant.
-  const letters = Array.from(text);
+  const ref = useRef<HTMLHeadingElement>(null);
+  const [hover, setHover] = useState(false);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+
+  // track cursor inside bounding box
+  const onMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setCoords({ x, y });
+  };
+
+  const onLeave = () => {
+    setHover(false);
+    setCoords({ x: 0, y: 0 });
+  };
+
   return (
-    <span className="inline-block will-change-transform">
-      {letters.map((ch, i) => (
+    <motion.span
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={onLeave}
+      animate={{
+        rotateX: hover ? coords.y * -10 : 0,
+        rotateY: hover ? coords.x * 10 : 0,
+        scale: hover ? 1.04 : 1,
+        color: hover ? "var(--color-accent)" : "var(--color-fg)",
+      }}
+      transition={{ type: "spring", stiffness: 120, damping: 12 }}
+      className="inline-block perspective-[800px] cursor-default"
+    >
+      {Array.from(text).map((ch, i) => (
         <motion.span
           key={`${ch}-${i}`}
-          className="hero-letter"
-          initial={{ y: 18, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "tween", duration: 0.45, delay: 0.02 * i }}
-          whileHover={{ y: -2 }}
-          whileTap={{ y: 1, scale: 0.99 }}
+          className="inline-block will-change-transform"
+          whileHover={{ y: [0, -2, 0], transition: { duration: 0.4, repeat: 0 } }}
         >
           {ch === " " ? "\u00A0" : ch}
         </motion.span>
       ))}
-      {/* shimmering stroke overlay */}
       <span aria-hidden className="hero-stroke" />
-    </span>
+    </motion.span>
   );
 }
-
