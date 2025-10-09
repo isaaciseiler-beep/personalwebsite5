@@ -162,16 +162,14 @@ function Nav() {
                 );
               })}
 
-              <button
-                ref={searchBtnRef}
-                onClick={() => search.openFromEl(searchBtnRef.current!)}
-                className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
-                aria-label="Open search"
-              >
-                <Search size={16} />
-                <span className="hidden lg:inline">Search</span>
-                <kbd className="ml-1 rounded bg-white/10 px-1.5 text-[10px] leading-4">⌘K</kbd>
-              </button>
+          <button
+            onClick={search.open}
+            className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
+            aria-label="Open search"
+          >
+            <Search size={16} />
+            <span className="hidden lg:inline">Search</span>
+          </button>
             </div>
 
             <button
