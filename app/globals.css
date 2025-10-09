@@ -205,3 +205,38 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   .text-reactive { transition: color 120ms ease, opacity 120ms ease, letter-spacing 120ms ease; }
   .text-reactive:active { opacity: 1; letter-spacing: 0.1px; font-variation-settings: "wght" 600; }
 }
+
+/* app/globals.css — ADD at the end */
+@layer utilities {
+  .hero-name {
+    --shine: linear-gradient(120deg, transparent 0%, currentColor 30%, transparent 60%);
+    color: color-mix(in oklab, var(--color-fg) 96%, transparent);
+    position: relative;
+  }
+  .hero-letter {
+    display: inline-block;
+    will-change: transform, opacity;
+    text-shadow:
+      0 1px 0 rgba(0,0,0,.08),
+      0 2px 12px color-mix(in oklab, currentColor 24%, transparent);
+    transition: color .15s ease;
+  }
+  .hero-stroke {
+    position: absolute;
+    inset: 0;
+    -webkit-text-stroke: 1px color-mix(in oklab, currentColor 35%, transparent);
+    color: transparent;
+    background: var(--shine);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shine 3.2s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes shine { to { background-position: 200% 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-letter { transition: none; }
+    .hero-stroke { animation: none; }
+  }
+}
