@@ -70,7 +70,7 @@ export default function Hero() {
 }
 
 function AnimatedName({ text }: { text: string }) {
-  const ref = useRef<HTMLHeadingElement>(null);
+  const ref = useRef<HTMLSpanElement>(null);
   const [hover, setHover] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
 
