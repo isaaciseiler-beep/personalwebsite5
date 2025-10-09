@@ -101,7 +101,10 @@ function Nav() {
 
   return (
     <>
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-black/80 focus:px-3 focus:py-2 focus:text-white">
+      <a
+    href="#content"
+    className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-black/80 focus:px-3 focus:py-2 focus:text-white"
+      >
         Skip to content
       </a>
       <div ref={announceRef} className="sr-only" aria-live="polite" />
