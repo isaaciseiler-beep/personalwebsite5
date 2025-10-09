@@ -15,7 +15,7 @@ export default function Hero() {
     <section className="relative isolate">
       <motion.div style={{ y, scale }} className="mx-auto max-w-5xl px-4 pt-20 pb-10 sm:pt-28 sm:pb-14">
         <h1
-          className="hero-name select-none text-[12vw] leading-[0.9] tracking-tight sm:text-[8rem]"
+          className="select-none text-[12vw] leading-[0.9] tracking-tight sm:text-[8rem]"
           aria-label={NAME}
         >
           <AnimatedName text={NAME} />
@@ -35,7 +35,10 @@ export default function Hero() {
           <Link href="/about" className="pressable text-reactive rounded-xl border border-white/10 px-4 py-2 text-sm">
             About
           </Link>
-          <a href="mailto:isaac.seiler@outlook.com" className="pressable text-reactive rounded-xl border border-white/10 px-4 py-2 text-sm">
+          <a
+            href="mailto:isaac.seiler@outlook.com"
+            className="pressable text-reactive rounded-xl border border-white/10 px-4 py-2 text-sm"
+          >
             Contact
           </a>
         </div>
@@ -46,47 +49,60 @@ export default function Hero() {
 
 function AnimatedName({ text }: { text: string }) {
   const ref = useRef<HTMLSpanElement>(null);
+  const [hover, setHover] = useState(false);
   const [pos, setPos] = useState({ x: 0.5, y: 0.5 });
+
   const onMove = (e: React.MouseEvent) => {
     const el = ref.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    setPos({ x, y });
+    setPos({
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height,
+    });
   };
-  const onLeave = () => setPos({ x: 0.5, y: 0.5 });
 
-  const gradient = `radial-gradient(circle at ${pos.x * 100}% ${pos.y * 100}%, white 0%, #999 60%, black 100%)`;
+  const onLeave = () => setHover(false);
+
+  // soft radial lighting gradient only when hovering
+  const base = "black";
+  const gradient = hover
+    ? `radial-gradient(circle at ${pos.x * 100}% ${pos.y * 100}%, white 10%, #ccc 30%, ${base} 100%)`
+    : base;
 
   return (
     <motion.span
       ref={ref}
-      onMouseMove={onMove}
+      onMouseMove={(e) => {
+        setHover(true);
+        onMove(e);
+      }}
       onMouseLeave={onLeave}
-      className="inline-block cursor-default relative"
+      className="inline-block relative cursor-default"
       style={{
+        color: hover ? "transparent" : base,
         backgroundImage: gradient,
         backgroundClip: "text",
         WebkitBackgroundClip: "text",
-        color: "transparent",
-        filter: "contrast(1.1) brightness(1.1)",
-        transition: "background-position 0.2s ease",
+        transition: "background 0.4s ease, color 0.4s ease",
       }}
     >
       {text}
-      {/* soft blur glow */}
-      <span
-        aria-hidden
-        className="absolute inset-0 blur-[6px] opacity-30"
-        style={{
-          backgroundImage: gradient,
-          WebkitBackgroundClip: "text",
-          color: "transparent",
-        }}
-      >
-        {text}
-      </span>
+      {hover && (
+        <motion.span
+          aria-hidden
+          className="absolute inset-0 blur-[8px] opacity-30"
+          style={{
+            backgroundImage: gradient,
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          {text}
+        </motion.span>
+      )}
     </motion.span>
   );
 }
