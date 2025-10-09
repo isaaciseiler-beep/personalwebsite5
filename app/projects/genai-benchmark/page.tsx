@@ -51,15 +51,6 @@ export default function GenAIBenchmarkPage() {
         <ScoreChart />
       </Section>
 
-      <Section title="Nationwide Readiness Map">
-        <p className="text-[color:var(--color-fg)]/80 mb-4">
-          The choropleth below shows composite readiness scores across the U.S.
-          Hover over a state to see its score. Lighter shades indicate stronger
-          public AI governance structures and employee enablement.
-        </p>
-        <USMap />
-      </Section>
-
       <Section title="Readiness Profile by Category">
         <p className="text-[color:var(--color-fg)]/80 mb-4">
           Averaged across all governments, implementation outpaces workforce
