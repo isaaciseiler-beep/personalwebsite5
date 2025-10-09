@@ -184,7 +184,7 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 .shadow-subtle{ box-shadow:0 8px 30px rgba(0,0,0,.20); }
 .bg-card-blur{ background-color:color-mix(in oklab, var(--color-bg) 60%, transparent); backdrop-filter:blur(6px); }
 
-/* app/globals.css — ADD these at the end (utilities for press effect) */
+/* app/globals.css — ADD/UPDATE (focus removal in header, reactive text) */
 @layer utilities {
   .pressable {
     position: relative;
@@ -192,18 +192,16 @@ h2{@apply text-xl md:text-2xl tracking-tight}
     transition: transform 120ms ease, opacity 120ms ease, filter 120ms ease;
   }
   .pressable:active { transform: scale(0.97); }
-  .pressable:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in oklab, currentColor 60%, transparent); }
 
-  .pressable-ripple {
-    position: absolute;
-    border-radius: 9999px;
-    transform: scale(0);
-    opacity: .25;
-    background: currentColor;
-    pointer-events: none;
-    animation: pr 450ms ease-out;
-  }
-  @keyframes pr {
-    to { transform: scale(1); opacity: 0; }
-  }
+  /* ripple kept from prior step */
+  .pressable-ripple { position:absolute; border-radius:9999px; transform:scale(0); opacity:.25; background:currentColor; pointer-events:none; animation:pr 450ms ease-out; }
+  @keyframes pr { to { transform:scale(1); opacity:0; } }
+
+  /* header: remove default blue focus box, keep accessibility via subtle shadow if needed */
+  [data-no-outline] *:focus { outline: none; }
+  [data-no-outline] *:focus-visible { outline: none; box-shadow: 0 0 0 0 transparent; }
+
+  /* more reactive text on press */
+  .text-reactive { transition: color 120ms ease, opacity 120ms ease, letter-spacing 120ms ease; }
+  .text-reactive:active { opacity: 1; letter-spacing: 0.1px; font-variation-settings: "wght" 600; }
 }
