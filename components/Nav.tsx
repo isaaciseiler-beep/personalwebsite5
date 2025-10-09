@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL FILE REPLACEMENT (exports default and named `Nav`)
+// components/Nav.tsx — FULL FILE REPLACEMENT (roomier + shrink-on-scroll + better underline)
 "use client";
 
 import Link from "next/link";
@@ -29,32 +29,57 @@ const NAV_LINKS: Array<{ href: string; label: string; keywords?: string[] }> = [
   { href: "/about", label: "About", keywords: ["bio", "me"] },
 ];
 
+function normalize(p: string) {
+  if (!p) return "/";
+  const q = p.endsWith("/") && p !== "/" ? p.slice(0, -1) : p;
+  return q;
+}
+
+function useScrolled(threshold = 24) {
+  const [scrolled, set] = useState(false);
+  useEffect(() => {
+    const onScroll = () => set(window.scrollY > threshold);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [threshold]);
+  return scrolled;
+}
+
+function useCmdK(toggle: () => void, closeAll: () => void) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      if ((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        toggle();
+      }
+      if (e.key === "Escape") closeAll();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [toggle, closeAll]);
+}
+
+function progressPct() {
+  const h = document.documentElement;
+  const max = (h.scrollHeight - h.clientHeight) || 1;
+  const y = window.scrollY || 0;
+  return Math.min(100, Math.max(0, (y / max) * 100));
+}
+
 function Nav() {
   const theme = useTheme();
-  const pathname = usePathname() || "/";
+  const pathname = normalize(usePathname() || "/");
   const [open, setOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [cmdkOpen, setCmdkOpen] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const scrolled = useScrolled(24);
   const announceRef = useRef<HTMLDivElement>(null);
-  const lastY = useRef(0);
 
+  // page progress
   useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      const dy = y - lastY.current;
-      const preferReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      if (y > 16 && dy > 0) setHidden(true);
-      else setHidden(false);
-      lastY.current = y;
-
-      const h = document.documentElement;
-      const max = (h.scrollHeight - h.clientHeight) || 1;
-      setProgress(Math.min(100, Math.max(0, (y / max) * 100)));
-
-      if (preferReduced) setHidden(false);
-    };
+    const onScroll = () => setProgress(progressPct());
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
@@ -64,40 +89,34 @@ function Nav() {
     };
   }, []);
 
+  // lock scroll if overlays open
   useEffect(() => {
     const anyOpen = open || cmdkOpen;
     document.documentElement.style.overflow = anyOpen ? "hidden" : "";
     return () => { document.documentElement.style.overflow = ""; };
   }, [open, cmdkOpen]);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().includes("MAC");
-      if ((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setCmdkOpen((v) => !v);
-      }
-      if (e.key === "Escape") {
-        setCmdkOpen(false);
-        setOpen(false);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
+  useCmdK(() => setCmdkOpen((v) => !v), () => { setCmdkOpen(false); setOpen(false); });
 
   useEffect(() => {
     const region = announceRef.current;
     if (!region) return;
-    region.textContent = `Navigated to ${NAV_LINKS.find(l => l.href === pathname)?.label ?? "page"}`;
+    const label = NAV_LINKS.find(l => normalize(l.href) === pathname)?.label ?? "page";
+    region.textContent = `Navigated to ${label}`;
   }, [pathname]);
 
-  const active = useMemo(() => {
-    return (href: string) =>
-      href === "/"
+  const isActive = useMemo(() => {
+    return (href: string) => {
+      const h = normalize(href);
+      return h === "/"
         ? pathname === "/"
-        : pathname === href || pathname.startsWith(href + "/");
+        : pathname === h || pathname.startsWith(h + "/");
+    };
   }, [pathname]);
+
+  // CSS vars for height + logo scale
+  const navH = scrolled ? 62 : 80; // more room, then shrink a bit
+  const logoScale = scrolled ? 0.92 : 1;
 
   return (
     <>
@@ -107,26 +126,27 @@ function Nav() {
       >
         Skip to content
       </a>
-
       <div ref={announceRef} className="sr-only" aria-live="polite" />
 
       <header
         className={[
           "fixed inset-x-0 top-0 z-50",
           "supports-[backdrop-filter]:backdrop-blur-md",
-          "bg-transparent",
-          "transition-transform duration-200 will-change-transform",
-          hidden ? "-translate-y-full" : "translate-y-0",
+          "bg-transparent",                 // blur only, no tint
+          "transition-[height,transform] duration-200",
         ].join(" ")}
+        style={{ height: navH }}
         aria-label="Main"
       >
+        {/* progress */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5" aria-hidden>
           <div
-            className={`h-full ${theme === "light" ? "bg-black/40" : "bg-white/40"}`}
+            className={theme === "light" ? "h-full bg-black/40" : "h-full bg-white/40"}
             style={{ width: `${progress}%` }}
           />
         </div>
 
+        {/* hairline */}
         <div
           className={[
             "pointer-events-none absolute inset-x-0 top-0 h-px",
@@ -135,39 +155,57 @@ function Nav() {
           aria-hidden
         />
 
-        <nav className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-[64px] items-center justify-between gap-4">
+        <nav className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-full">
+          <div className="flex h-full items-center justify-between gap-4">
             <Link href="/" className="shrink-0 focus:outline-none focus:ring">
-              <ThemeLogo />
+              <motion.div
+                style={{ originY: 0.5, originX: 0.5 }}
+                animate={{ scale: logoScale }}
+                transition={{ type: "tween", duration: 0.18 }}
+              >
+                <ThemeLogo />
+              </motion.div>
             </Link>
 
+            {/* desktop */}
             <div className="hidden md:flex items-center gap-2">
-              {NAV_LINKS.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={[
-                    "relative rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring",
-                    "text-current/80 hover:text-current",
-                    active(l.href) ? "text-current" : "",
-                    "transition-[color,opacity] duration-150",
-                  ].join(" ")}
-                >
-                  <span>{l.label}</span>
-                  <span
-                    aria-hidden
+              {NAV_LINKS.map((l) => {
+                const active = isActive(l.href);
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
                     className={[
-                      "absolute left-2 right-2 -bottom-0.5 h-px",
-                      active(l.href) ? (theme === "light" ? "bg-black/60" : "bg-white/60") : "bg-transparent",
-                      "transition-colors duration-150",
+                      "group relative rounded-lg px-3 py-2 text-sm font-medium focus:outline-none focus:ring",
+                      active ? "text-current" : "text-current/80 hover:text-current",
+                      "transition-[color,opacity] duration-150",
                     ].join(" ")}
-                  />
-                </Link>
-              ))}
+                  >
+                    <span>{l.label}</span>
+                    {/* underline: now thicker and animated so About shows clearly */}
+                    <span
+                      aria-hidden
+                      className={[
+                        "pointer-events-none absolute left-2 right-2 -bottom-0.5 h-[2px] overflow-hidden",
+                      ].join(" ")}
+                    >
+                      <span
+                        className={[
+                          "block h-full origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-200",
+                          active
+                            ? theme === "light" ? "bg-black/70 scale-x-100" : "bg-white/70 scale-x-100"
+                            : theme === "light" ? "bg-black/50" : "bg-white/50",
+                        ].join(" ")}
+                      />
+                    </span>
+                  </Link>
+                );
+              })}
 
+              {/* quick switch */}
               <button
                 onClick={() => setCmdkOpen(true)}
-                className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus:outline-none focus:ring"
+                className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current focus:outline-none focus:ring pressable"
                 aria-label="Open quick switcher"
               >
                 <Search size={16} />
@@ -176,9 +214,10 @@ function Nav() {
               </button>
             </div>
 
+            {/* mobile btn */}
             <button
               aria-label={open ? "Close menu" : "Open menu"}
-              className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 focus:outline-none focus:ring"
+              className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 focus:outline-none focus:ring pressable"
               onClick={() => setOpen((v) => !v)}
             >
               {open ? <X size={20} /> : <Menu size={20} />}
@@ -186,6 +225,7 @@ function Nav() {
           </div>
         </nav>
 
+        {/* mobile drawer */}
         <AnimatePresence>
           {open && (
             <motion.div
@@ -194,9 +234,7 @@ function Nav() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ type: "tween", duration: 0.18 }}
               className={[
-                "md:hidden",
-                "supports-[backdrop-filter]:backdrop-blur-md",
-                "bg-transparent",
+                "md:hidden supports-[backdrop-filter]:backdrop-blur-md bg-transparent",
                 theme === "light" ? "border-t border-black/10" : "border-t border-white/10",
               ].join(" ")}
             >
@@ -209,7 +247,7 @@ function Nav() {
                         onClick={() => setOpen(false)}
                         className={[
                           "block rounded-lg px-2 py-2 text-base focus:outline-none focus:ring",
-                          active(l.href) ? "text-current" : "text-current/90",
+                          isActive(l.href) ? "text-current" : "text-current/90",
                         ].join(" ")}
                       >
                         {l.label}
@@ -220,7 +258,7 @@ function Nav() {
 
                 <button
                   onClick={() => setCmdkOpen(true)}
-                  className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-current/90 focus:outline-none focus:ring"
+                  className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-current/90 focus:outline-none focus:ring pressable"
                 >
                   <span className="flex items-center gap-2">
                     <Search size={16} />
@@ -234,7 +272,8 @@ function Nav() {
         </AnimatePresence>
       </header>
 
-      <div aria-hidden className="h-[64px]" />
+      {/* spacer matches dynamic height */}
+      <div aria-hidden style={{ height: navH }} />
 
       <QuickSwitcher
         open={cmdkOpen}
@@ -298,7 +337,6 @@ function QuickSwitcher({
         "m-0 w-full max-w-lg rounded-2xl p-0 outline-none",
         "supports-[backdrop-filter]:backdrop-blur-md",
         "bg-transparent",
-        "open:animate-in open:fade-in-0",
       ].join(" ")}
       onClose={onClose}
     >
@@ -323,7 +361,7 @@ function QuickSwitcher({
             <li key={l.href}>
               <Link
                 href={l.href}
-                className="block rounded-lg px-3 py-2 text-sm text-current/90 hover:text-current focus:outline-none focus:ring"
+                className="block rounded-lg px-3 py-2 text-sm text-current/90 hover:text-current focus:outline-none focus:ring pressable"
                 onClick={onClose}
               >
                 {l.label}
