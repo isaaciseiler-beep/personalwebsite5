@@ -1,5 +1,15 @@
 [
   {
+    "title": "The GenAI Benchmark",
+    "slug": "genai-benchmark",
+    "kind": "project",
+    "image": "/images/genai-benchmark-cover.jpg",
+    "date": "2025-05-12",
+    "excerpt": "A fifty-state generative AI readiness index measuring how governments deploy and regulate GenAI inside government.",
+    "tags": ["AI policy", "governance", "data visualization", "public sector"],
+    "contentHtml": "<p><strong>The GenAI Benchmark</strong> is the first comprehensive assessment of how prepared U.S. state and territory governments are for the generative AI era. Conducted under the Council of State Governments, the benchmark evaluates 56 governments against fifteen measurable criteria that assess adoption, infrastructure, and employee readiness for AI-driven governance.</p><p>The methodology is simple but rigorous. Each state earns up to twenty points across three core domains: <em>GenAI Implementation</em>, <em>Government Infrastructure</em>, and <em>Employee Resources</em>. These criteria range from tangible deployments—such as pilot programs and sandboxes—to structural readiness indicators like executive orders, AI-focused legislation, or employee training pipelines.</p><p>The composite results reveal a stark landscape: only five governments—Maryland, California, Alabama, Georgia, and Pennsylvania—score in the 'Excellent' range, while over half fall below average. The national mean score hovers at <strong>45/100</strong>, suggesting that while AI is rapidly transforming the private sector, public institutions remain at an early stage of adoption.</p><p>The takeaway is clear: governments that treat AI as a governance challenge—not merely a technology—are leading the way. The GenAI Benchmark isn’t just a scorecard; it’s a call for public-sector innovation grounded in transparency, ethics, and institutional readiness.</p>"
+  },
+  {
     "slug": "policy-visuals",
     "title": "policy visuals",
     "kind": "project",
