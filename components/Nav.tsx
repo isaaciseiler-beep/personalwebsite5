@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (card header + clipped recede stage)
+// components/Nav.tsx — FULL REPLACEMENT (validated syntax)
 "use client";
 
 import Link from "next/link";
@@ -13,76 +13,96 @@ import { PILLS as PRESS_PILLS } from "@/components/HeroPressPills";
 
 const ease = cubicBezier(0.2, 0, 0, 1);
 
+/* ─────────────── HEADER COMPONENT ─────────────── */
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
 
-  // ------- search index (projects + now + press; photos only by location) -------
+  /* ---------- SEARCH INDEX ---------- */
   const all = projects as Project[];
   const indexText = useMemo(() => {
     const items: Array<{ title: string; href: string; kind: string; hay: string }> = [];
-    for (const p of all.filter(x => x.kind === "project")) {
+
+    for (const p of all.filter((x) => x.kind === "project")) {
       const tags = Array.isArray((p as any).tags) ? (p as any).tags.join(" ") : "";
       const desc = (p as any)?.description ?? "";
       const hay = [p.title, p.summary, p.location, tags, desc].filter(Boolean).join(" ").toLowerCase();
       items.push({ title: p.title, href: `/work/projects#${p.slug}`, kind: "project", hay });
     }
-    for (const p of all.filter(x => x.kind === "photo")) {
+
+    for (const p of all.filter((x) => x.kind === "photo")) {
       const loc = (p.location ?? "").toLowerCase();
       if (!loc) continue;
       items.push({ title: p.location || p.title || "photo", href: "/work/photos", kind: "photo", hay: loc });
     }
+
     if ((now as any)?.text) {
       const t = String((now as any).text);
       items.push({ title: t, href: "/#nowbar", kind: "now", hay: t.toLowerCase() });
     }
+
     for (const pill of PRESS_PILLS) {
       items.push({ title: pill.name, href: pill.href, kind: "press", hay: pill.name.toLowerCase() });
     }
+
     return items;
   }, [all]);
 
   const results = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return [];
-    return indexText.filter(r => r.hay.includes(s)).slice(0, 8);
+    return indexText.filter((r) => r.hay.includes(s)).slice(0, 8);
   }, [q, indexText]);
 
-  // keyboard open/close + close on outside + close on scroll up
+  /* ---------- SHORTCUTS & CLOSE ---------- */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const metaK = e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
-      if (metaK || e.key === "/") { e.preventDefault(); setSearchOpen(true); }
+      if (metaK || e.key === "/") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
       if (e.key === "Escape") setSearchOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
   const popRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!searchOpen) return;
-    const onClick = (e: MouseEvent) => { if (popRef.current && !popRef.current.contains(e.target as Node)) setSearchOpen(false); };
+    const onClick = (e: MouseEvent) => {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) setSearchOpen(false);
+    };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, [searchOpen]);
+
   useEffect(() => {
     let lastY = window.scrollY;
-    const onScroll = () => { const y = window.scrollY; if (y < lastY) setSearchOpen(false); lastY = y; };
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < lastY) setSearchOpen(false);
+      lastY = y;
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  /* ---------- HEADER ---------- */
   return (
     <>
-      {/* Card-style header with an internal, clipped stage */}
       <header id="site-header" className="fixed top-3 left-0 right-0 z-50">
         <div className="mx-auto max-w-5xl px-4">
-          <div className="rounded-2xl bg-card/80 backdrop-blur-md shadow-xl">
-            {/* Recede stage sits behind the nav row and clips clones */}
-            <div id="recede-stage" aria-hidden
-                 className="pointer-events-none relative h-2 overflow-hidden rounded-2xl"
-                 style={{ transformStyle: "preserve-3d", perspective: "900px" }} />
+          <div className="rounded-2xl bg-card/80 backdrop-blur-md shadow-xl overflow-hidden">
+            {/* CLIPPED STAGE FOR RECEDING CONTENT */}
+            <div
+              id="recede-stage"
+              aria-hidden
+              className="pointer-events-none relative h-2 overflow-hidden"
+              style={{ transformStyle: "preserve-3d", perspective: "900px" }}
+            />
             <div className="flex items-center px-4 py-3">
               <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
                 <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
@@ -93,7 +113,14 @@ export default function Nav() {
 
               <nav className="ml-auto hidden md:flex items-center gap-6">
                 <NavLinks />
-                <SearchCluster open={searchOpen} setOpen={setSearchOpen} q={q} setQ={setQ} results={results} popRef={popRef} />
+                <SearchCluster
+                  open={searchOpen}
+                  setOpen={setSearchOpen}
+                  q={q}
+                  setQ={setQ}
+                  results={results}
+                  popRef={popRef}
+                />
               </nav>
 
               <div className="ml-auto md:hidden flex items-center gap-2">
@@ -102,7 +129,7 @@ export default function Nav() {
                   className="rounded-xl border border-subtle p-2"
                   aria-label="toggle menu"
                   aria-expanded={menuOpen}
-                  onClick={() => setMenuOpen(v => !v)}
+                  onClick={() => setMenuOpen((v) => !v)}
                 >
                   {menuOpen ? <X size={18} /> : <Menu size={18} />}
                 </button>
@@ -121,23 +148,22 @@ export default function Nav() {
               className="md:hidden mx-auto max-w-5xl px-4"
             >
               <div className="mt-2 rounded-2xl bg-card/80 backdrop-blur-md shadow-xl">
-                <div className="px-4 py-4"><NavLinks /></div>
+                <div className="px-4 py-4">
+                  <NavLinks />
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </header>
 
-      {/* spacer for fixed header */}
       <div aria-hidden className="h-[82px] md:h-[88px]" />
-
       <RecedeController />
     </>
   );
 }
 
-/* ---------- Subcomponents ---------- */
-
+/* ─────────────── NAV LINKS ─────────────── */
 function NavLinks() {
   const Item = ({ href, label }: { href: string; label: string }) => (
     <Link href={href} prefetch className="relative text-sm text-[color:var(--color-fg)]/85">
@@ -152,21 +178,41 @@ function NavLinks() {
       </span>
     </Link>
   );
+
   const linkedin = process.env.NEXT_PUBLIC_LINKEDIN_URL || "#";
+
   return (
     <ul className="flex items-center gap-6">
       <li><Item href="/experience" label="experience" /></li>
       <li><Item href="/work" label="work" /></li>
       <li><Item href="/about" label="about" /></li>
-      <li><a href={linkedin} target="_blank" rel="noopener noreferrer" className="relative text-sm text-[color:var(--color-fg)]/85">linkedin</a></li>
+      <li>
+        <a
+          href={linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative text-sm text-[color:var(--color-fg)]/85"
+        >
+          linkedin
+        </a>
+      </li>
     </ul>
   );
 }
 
+/* ─────────────── SEARCH CLUSTER ─────────────── */
 function SearchCluster({
-  open, setOpen, q, setQ, results, popRef,
+  open,
+  setOpen,
+  q,
+  setQ,
+  results,
+  popRef,
 }: {
-  open: boolean; setOpen: (v: boolean) => void; q: string; setQ: (v: string) => void;
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  q: string;
+  setQ: (v: string) => void;
   results: Array<{ title: string; href: string; kind: string }>;
   popRef: React.RefObject<HTMLDivElement>;
 }) {
@@ -203,7 +249,133 @@ function SearchCluster({
                 placeholder="Search across site…"
                 className="w-full bg-transparent text-base outline-none focus:outline-none ring-0 focus:ring-0 caret-white placeholder:text-muted-foreground"
                 autoFocus
-                onKeyDown={(e) => { if (e.key === "Enter") { const top = results[0]; if (top) window.location.href = top.href; } }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const top = results[0];
+                    if (top) window.location.href = top.href;
+                  }
+                }}
               />
             </div>
-            <div className="h-px
+            <div className="h-px w-full bg-[color:var(--color-border)]/60" />
+            <div>
+              {q.trim().length === 0 ? (
+                <div className="px-3 py-3 text-sm text-muted">Type to search…</div>
+              ) : results.length === 0 ? (
+                <div className="px-3 py-3 text-sm text-muted">No matches.</div>
+              ) : (
+                results.map((r, i) => (
+                  <motion.a
+                    key={`${r.href}-${i}`}
+                    href={r.href}
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.12, ease, delay: i * 0.015 }}
+                    className="block px-3 py-2 text-sm hover:bg-[color:var(--color-muted)]/50"
+                    onClick={() => setOpen(false)}
+                  >
+                    <span className="text-[color:var(--color-fg)]/90">{r.title}</span>
+                    <span className="ml-2 text-xs text-muted">• {r.kind}</span>
+                  </motion.a>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ─────────────── RECEDE CONTROLLER ─────────────── */
+function RecedeController() {
+  useEffect(() => {
+    const header = document.getElementById("site-header");
+    const stage = document.getElementById("recede-stage");
+    if (!header || !stage) return;
+
+    let active: { el: HTMLElement; clone: HTMLElement } | null = null;
+
+    const sections = Array.from(document.querySelectorAll("main section")) as HTMLElement[];
+
+    const resetActive = () => {
+      if (!active) return;
+      active.el.style.visibility = "";
+      active.clone.remove();
+      active = null;
+    };
+
+    const apply = () => {
+      const hb = header.getBoundingClientRect();
+      const bandTop = hb.top;
+      const bandBottom = hb.bottom;
+      const bandH = Math.max(1, bandBottom - bandTop);
+
+      let target: HTMLElement | null = null;
+      for (const el of sections) {
+        const r = el.getBoundingClientRect();
+        if (r.top < bandBottom && r.bottom > bandTop) {
+          target = el;
+          break;
+        }
+      }
+
+      if (!target) {
+        resetActive();
+        return;
+      }
+
+      const tb = target.getBoundingClientRect();
+      const t = Math.min(Math.max((bandBottom - tb.top) / bandH, 0), 1);
+
+      if (t <= 0) {
+        resetActive();
+        return;
+      }
+
+      if (!active || active.el !== target) {
+        if (active) resetActive();
+        const clone = target.cloneNode(true) as HTMLElement;
+        clone.style.margin = "0";
+        clone.style.position = "absolute";
+        clone.style.top = "0";
+        clone.style.left = `${tb.left}px`;
+        clone.style.width = `${tb.width}px`;
+        clone.style.willChange = "transform, opacity, filter";
+        stage.appendChild(clone);
+        active = { el: target, clone };
+      }
+
+      const clone = active.clone;
+      const translateZ = -200 * t;
+      const translateY = -20 * t;
+      const scale = 1 - 0.15 * t;
+      const opacity = 1 - 0.2 * t;
+      const blur = 1 * t;
+
+      clone.style.transform = `perspective(900px) translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`;
+      clone.style.opacity = String(opacity);
+      clone.style.filter = `blur(${blur}px)`;
+      target.style.visibility = "hidden";
+
+      if (t >= 1 || tb.bottom <= bandTop) {
+        resetActive();
+      }
+    };
+
+    const onScroll = () => apply();
+    const onResize = () => apply();
+    apply();
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      resetActive();
+    };
+  }, []);
+
+  return null;
+}
