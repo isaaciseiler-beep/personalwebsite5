@@ -1,14 +1,14 @@
-// components/Hero.tsx — FULL REPLACEMENT (navy recessed “camera-bump” hero)
+// components/Hero.tsx — FULL REPLACEMENT (fix typed easing)
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, cubicBezier } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const NAME = "isaac seiler";
+const ease = cubicBezier(0.2, 0, 0, 1);
 
 export default function Hero() {
-  // Reduce motion respect
   const [reduceMotion, setRM] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -18,42 +18,29 @@ export default function Hero() {
     return () => mq.removeEventListener?.("change", l);
   }, []);
 
-  // Shared easing
-  const tr = { duration: 0.45, ease: [0.2, 0, 0, 1] };
+  const tr = { duration: 0.45, ease };
 
   return (
-    <section
-      id="hero"
-      className="relative isolate"
-      aria-label="intro"
-    >
-      {/* Recessed navy slab (inverse camera bump) */}
-      <div
-        className="mx-auto w-full max-w-6xl px-4"
-        style={{ paddingTop: "min(8vh, 56px)" }}
-      >
+    <section id="hero" className="relative isolate" aria-label="intro">
+      <div className="mx-auto w-full max-w-6xl px-4" style={{ paddingTop: "min(8vh, 56px)" }}>
         <motion.div
           initial={reduceMotion ? undefined : { opacity: 0, y: 14 }}
           animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
           transition={tr}
           className="relative rounded-3xl overflow-hidden"
           style={{
-            // Deep navy base with vertical gradient
             background:
               "linear-gradient(180deg, rgba(10,18,36,0.86) 0%, rgba(8,14,28,0.92) 100%)",
-            // Recessed illusion: multiple inset shadows + subtle outer penumbra
             boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.06), " +            // top inner highlight
-              "inset 0 -1px 0 rgba(0,0,0,0.35), " +                 // bottom inner shade
-              "inset 0 22px 60px rgba(255,255,255,0.04), " +        // broad inner lift
-              "inset 0 -28px 60px rgba(0,0,0,0.35), " +             // broad inner recess
-              "0 22px 60px rgba(0,0,0,0.32)",                       // outer soft drop
+              "inset 0 1px 0 rgba(255,255,255,0.06), " +
+              "inset 0 -1px 0 rgba(0,0,0,0.35), " +
+              "inset 0 22px 60px rgba(255,255,255,0.04), " +
+              "inset 0 -28px 60px rgba(0,0,0,0.35), " +
+              "0 22px 60px rgba(0,0,0,0.32)",
             border: "1px solid rgba(255,255,255,0.05)",
-            // Size: fill front screen nicely
             minHeight: "min(72vh, 760px)",
           }}
         >
-          {/* Subtle noise + vignette for material feel */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0"
@@ -75,7 +62,6 @@ export default function Hero() {
             }}
           />
 
-          {/* Animated top edge “chamfer” highlight */}
           <motion.div
             aria-hidden
             initial={reduceMotion ? undefined : { opacity: 0 }}
@@ -90,9 +76,7 @@ export default function Hero() {
             }}
           />
 
-          {/* Content */}
           <div className="relative z-10 flex min-h-[56vh] flex-col items-center justify-center px-6 py-12 sm:py-16">
-            {/* Name */}
             <motion.h1
               initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
               animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -100,18 +84,14 @@ export default function Hero() {
               aria-label={NAME}
               className="select-none text-center font-extrabold leading-[0.92] tracking-tight"
               style={{
-                // Large but fluid
                 fontSize: "clamp(2.8rem, 9vw, 6.8rem)",
-                // Dim silver at rest → bright on hover
                 color: "rgba(229,233,242,0.82)",
-                textShadow:
-                  "0 1px 0 rgba(0,0,0,0.35), 0 14px 40px rgba(0,0,0,0.35)",
+                textShadow: "0 1px 0 rgba(0,0,0,0.35), 0 14px 40px rgba(0,0,0,0.35)",
               }}
             >
               {NAME}
             </motion.h1>
 
-            {/* Subtitle */}
             <motion.p
               initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
               animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -122,7 +102,6 @@ export default function Hero() {
               Portfolio, experiments, and work notes at the edge of AI, product, and communications.
             </motion.p>
 
-            {/* Buttons */}
             <motion.div
               initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
               animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -136,7 +115,6 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Inner inset ring for extra recess depth */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-4 rounded-2xl"
@@ -165,13 +143,11 @@ function CTA({
   const style: React.CSSProperties = {
     background:
       "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.02) 100%)",
-    boxShadow:
-      "inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.25)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.25)",
     color: "rgba(235,239,248,0.92)",
   };
   const hover: React.CSSProperties = {
-    boxShadow:
-      "inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 28px rgba(0,0,0,0.34)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 28px rgba(0,0,0,0.34)",
     transform: "translateY(-1px)",
   };
 
