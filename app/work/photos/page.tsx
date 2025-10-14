@@ -24,7 +24,13 @@ export default function PhotosPage() {
 
   // map should use all geotagged items, not just shown slice
   const withCoords = useMemo(
-    () => all.filter((p) => typeof p.lat === "number" && typeof p.lng === "number"),
+    () =>
+      all.filter(
+        (p) =>
+          p.location &&
+          typeof p.location.lat === "number" &&
+          typeof p.location.lng === "number"
+      ),
     [all]
   );
 
@@ -34,7 +40,7 @@ export default function PhotosPage() {
   const items = shown.map((p) => ({
     src: p.image ?? "",
     alt: p.title,
-    caption: p.location || p.title,
+    caption: p.location?.name || p.title,
   }));
 
   return (
@@ -46,7 +52,7 @@ export default function PhotosPage() {
       {/* visible map (client-only) */}
       <Reveal>
         <div className="mt-6">
-          <MapView photos={withCoords} />
+          <MapView projects={withCoords} />
         </div>
       </Reveal>
 
