@@ -1,14 +1,18 @@
-// components/Hero.tsx — FULL REPLACEMENT (fix typed easing)
+// components/Hero.tsx — FINAL refined hero
 "use client";
 
-import { motion, cubicBezier } from "framer-motion";
+import { motion, useScroll, useTransform, cubicBezier } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const NAME = "isaac seiler";
 const ease = cubicBezier(0.2, 0, 0, 1);
 
 export default function Hero() {
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 300], [0, -14]);
+  const scale = useTransform(scrollY, [0, 300], [1, 0.985]);
+
   const [reduceMotion, setRM] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -18,114 +22,133 @@ export default function Hero() {
     return () => mq.removeEventListener?.("change", l);
   }, []);
 
-  const tr = { duration: 0.45, ease };
-
   return (
-    <section id="hero" className="relative isolate" aria-label="intro">
-      <div className="mx-auto w-full max-w-6xl px-4" style={{ paddingTop: "min(8vh, 56px)" }}>
-        <motion.div
-          initial={reduceMotion ? undefined : { opacity: 0, y: 14 }}
-          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-          transition={tr}
-          className="relative rounded-3xl overflow-hidden"
+    <section id="hero" className="relative isolate overflow-hidden">
+      {/* immersive gradient background */}
+      <div aria-hidden className="absolute inset-0">
+        <div
+          className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(10,18,36,0.86) 0%, rgba(8,14,28,0.92) 100%)",
-            boxShadow:
-              "inset 0 1px 0 rgba(255,255,255,0.06), " +
-              "inset 0 -1px 0 rgba(0,0,0,0.35), " +
-              "inset 0 22px 60px rgba(255,255,255,0.04), " +
-              "inset 0 -28px 60px rgba(0,0,0,0.35), " +
-              "0 22px 60px rgba(0,0,0,0.32)",
-            border: "1px solid rgba(255,255,255,0.05)",
-            minHeight: "min(72vh, 760px)",
+              "radial-gradient(120% 100% at -20% 0%, rgba(14,18,33,1) 0%, rgba(10,12,25,0.95) 45%, rgba(6,8,15,0.8) 70%, rgba(2,4,8,0.6) 100%)",
           }}
-        >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 55%), radial-gradient(100% 100% at 50% 100%, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 50%)",
-              mixBlendMode: "overlay",
-            }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{
-              backgroundImage:
-                "url(\"data:image/svg+xml;utf8,\
+        />
+        {/* vignette + grain */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(100% 140% at 70% 120%, rgba(255,255,255,0.04) 0%, transparent 80%)",
+            mixBlendMode: "overlay",
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'>\
 <filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter>\
-<rect width='160' height='160' filter='url(%23n)' opacity='0.03'/></svg>\")",
-            }}
-          />
-
-          <motion.div
-            aria-hidden
-            initial={reduceMotion ? undefined : { opacity: 0 }}
-            animate={reduceMotion ? undefined : { opacity: 1 }}
-            transition={{ ...tr, delay: 0.15 }}
-            className="absolute inset-x-0 -top-px h-1"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)",
-              filter: "blur(0.5px)",
-              opacity: 0.7,
-            }}
-          />
-
-          <div className="relative z-10 flex min-h-[56vh] flex-col items-center justify-center px-6 py-12 sm:py-16">
-            <motion.h1
-              initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-              transition={{ ...tr, delay: 0.05 }}
-              aria-label={NAME}
-              className="select-none text-center font-extrabold leading-[0.92] tracking-tight"
-              style={{
-                fontSize: "clamp(2.8rem, 9vw, 6.8rem)",
-                color: "rgba(229,233,242,0.82)",
-                textShadow: "0 1px 0 rgba(0,0,0,0.35), 0 14px 40px rgba(0,0,0,0.35)",
-              }}
-            >
-              {NAME}
-            </motion.h1>
-
-            <motion.p
-              initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-              transition={{ ...tr, delay: 0.15 }}
-              className="mt-5 max-w-2xl text-center text-base sm:text-lg"
-              style={{ color: "rgba(225,229,238,0.78)" }}
-            >
-              Portfolio, experiments, and work notes at the edge of AI, product, and communications.
-            </motion.p>
-
-            <motion.div
-              initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-              transition={{ ...tr, delay: 0.25 }}
-              className="mt-8 flex flex-wrap items-center justify-center gap-3"
-            >
-              <CTA href="/experience" label="Experience" />
-              <CTA href="/work/projects" label="Projects" />
-              <CTA href="/about" label="About" />
-              <CTA href="mailto:isaac.seiler@outlook.com" label="Contact" external />
-            </motion.div>
-          </div>
-
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-4 rounded-2xl"
-            style={{
-              boxShadow:
-                "inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 18px 50px rgba(255,255,255,0.03), inset 0 -18px 60px rgba(0,0,0,0.35)",
-            }}
-          />
-        </motion.div>
+<rect width='160' height='160' filter='url(%23n)' opacity='0.02'/></svg>\")",
+          }}
+        />
       </div>
+
+      {/* parallax content */}
+      <motion.div
+        style={reduceMotion ? undefined : { y, scale }}
+        className="relative mx-auto max-w-5xl px-4 pt-24 pb-20 sm:pt-32 sm:pb-24"
+      >
+        <div className="max-w-3xl">
+          {/* name */}
+          <h1
+            className="select-none text-[clamp(3.8rem,9vw,8rem)] leading-[0.88] tracking-tight"
+            aria-label={NAME}
+          >
+            <AnimatedName text={NAME} />
+          </h1>
+
+          {/* subtitle */}
+          <p className="mt-6 text-lg text-[color:var(--color-fg)]/80 max-w-[36ch]">
+            Portfolio, experiments, and work notes at the edge of AI, product, and communications.
+          </p>
+
+          {/* buttons */}
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <CTA href="/experience" label="Experience" />
+            <CTA href="/work/projects" label="Projects" />
+            <CTA href="/about" label="About" />
+            <CTA href="mailto:isaac.seiler@outlook.com" label="Contact" external />
+          </div>
+        </div>
+
+        {/* subtle inner light border */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 rounded-[2rem]"
+          style={{
+            boxShadow:
+              "inset 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 40px rgba(255,255,255,0.04)",
+          }}
+        />
+      </motion.div>
     </section>
+  );
+}
+
+function AnimatedName({ text }: { text: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [hover, setHover] = useState(false);
+  const [pos, setPos] = useState({ x: 0.5, y: 0.5 });
+
+  const onMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setPos({
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height,
+    });
+  };
+
+  const base = "rgba(229,233,242,0.24)";
+  const gradient = `radial-gradient(circle at ${pos.x * 100}% ${pos.y * 100}%, rgba(255,255,255,0.96) 8%, rgba(189,197,216,0.6) 25%, rgba(50,58,76,0.12) 90%)`;
+
+  return (
+    <motion.span
+      ref={ref}
+      onMouseMove={(e) => {
+        setHover(true);
+        onMove(e);
+      }}
+      onMouseLeave={() => setHover(false)}
+      className="inline-block relative cursor-default"
+      style={{
+        color: hover ? "transparent" : base,
+        backgroundImage: hover ? gradient : "none",
+        backgroundClip: "text",
+        WebkitBackgroundClip: "text",
+        WebkitTextStroke: "0.6px rgba(255,255,255,0.16)",
+        transition: "background-image 0.35s cubic-bezier(.2,0,0,1), color 0.25s cubic-bezier(.2,0,0,1)",
+      }}
+    >
+      {text}
+      {hover && (
+        <motion.span
+          aria-hidden
+          className="absolute inset-0 blur-[8px] opacity-25"
+          style={{
+            backgroundImage: gradient,
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+          }}
+          transition={{ duration: 0.35, ease }}
+        >
+          {text}
+        </motion.span>
+      )}
+    </motion.span>
   );
 }
 
@@ -139,45 +162,44 @@ function CTA({
   external?: boolean;
 }) {
   const base =
-    "rounded-xl border border-white/10 px-4 py-2 text-sm leading-none transition-transform will-change-transform";
-  const style: React.CSSProperties = {
+    "pressable rounded-xl border border-white/10 px-4 py-2 text-sm transition-transform duration-150 ease-[cubic-bezier(.2,0,0,1)]";
+  const normal: React.CSSProperties = {
     background:
-      "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.02) 100%)",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.25)",
-    color: "rgba(235,239,248,0.92)",
+      "linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)",
+    color: "rgba(245,247,250,0.88)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 6px rgba(0,0,0,0.25)",
   };
   const hover: React.CSSProperties = {
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 28px rgba(0,0,0,0.34)",
     transform: "translateY(-1px)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 22px rgba(0,0,0,0.38)",
   };
 
-  if (external) {
+  if (external)
     return (
       <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className={base + " pressable text-reactive"}
-        style={style}
+        className={base}
+        style={normal}
         onMouseEnter={(e) => Object.assign((e.currentTarget as HTMLAnchorElement).style, hover)}
         onMouseLeave={(e) =>
-          Object.assign((e.currentTarget as HTMLAnchorElement).style, style)
+          Object.assign((e.currentTarget as HTMLAnchorElement).style, normal)
         }
       >
         {label}
       </a>
     );
-  }
 
   return (
     <Link
       href={href}
       prefetch
-      className={base + " pressable text-reactive"}
-      style={style}
+      className={base}
+      style={normal}
       onMouseEnter={(e) => Object.assign((e.currentTarget as HTMLAnchorElement).style, hover)}
       onMouseLeave={(e) =>
-        Object.assign((e.currentTarget as HTMLAnchorElement).style, style)
+        Object.assign((e.currentTarget as HTMLAnchorElement).style, normal)
       }
     >
       {label}
