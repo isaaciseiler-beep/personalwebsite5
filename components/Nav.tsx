@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (adds recede-on-overlap effect)
+// components/Nav.tsx — FULL REPLACEMENT (card header + clipped recede stage)
 "use client";
 
 import Link from "next/link";
@@ -18,32 +18,28 @@ export default function Nav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
 
-  // ---------- Search index ----------
+  // ------- search index (projects + now + press; photos only by location) -------
   const all = projects as Project[];
   const indexText = useMemo(() => {
     const items: Array<{ title: string; href: string; kind: string; hay: string }> = [];
-
     for (const p of all.filter(x => x.kind === "project")) {
       const tags = Array.isArray((p as any).tags) ? (p as any).tags.join(" ") : "";
       const desc = (p as any)?.description ?? "";
       const hay = [p.title, p.summary, p.location, tags, desc].filter(Boolean).join(" ").toLowerCase();
       items.push({ title: p.title, href: `/work/projects#${p.slug}`, kind: "project", hay });
     }
-
     for (const p of all.filter(x => x.kind === "photo")) {
       const loc = (p.location ?? "").toLowerCase();
       if (!loc) continue;
-      items.push({ title: p.title || p.location || "photo", href: "/work/photos", kind: "photo", hay: loc });
+      items.push({ title: p.location || p.title || "photo", href: "/work/photos", kind: "photo", hay: loc });
     }
-
     if ((now as any)?.text) {
-      items.push({ title: (now as any).text as string, href: "/#nowbar", kind: "now", hay: String((now as any).text).toLowerCase() });
+      const t = String((now as any).text);
+      items.push({ title: t, href: "/#nowbar", kind: "now", hay: t.toLowerCase() });
     }
-
     for (const pill of PRESS_PILLS) {
       items.push({ title: pill.name, href: pill.href, kind: "press", hay: pill.name.toLowerCase() });
     }
-
     return items;
   }, [all]);
 
@@ -53,7 +49,7 @@ export default function Nav() {
     return indexText.filter(r => r.hay.includes(s)).slice(0, 8);
   }, [q, indexText]);
 
-  // keyboard open/close
+  // keyboard open/close + close on outside + close on scroll up
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const metaK = e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
@@ -63,8 +59,6 @@ export default function Nav() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  // close on outside click
   const popRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!searchOpen) return;
@@ -72,8 +66,6 @@ export default function Nav() {
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, [searchOpen]);
-
-  // close on scroll up
   useEffect(() => {
     let lastY = window.scrollY;
     const onScroll = () => { const y = window.scrollY; if (y < lastY) setSearchOpen(false); lastY = y; };
@@ -83,10 +75,14 @@ export default function Nav() {
 
   return (
     <>
-      {/* Card-style header (no borders) */}
+      {/* Card-style header with an internal, clipped stage */}
       <header id="site-header" className="fixed top-3 left-0 right-0 z-50">
         <div className="mx-auto max-w-5xl px-4">
           <div className="rounded-2xl bg-card/80 backdrop-blur-md shadow-xl">
+            {/* Recede stage sits behind the nav row and clips clones */}
+            <div id="recede-stage" aria-hidden
+                 className="pointer-events-none relative h-2 overflow-hidden rounded-2xl"
+                 style={{ transformStyle: "preserve-3d", perspective: "900px" }} />
             <div className="flex items-center px-4 py-3">
               <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
                 <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
@@ -108,7 +104,7 @@ export default function Nav() {
                   aria-expanded={menuOpen}
                   onClick={() => setMenuOpen(v => !v)}
                 >
-                  {menuOpen ? <Menu size={18} /> : <Menu size={18} />}
+                  {menuOpen ? <X size={18} /> : <Menu size={18} />}
                 </button>
               </div>
             </div>
@@ -125,20 +121,17 @@ export default function Nav() {
               className="md:hidden mx-auto max-w-5xl px-4"
             >
               <div className="mt-2 rounded-2xl bg-card/80 backdrop-blur-md shadow-xl">
-                <div className="px-4 py-4">
-                  <NavLinks />
-                </div>
+                <div className="px-4 py-4"><NavLinks /></div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </header>
 
-      {/* spacer to offset fixed header */}
+      {/* spacer for fixed header */}
       <div aria-hidden className="h-[82px] md:h-[88px]" />
 
-      {/* recede-on-overlap script */}
-      <RecedeScript />
+      <RecedeController />
     </>
   );
 }
@@ -185,8 +178,10 @@ function SearchCluster({
         onClick={() => setOpen(true)}
         className="group flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-[color:var(--color-muted)]"
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" className="opacity-90"><path fill="currentColor" d="M10 18a7.95 7.95 0 0 0 4.9-1.7l4.4 4.4l1.4-1.4l-4.4-4.4A8 8 0 1 0 10 18m0-14a6 6 0 1 1 0 12a6 6 0 0 1 0-12" /></svg>
-        <span className="rounded-md border border-subtle px-1.5 py-0.5 text-[10px] text-muted group-hover:text-[color:var(--color-fg)]/90">⌘K</span>
+        <Search size={18} />
+        <span className="rounded-md border border-subtle px-1.5 py-0.5 text-[10px] text-muted group-hover:text-[color:var(--color-fg)]/90">
+          ⌘K
+        </span>
       </button>
 
       <AnimatePresence>
@@ -201,7 +196,7 @@ function SearchCluster({
             style={{ background: "color-mix(in srgb, var(--color-bg) 55%, transparent)" }}
           >
             <div className="flex items-center gap-2 px-3 py-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" className="opacity-90"><path fill="currentColor" d="M10 18a7.95 7.95 0 0 0 4.9-1.7l4.4 4.4l1.4-1.4l-4.4-4.4A8 8 0 1 0 10 18m0-14a6 6 0 1 1 0 12a6 6 0 0 1 0-12" /></svg>
+              <Search size={16} aria-hidden />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -211,102 +206,4 @@ function SearchCluster({
                 onKeyDown={(e) => { if (e.key === "Enter") { const top = results[0]; if (top) window.location.href = top.href; } }}
               />
             </div>
-            <div className="h-px w-full bg-[color:var(--color-border)]/60" />
-            <div>
-              <AnimatePresence initial={false}>
-                {q.trim().length === 0 ? (
-                  <div className="px-3 py-3 text-sm text-muted">Type to search…</div>
-                ) : results.length === 0 ? (
-                  <div className="px-3 py-3 text-sm text-muted">No matches.</div>
-                ) : (
-                  results.map((r, i) => (
-                    <motion.a
-                      key={`${r.href}-${i}`}
-                      href={r.href}
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.12, ease, delay: i * 0.015 }}
-                      className="block px-3 py-2 text-sm hover:bg-[color:var(--color-muted)]/50"
-                      onClick={() => setOpen(false)}
-                    >
-                      <span className="text-[color:var(--color-fg)]/90">{r.title}</span>
-                      <span className="ml-2 text-xs text-muted">• {r.kind}</span>
-                    </motion.a>
-                  ))
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* ---------- Recede effect ---------- */
-
-function RecedeScript() {
-  useEffect(() => {
-    const header = document.getElementById("site-header");
-    if (!header) return;
-
-    const sections = Array.from(document.querySelectorAll("main section")) as HTMLElement[];
-    sections.forEach(s => {
-      s.style.transformStyle = "preserve-3d";
-      s.style.willChange = "transform, filter, opacity";
-      s.style.transformOrigin = "top center";
-    });
-
-    const apply = () => {
-      const hb = header.getBoundingClientRect();
-      const bandTop = hb.top;
-      const bandBottom = hb.bottom; // card height
-      const bandH = bandBottom - bandTop;
-
-      let target: HTMLElement | null = null;
-      let minDist = Infinity;
-
-      for (const el of sections) {
-        const r = el.getBoundingClientRect();
-        // choose the section whose top is within the header band or just beneath it
-        const dist = Math.abs(r.top - bandBottom);
-        if (r.top < bandBottom + 8 && r.bottom > bandTop && dist < minDist) {
-          target = el;
-          minDist = dist;
-        } else {
-          // reset others
-          el.style.transform = "";
-          el.style.opacity = "";
-          el.style.filter = "";
-        }
-      }
-
-      if (target) {
-        const rt = target.getBoundingClientRect();
-        const t = Math.min(Math.max((bandBottom - rt.top) / bandH, 0), 1); // 0..1 within band
-        const translateZ = -90 * t; // px
-        const translateY = -10 * t;
-        const scale = 1 - 0.08 * t;
-        const blur = 0.6 * t;
-
-        target.style.transform = `perspective(900px) translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`;
-        target.style.opacity = String(1 - 0.08 * t);
-        target.style.filter = `blur(${blur}px)`;
-      }
-    };
-
-    const onScroll = () => apply();
-    const onResize = () => apply();
-    apply();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      sections.forEach(s => { s.style.transform = ""; s.style.opacity = ""; s.style.filter = ""; });
-    };
-  }, []);
-
-  return null;
-}
+            <div className="h-px
