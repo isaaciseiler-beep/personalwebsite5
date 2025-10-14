@@ -1,272 +1,231 @@
-// components/Nav.tsx — FULL FILE REPLACEMENT
+// components/Nav.tsx — FULL REPLACEMENT (adds working Search)
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Menu, X, Search } from "lucide-react";
-import ThemeLogo from "@/components/ThemeLogo";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSearch } from "@/providers/SearchProvider";
+import ThemeLogo from "@/components/ThemeLogo";
 
-type Theme = "dark" | "light";
+const MotionSpan = motion.span;
 
-function useTheme(): Theme {
-  const [t, setT] = useState<Theme>("dark");
+function useTheme(): "dark" | "light" {
+  const [t, setT] = useState<"dark" | "light">("dark");
   useEffect(() => {
     const el = document.documentElement;
-    const read = () => setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
-    read();
-    const obs = new MutationObserver(read);
+    const set = () => setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
+    set();
+    const obs = new MutationObserver(set);
     obs.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
     return () => obs.disconnect();
   }, []);
   return t;
 }
 
-const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/experience", label: "Experience" },
-  { href: "/about", label: "About" },
-  { href: "https://www.linkedin.com/in/isaacseiler/", label: "LinkedIn", external: true },
-];
-
-function normalize(p: string) {
-  if (!p) return "/";
-  return p.endsWith("/") && p !== "/" ? p.slice(0, -1) : p;
-}
-
-function useScrolled(threshold = 24) {
-  const [scrolled, set] = useState(false);
-  useEffect(() => {
-    const onScroll = () => set(window.scrollY > threshold);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [threshold]);
-  return scrolled;
-}
-
-function progressPct() {
-  const h = document.documentElement;
-  const max = (h.scrollHeight - h.clientHeight) || 1;
-  const y = window.scrollY || 0;
-  return Math.min(100, Math.max(0, (y / max) * 100));
-}
-
-export default function Nav() {
+export function Nav() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const theme = useTheme();
-  const pathname = normalize(usePathname() || "/");
-  const [open, setOpen] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const scrolled = useScrolled(24);
-  const announceRef = useRef<HTMLDivElement>(null);
-  const search = useSearch();
+  const router = useRouter();
+  const linkedin = process.env.NEXT_PUBLIC_LINKEDIN_URL || "#";
+  const linkHover = { y: -1, transition: { duration: 0.12, ease: [0.2, 0, 0, 1] } };
 
+  // open search with "/" and ⌘K / Ctrl+K
   useEffect(() => {
-    const onScroll = () => setProgress(progressPct());
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+    const onKey = (e: KeyboardEvent) => {
+      const metaK = (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey));
+      const slash = e.key === "/";
+      if (metaK || slash) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key === "Escape") setSearchOpen(false);
     };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   useEffect(() => {
-    const region = announceRef.current;
-    if (!region) return;
-    const label = NAV_LINKS.find(l => normalize(l.href) === pathname)?.label ?? "page";
-    region.textContent = `Navigated to ${label}`;
-  }, [pathname]);
+    if (searchOpen) setTimeout(() => inputRef.current?.focus(), 10);
+  }, [searchOpen]);
 
-  const isActive = useMemo(() => {
-    return (href: string) => {
-      const h = normalize(href);
-      return h === "/" ? pathname === "/" : pathname === h || pathname.startsWith(h + "/");
-    };
-  }, [pathname]);
+  const onSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const term = q.trim();
+    setSearchOpen(false);
+    if (term.length === 0) return;
+    router.push(`/work?query=${encodeURIComponent(term)}`);
+  };
 
-  const navH = scrolled ? 62 : 80;
-  const logoScale = scrolled ? 0.92 : 1;
+  const NavLinks = () => (
+    <ul className="flex flex-col md:flex-row gap-6 md:gap-4 items-start md:items-center">
+      <li>
+        <Link href="/experience" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
+          <MotionSpan whileHover={linkHover}>experience</MotionSpan>
+        </Link>
+      </li>
+      <li>
+        <Link href="/work" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
+          <MotionSpan whileHover={linkHover}>work</MotionSpan>
+        </Link>
+      </li>
+      <li>
+        <Link href="/about" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
+          <MotionSpan whileHover={linkHover}>about</MotionSpan>
+        </Link>
+      </li>
+      <li>
+        <a
+          href={linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link-underline hover:text-[color:var(--color-accent)]"
+          aria-label="linkedin"
+        >
+          <MotionSpan whileHover={linkHover}>linkedin</MotionSpan>
+        </a>
+      </li>
+    </ul>
+  );
+
+  const tint =
+    theme === "light"
+      ? "color-mix(in srgb, var(--color-bg) 70%, transparent)"
+      : "color-mix(in srgb, var(--color-bg) 55%, transparent)";
+
+  const noise =
+    "url('data:image/svg+xml;utf8,\
+<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"160\" height=\"160\" viewBox=\"0 0 160 160\">\
+<filter id=\"n\"><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.9\" numOctaves=\"2\" stitchTiles=\"stitch\"/></filter>\
+<rect width=\"160\" height=\"160\" filter=\"url(%23n)\" opacity=\"0.035\"/>\
+</svg>')";
 
   return (
     <>
-      <a
-        href="#content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-black/80 focus:px-3 focus:py-2 focus:text-white"
-      >
-        Skip to content
-      </a>
-      <div ref={announceRef} className="sr-only" aria-live="polite" />
-
-      <header
-        data-no-outline
-        className={[
-          "fixed inset-x-0 top-0 z-50",
-          "supports-[backdrop-filter]:backdrop-blur-md",
-          "bg-transparent",
-          "transition-[height,transform] duration-200",
-        ].join(" ")}
-        style={{ height: navH }}
-        aria-label="Main"
-      >
-        {/* progress bar */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5" aria-hidden>
-          <div
-            className={theme === "light" ? "h-full bg-black/40" : "h-full bg-white/40"}
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        {/* hairline */}
+      <header className="fixed inset-x-0 top-0 z-50">
         <div
-          className={["pointer-events-none absolute inset-x-0 top-0 h-px", theme === "light" ? "bg-black/10" : "bg-white/10"].join(" ")}
           aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            background:
+              `radial-gradient(1200px 1200px at 20% -40%, ${tint} 0%, transparent 54%),` +
+              `linear-gradient(${tint}, ${tint})`,
+            backgroundImage: `${noise}`,
+            backgroundBlendMode: "overlay, normal, normal, normal",
+            borderBottom: "1px solid var(--color-border)",
+            boxShadow: "0 10px 28px rgba(0,0,0,0.18)",
+          }}
         />
 
-        <nav className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-full">
-          <div className="flex h-full items-center justify-between gap-4">
-            {/* Logo */}
-            <Link
-              href="/"
-              className="shrink-0 focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
-            >
-              <motion.div
-                style={{ originY: 0.5, originX: 0.5 }}
-                animate={{ scale: logoScale }}
-                transition={{ type: "tween", duration: 0.18 }}
-              >
-                <ThemeLogo />
-              </motion.div>
-            </Link>
+        <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
+          <a href="#content" className="skip-link">skip to content</a>
 
-            {/* Desktop links */}
-            <div className="hidden md:flex items-center gap-2">
-              {NAV_LINKS.map((l) => {
-                const active = isActive(l.href);
-                const baseClasses = [
-                  "group relative rounded-lg px-3 py-2 text-sm font-medium pressable text-reactive",
-                  "focus-visible:outline-none focus-visible:ring-0",
-                  active ? "text-current" : "text-current/80 hover:text-current",
-                  "transition-[color,opacity] duration-150",
-                ].join(" ");
+          <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
+            <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
+              <ThemeLogo size={42} />
+            </motion.div>
+            <span className="sr-only">isaac</span>
+          </Link>
 
-                return l.external ? (
-                  <a
-                    key={l.href}
-                    href={l.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={baseClasses}
-                  >
-                    <span>{l.label}</span>
-                  </a>
-                ) : (
-                  <Link key={l.href} href={l.href} className={baseClasses}>
-                    <span>{l.label}</span>
-                    <span
-                      aria-hidden
-                      className="pointer-events-none absolute left-2 right-2 -bottom-0.5 h-[2px] overflow-hidden"
-                    >
-                      <span
-                        className={[
-                          "block h-full origin-left transition-transform duration-200",
-                          active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
-                          theme === "light" ? "bg-black/70" : "bg-white/70",
-                        ].join(" ")}
-                      />
-                    </span>
-                  </Link>
-                );
-              })}
+          <nav className="hidden md:flex items-center gap-4">
+            <NavLinks />
+          </nav>
 
-              {/* Search */}
-              <button
-                onClick={() => search.open()}
-                className="ml-1 inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-current/80 hover:text-current pressable text-reactive"
-                aria-label="Open search"
-              >
-                <Search size={16} />
-                <span className="hidden lg:inline">Search</span>
-              </button>
-            </div>
-
-            {/* Mobile menu toggle */}
+          <div className="flex items-center gap-2">
+            {/* Search button (desktop + mobile) */}
             <button
-              aria-label={open ? "Close menu" : "Open menu"}
-              className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 focus-visible:outline-none focus-visible:ring-0 pressable text-reactive"
-              onClick={() => setOpen((v) => !v)}
+              type="button"
+              className="rounded-xl border border-subtle p-2 hover:bg-[color:var(--color-muted)]"
+              aria-label="open search"
+              onClick={() => setSearchOpen(true)}
             >
-              {open ? <X size={20} /> : <Menu size={20} />}
+              <Search size={18} />
+            </button>
+
+            {/* Mobile menu */}
+            <button
+              type="button"
+              className="md:hidden rounded-xl border border-subtle p-2"
+              aria-label="toggle menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(v => !v)}
+            >
+              {menuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
-        </nav>
+        </div>
 
         {/* Mobile drawer */}
         <AnimatePresence>
-          {open && (
+          {menuOpen && (
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ type: "tween", duration: 0.18 }}
-              className={[
-                "md:hidden supports-[backdrop-filter]:backdrop-blur-md bg-transparent",
-                theme === "light" ? "border-t border-black/10" : "border-t border-white/10",
-              ].join(" ")}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.16, ease: [0.2, 0, 0, 1] }}
+              className="md:hidden border-t border-subtle bg-card/80 backdrop-blur-sm"
             >
-              <div className="mx-auto max-w-6xl px-4 py-3">
-                <ul className="flex flex-col">
-                  {NAV_LINKS.map((l) => (
-                    <li key={l.href}>
-                      {l.external ? (
-                        <a
-                          href={l.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => setOpen(false)}
-                          className="block rounded-lg px-2 py-2 text-base focus-visible:outline-none focus-visible:ring-0 pressable text-reactive text-current/90"
-                        >
-                          {l.label}
-                        </a>
-                      ) : (
-                        <Link
-                          href={l.href}
-                          onClick={() => setOpen(false)}
-                          className={[
-                            "block rounded-lg px-2 py-2 text-base focus-visible:outline-none focus-visible:ring-0 pressable text-reactive",
-                            isActive(l.href) ? "text-current" : "text-current/90",
-                          ].join(" ")}
-                        >
-                          {l.label}
-                        </Link>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    search.open();
-                  }}
-                  className="mt-2 inline-flex w-full items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm text-current/90 pressable text-reactive"
-                >
-                  <span className="flex items-center gap-2">
-                    <Search size={16} />
-                    Search
-                  </span>
-                  <kbd className="rounded bg-white/10 px-1.5 text-[10px] leading-4">Esc</kbd>
-                </button>
+              <div className="mx-auto max-w-5xl px-4 py-4">
+                <NavLinks />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </header>
 
-      <div aria-hidden style={{ height: navH }} />
+      {/* Search overlay */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-[color:var(--color-bg)/.6] backdrop-blur-sm"
+            onClick={() => setSearchOpen(false)}
+          >
+            <motion.form
+              initial={{ y: -8, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -8, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="mx-auto mt-28 w-full max-w-xl"
+              onSubmit={onSubmit}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center rounded-2xl border border-subtle bg-card px-3 py-2 shadow-lg">
+                <Search size={18} className="mr-2" aria-hidden />
+                <input
+                  ref={inputRef}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search projects and photos…  ( /  or  ⌘K )"
+                  className="w-full bg-transparent outline-none placeholder:text-muted-foreground"
+                  name="q"
+                  aria-label="search query"
+                />
+                <button
+                  type="submit"
+                  className="ml-2 rounded-lg border border-subtle px-3 py-1 text-sm hover:bg-[color:var(--color-muted)]"
+                >
+                  Search
+                </button>
+              </div>
+            </motion.form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* spacer to offset header height */}
+      <div aria-hidden className="h-[72px] md:h-[84px]" />
     </>
   );
 }
+
+export default Nav;
