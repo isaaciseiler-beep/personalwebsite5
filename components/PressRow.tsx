@@ -1,30 +1,35 @@
-// components/PressRow.tsx — FULL FILE
+// components/PressRow.tsx — FULL REPLACEMENT
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import { PILLS } from "@/components/HeroPressPills";
 
-type Press = { name: string; url?: string; logo?: string };
-
-export default function PressRow({ items }: { items: Press[] }) {
-  if (!items?.length) return null;
+export default function PressRow() {
+  if (!PILLS.length) return null;
   return (
-    <section className="mx-auto mt-10 max-w-5xl px-4">
-      <div className="text-sm text-muted mb-3">featured in</div>
-      <div className="flex flex-wrap items-center gap-6 opacity-70">
-        {items.map((p) =>
-          p.url ? (
-            <a key={p.name} href={p.url} target="_blank" className="hover:opacity-100">
-              {p.logo ? (
-                <Image src={p.logo} alt={p.name} width={96} height={28} className="object-contain" />
-              ) : (
-                <span>{p.name}</span>
-              )}
-            </a>
-          ) : p.logo ? (
-            <Image key={p.name} src={p.logo} alt={p.name} width={96} height={28} className="object-contain" />
+    <div className="flex flex-wrap items-center gap-6 opacity-80">
+      {PILLS.map((it) => (
+        <Link
+          key={it.name}
+          href={it.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2"
+        >
+          {it.logo ? (
+            <Image
+              src={it.logo}
+              alt={it.alt ?? it.name}
+              width={96}
+              height={24}
+              className="h-6 w-auto object-contain"
+            />
           ) : (
-            <span key={p.name}>{p.name}</span>
-          )
-        )}
-      </div>
-    </section>
+            <span className="text-sm">{it.name}</span>
+          )}
+        </Link>
+      ))}
+    </div>
   );
 }
