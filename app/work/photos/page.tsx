@@ -1,4 +1,3 @@
-// app/work/photos/page.tsx — FULL REPLACEMENT (MapView via dynamic import, ssr:false)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -10,8 +9,18 @@ import data from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import { Lightbox } from "@/components/Lightbox";
 
-// IMPORTANT: avoid SSR for map (prevents "document is not defined")
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
+
+// type guard: has top-level lat/lng
+function hasTopCoords(p: any): p is Project & { lat: number; lng: number } {
+  return typeof p?.lat === "number" && typeof p?.lng === "number";
+}
+// type guard: has location.lat/lng object
+function hasLocCoords(
+  p: any
+): p is Project & { location: { lat: number; lng: number } } {
+  return p?.location && typeof p.location === "object" && typeof p.location.lat === "number" && typeof p.location.lng === "number";
+}
 
 export default function PhotosPage() {
   useEffect(() => {
@@ -22,15 +31,9 @@ export default function PhotosPage() {
   const [visible, setVisible] = useState(12);
   const shown = useMemo(() => all.slice(0, visible), [all, visible]);
 
-  // map should use all geotagged items, not just shown slice
+  // include any item that has coords in either shape
   const withCoords = useMemo(
-    () =>
-      all.filter(
-        (p) =>
-          p.location &&
-          typeof p.location.lat === "number" &&
-          typeof p.location.lng === "number"
-      ),
+    () => all.filter((p) => hasTopCoords(p) || hasLocCoords(p)),
     [all]
   );
 
@@ -40,7 +43,9 @@ export default function PhotosPage() {
   const items = shown.map((p) => ({
     src: p.image ?? "",
     alt: p.title,
-    caption: p.location?.name || p.title,
+    caption:
+      (typeof (p as any).location === "object" && (p as any).location?.name) ||
+      p.title,
   }));
 
   return (
@@ -49,14 +54,12 @@ export default function PhotosPage() {
         <h1 className="text-2xl font-semibold tracking-tight">photos</h1>
       </Reveal>
 
-      {/* visible map (client-only) */}
       <Reveal>
         <div className="mt-6">
           <MapView projects={withCoords} />
         </div>
       </Reveal>
 
-      {/* 16:9, two per row */}
       <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2">
         {shown.map((item, i) => (
           <Reveal key={item.slug} delay={i * 0.03}>
