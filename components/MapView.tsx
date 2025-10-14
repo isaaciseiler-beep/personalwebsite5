@@ -2,7 +2,7 @@
 "use client";
 
 import "mapbox-gl/dist/mapbox-gl.css";
-import Map, { MapRef, Marker } from "react-map-gl";
+import Map, { MapRef, Marker } from "react-map-gl/mapbox";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/types/project";
 
@@ -14,164 +14,175 @@ function useTheme(): "dark" | "light" {
     const el = document.documentElement;
     const set = () =>
       setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
-    set();
     const obs = new MutationObserver(set);
+    set();
     obs.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
     return () => obs.disconnect();
   }, []);
   return t;
 }
 
-export default function MapView({
-  photos,
-  collapsedHeight = 220,
-  expandedHeight = 420,
-}: {
-  photos: Project[];
-  collapsedHeight?: number;
-  expandedHeight?: number;
-}) {
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-  const theme = useTheme();
-  const mapRef = useRef<MapRef | null>(null);
+/* pin type */
+type Pin = {
+  slug: string;
+  title: string;
+  lat: number;
+  lng: number;
+};
 
-  const [expanded, setExpanded] = useState(false);
-  const [zoom, setZoom] = useState(3);
-
-  const points = useMemo(
+/* build pins from projects with geo */
+function usePins(projects: Project[]): Pin[] {
+  return useMemo(
     () =>
-      (photos || [])
-        .filter((p) => typeof p.lat === "number" && typeof p.lng === "number")
+      projects
+        .filter((p) => p.location && typeof p.location.lat === "number" && typeof p.location.lng === "number")
         .map((p) => ({
           slug: p.slug,
           title: p.title,
-          location: p.location,
-          lng: Number(p.lng),
-          lat: Number(p.lat),
+          lat: p.location!.lat!,
+          lng: p.location!.lng!,
         })),
-    [photos]
+    [projects]
   );
+}
 
-  const initial =
-    points.length > 0
-      ? { longitude: points[0].lng, latitude: points[0].lat, zoom: 3 }
-      : { longitude: 0, latitude: 20, zoom: 1.5 };
+type Props = {
+  projects: Project[];
+  initialZoom?: number;
+  className?: string;
+};
 
-  const mapStyle =
+export default function MapView({ projects, initialZoom = 2.6, className }: Props) {
+  const theme = useTheme();
+  const points = usePins(projects);
+
+  const mapRef = useRef<MapRef | null>(null);
+  const [zoom, setZoom] = useState(initialZoom);
+
+  const styleUrl =
     theme === "light"
       ? "mapbox://styles/mapbox/light-v11"
       : "mapbox://styles/mapbox/dark-v11";
 
-  // ensure correct sizing on mount/expand
+  // bounds from pins
+  const bounds = useMemo<[number, number, number, number] | null>(() => {
+    if (points.length === 0) return null;
+    let minLng = Infinity,
+      minLat = Infinity,
+      maxLng = -Infinity,
+      maxLat = -Infinity;
+    for (const p of points) {
+      if (p.lng < minLng) minLng = p.lng;
+      if (p.lat < minLat) minLat = p.lat;
+      if (p.lng > maxLng) maxLng = p.lng;
+      if (p.lat > maxLat) maxLat = p.lat;
+    }
+    return [minLng, minLat, maxLng, maxLat];
+  }, [points]);
+
   useEffect(() => {
-    const id = window.setTimeout(() => mapRef.current?.resize(), 160);
-    return () => window.clearTimeout(id);
-  }, [expanded]);
+    if (!mapRef.current || !bounds) return;
+    // fit to bounds with padding
+    try {
+      mapRef.current.fitBounds(bounds, { padding: 80, duration: 600 });
+    } catch {}
+  }, [bounds]);
 
   return (
-    <div
-      className="relative overflow-hidden rounded-xl border border-subtle transition-[height] duration-200 ease-[cubic-bezier(.2,0,0,1)]"
-      style={{ height: expanded ? expandedHeight : collapsedHeight }}
-    >
-      {!token ? (
-        <div className="flex h-full items-center justify-center text-sm text-muted">
-          set NEXT_PUBLIC_MAPBOX_TOKEN to show the map
-        </div>
-      ) : (
-        <Map
-          ref={mapRef}
-          initialViewState={initial}
-          mapboxAccessToken={token}
-          mapStyle={mapStyle}
-          style={{ width: "100%", height: "100%" }}
-          scrollZoom={false}
-          doubleClickZoom={false}
-          touchZoomRotate={false}
-          dragRotate={false}
-          attributionControl
-        >
-          {/* zoom controls (top-right) */}
-          <div className="absolute right-2 top-2 z-10 flex flex-col gap-2">
-            <button
-              onClick={() => {
-                const z = Math.min(14, zoom + 0.6);
-                setZoom(z);
-                mapRef.current?.flyTo({ zoom: z, duration: 220 });
-              }}
-              className="rounded-md border border-subtle bg-[color:var(--color-bg)]/70 px-2 py-1 text-sm backdrop-blur hover:border-[color:var(--color-accent)]/60"
-              aria-label="zoom in"
-            >
-              +
-            </button>
-            <button
-              onClick={() => {
-                const z = Math.max(1, zoom - 0.6);
-                setZoom(z);
-                mapRef.current?.flyTo({ zoom: z, duration: 220 });
-              }}
-              className="rounded-md border border-subtle bg-[color:var(--color-bg)]/70 px-2 py-1 text-sm backdrop-blur hover:border-[color:var(--color-accent)]/60"
-              aria-label="zoom out"
-            >
-              −
-            </button>
-          </div>
-
-          {/* non-clickable, differentiated pins */}
-          {points.map((p) => (
-            <Marker key={p.slug} longitude={p.lng} latitude={p.lat}>
-              <div className="pin">
-                <span className="pin-core" />
-                <span className="pin-ring" />
-              </div>
-            </Marker>
-          ))}
-        </Map>
-      )}
-
-      {/* expand / collapse */}
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        className="absolute bottom-1 left-1/2 z-10 -translate-x-1/2 rounded-full border border-subtle bg-[color:var(--color-bg)]/70 px-2 py-0.5 text-xs backdrop-blur hover:border-[color:var(--color-accent)]/60"
-        aria-label={expanded ? "minimize map" : "expand map"}
-        title={expanded ? "minimize map" : "expand map"}
+    <div className={className ?? ""}>
+      <Map
+        ref={mapRef}
+        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        mapStyle={styleUrl}
+        initialViewState={{
+          longitude: 0,
+          latitude: 20,
+          zoom: initialZoom,
+        }}
+        style={{ width: "100%", height: "520px", borderRadius: "12px" }}
+        attributionControl={false}
       >
-        {expanded ? "▾" : "▴"}
-      </button>
+        {/* zoom controls */}
+        <div className="pointer-events-auto absolute right-3 top-3 z-10 flex flex-col gap-2">
+          <button
+            onClick={() => {
+              const z = Math.min(18, zoom + 0.6);
+              setZoom(z);
+              mapRef.current?.flyTo({ zoom: z, duration: 220 });
+            }}
+            className="rounded-md border border-subtle bg-[color:var(--color-elevated)] px-2 py-1 text-sm backdrop-blur hover:border-[color:var(--color-accent)]/60"
+            aria-label="zoom in"
+          >
+            +
+          </button>
+          <button
+            onClick={() => {
+              const z = Math.max(1, zoom - 0.6);
+              setZoom(z);
+              mapRef.current?.flyTo({ zoom: z, duration: 220 });
+            }}
+            className="rounded-md border border-subtle bg-[color:var(--color-elevated)] px-2 py-1 text-sm backdrop-blur hover:border-[color:var(--color-accent)]/60"
+            aria-label="zoom out"
+          >
+            −
+          </button>
+        </div>
 
-      {/* attribution + pins styling */}
+        {/* non-clickable, differentiated pins */}
+        {points.map((p) => (
+          <Marker key={p.slug} longitude={p.lng} latitude={p.lat} anchor="bottom">
+            <div className="relative">
+              <div className="pin-dot" />
+              <div className="pin-stem" />
+              <div className="pin-ring" />
+              <div className="sr-only">{p.title}</div>
+            </div>
+          </Marker>
+        ))}
+      </Map>
+
       <style jsx global>{`
-        .mapboxgl-ctrl-attrib {
-          background: none !important;
-          font-size: 11px !important;
-          color: rgba(231, 231, 234, 0.7) !important; /* light grey */
-          letter-spacing: 0.02em;
-          padding: 2px 6px !important;
-        }
-        .mapboxgl-ctrl-attrib a {
-          color: rgba(231, 231, 234, 0.85) !important;
-          text-decoration: none !important;
-        }
-        .mapboxgl-ctrl-attrib a:hover { text-decoration: underline !important; }
-
-        .pin {
-          position: relative;
-          width: 18px; height: 18px;
-        }
-        .pin-core {
-          position: absolute; inset: 3px;
+        .pin-dot {
+          width: 10px;
+          height: 10px;
+          background: var(--color-accent);
+          border: 2px solid rgba(255, 255, 255, 0.9);
           border-radius: 9999px;
-          background: radial-gradient(circle at 30% 30%, #fff, #e2e8f0);
-          box-shadow: 0 0 0 2px rgba(14,165,233,0.85), 0 4px 10px rgba(0,0,0,0.35);
+          transform: translateY(2px);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        }
+        .pin-stem {
+          width: 2px;
+          height: 12px;
+          margin: 0 auto;
+          background: var(--color-accent);
+          transform: translateY(-2px);
+          border-radius: 1px;
         }
         .pin-ring {
-          position: absolute; inset: 0; border-radius: 9999px;
+          position: absolute;
+          inset: 0;
+          border-radius: 9999px;
           animation: pinPulse 1600ms ease-in-out infinite;
-          background: radial-gradient(circle, rgba(14,165,233,0.28) 0%, rgba(14,165,233,0) 60%);
+          background: radial-gradient(
+            circle,
+            rgba(14, 165, 233, 0.28) 0%,
+            rgba(14, 165, 233, 0) 60%
+          );
         }
         @keyframes pinPulse {
-          0% { transform: scale(0.9); opacity: 0.7; }
-          70% { transform: scale(1.2); opacity: 0; }
-          100% { transform: scale(0.9); opacity: 0; }
+          0% {
+            transform: scale(0.9);
+            opacity: 0.7;
+          }
+          70% {
+            transform: scale(1.2);
+            opacity: 0;
+          }
+          100% {
+            transform: scale(0.9);
+            opacity: 0;
+          }
         }
       `}</style>
     </div>
