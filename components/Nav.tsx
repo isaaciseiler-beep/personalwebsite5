@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (recede removed)
+// components/Nav.tsx — FULL REPLACEMENT (adds fixed top→header-mid gradient)
 "use client";
 
 import Link from "next/link";
@@ -18,31 +18,48 @@ export default function Nav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
 
+  // Fixed shadow height = header midpoint (top + half height)
+  useEffect(() => {
+    const card = document.getElementById("header-card");
+    const drop = document.getElementById("header-drop");
+    if (!card || !drop) return;
+    const sync = () => {
+      const r = card.getBoundingClientRect();
+      const h = Math.max(0, r.top + r.height / 2);
+      drop.style.height = `${h}px`;
+    };
+    const ro = new ResizeObserver(sync);
+    ro.observe(card);
+    window.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync, { passive: true });
+    sync();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, []);
+
   // Build search index: all text; photos only by location
   const all = projects as Project[];
   const indexText = useMemo(() => {
     const items: Array<{ title: string; href: string; kind: string; hay: string }> = [];
-
     for (const p of all.filter((x) => x.kind === "project")) {
       const tags = Array.isArray((p as any).tags) ? (p as any).tags.join(" ") : "";
       const desc = (p as any)?.description ?? "";
       const hay = [p.title, p.summary, p.location, tags, desc].filter(Boolean).join(" ").toLowerCase();
       items.push({ title: p.title, href: `/work/projects#${p.slug}`, kind: "project", hay });
     }
-
     for (const p of all.filter((x) => x.kind === "photo")) {
       const loc = (p.location ?? "").toLowerCase();
       if (!loc) continue;
       items.push({ title: p.location || p.title || "photo", href: "/work/photos", kind: "photo", hay: loc });
     }
-
     const nowText = (now as any)?.text ? String((now as any).text) : "";
     if (nowText) items.push({ title: nowText, href: "/#nowbar", kind: "now", hay: nowText.toLowerCase() });
-
     for (const pill of PRESS_PILLS) {
       items.push({ title: pill.name, href: pill.href, kind: "press", hay: pill.name.toLowerCase() });
     }
-
     return items;
   }, [all]);
 
@@ -89,6 +106,18 @@ export default function Nav() {
 
   return (
     <>
+      {/* Fixed, full-width dark→transparent gradient from page top to header mid */}
+      <div
+        id="header-drop"
+        aria-hidden
+        className="fixed inset-x-0 top-0 z-40 pointer-events-none"
+        style={{
+          // height is set via effect; gradient is constant
+          background:
+            "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.32) 12%, rgba(0,0,0,0.22) 32%, rgba(0,0,0,0.10) 60%, rgba(0,0,0,0) 100%)",
+        }}
+      />
+
       <header id="site-header" className="fixed top-3 left-0 right-0 z-50">
         <div className="mx-auto max-w-5xl px-4">
           <div
