@@ -90,6 +90,20 @@ export function mountRecede() {
     const bandH = Math.max(1, bandBottom - bandTop);
     const dirUp = window.scrollY < lastY;
     lastY = window.scrollY;
+    // --- DEBUG LOGGING (remove later) ---
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        "[RECEDE FRAME]",
+        {
+          scrollY: window.scrollY.toFixed(0),
+          dir: dirUp ? "UP" : "DOWN",
+          bandTop: vb.top.toFixed(1),
+          bandBottom: vb.bottom.toFixed(1),
+          bandHeight: bandH.toFixed(1),
+          sections: document.querySelectorAll("#content section, main section").length,
+        }
+      );
+    }
 
     // First section intersecting band
     let target: HTMLElement | null = null;
