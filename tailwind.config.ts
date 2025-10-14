@@ -6,7 +6,7 @@ const config: Config = {
     "./app/**/*.{js,jsx,ts,tsx,mdx}",
     "./components/**/*.{js,jsx,ts,tsx,mdx}",
     "./lib/**/*.{js,jsx,ts,tsx}",
-    "./data/**/*.{json}"
+    "./data/**/*.json"
   ],
   theme: {
     extend: {
