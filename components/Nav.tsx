@@ -29,7 +29,9 @@ export default function Nav() {
     const card = document.getElementById("header-card");
     const visor = document.getElementById("header-visor");
     if (!card || !visor) return;
-
+  
+    const debug = true; // set false after confirming alignment
+  
     const sync = () => {
       const r = card.getBoundingClientRect();
       visor.style.position = "fixed";
@@ -37,22 +39,30 @@ export default function Nav() {
       visor.style.left = `${r.left}px`;
       visor.style.width = `${r.width}px`;
       visor.style.height = `${r.height}px`;
-      visor.style.zIndex = "49"; // content < visor < header card
+      visor.style.pointerEvents = "none";
+      visor.style.zIndex = debug ? "9999" : "49"; // bring above header for visibility
+  
+      if (debug) {
+        visor.style.background = "rgba(255, 0, 0, 0.05)";
+        visor.style.outline = "2px solid red";
+      } else {
+        visor.style.background = "";
+        visor.style.outline = "";
+      }
     };
-
+  
     const ro = new ResizeObserver(sync);
     ro.observe(card);
     window.addEventListener("scroll", sync, { passive: true });
     window.addEventListener("resize", sync, { passive: true });
     sync();
-
+  
     return () => {
       ro.disconnect();
       window.removeEventListener("scroll", sync);
       window.removeEventListener("resize", sync);
     };
   }, []);
-
   // Build search index: all text; photos only by location
   const all = projects as Project[];
   const indexText = useMemo(() => {
