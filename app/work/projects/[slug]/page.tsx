@@ -1,8 +1,14 @@
-// app/work/projects/[slug]/page.tsx — NEW (project detail page)
+// app/work/projects/[slug]/page.tsx — FULL REPLACEMENT
+"use client";
+
 import { notFound } from "next/navigation";
 import projects from "@/data/projects.json";
 import ShimmerImage from "@/components/ShimmerImage";
 import { motion } from "framer-motion";
+
+export const runtime = "nodejs";
+export const dynamic = "force-static";
+export const dynamicParams = false;
 
 type Project = {
   title: string;
@@ -15,14 +21,14 @@ type Project = {
   tags?: string[];
 };
 
-const all = (projects as Project[]).filter(p => p.kind === "project");
+const all = (projects as Project[]).filter((p) => p.kind === "project");
 
 export async function generateStaticParams() {
-  return all.map(p => ({ slug: p.slug }));
+  return all.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const p = all.find(x => x.slug === params.slug);
+  const p = all.find((x) => x.slug === params.slug);
   if (!p) return {};
   return {
     title: p.title,
@@ -37,7 +43,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default function ProjectPage({ params }: { params: { slug: string } }) {
-  const project = all.find(p => p.slug === params.slug);
+  const project = all.find((p) => p.slug === params.slug);
   if (!project) notFound();
 
   return (
@@ -64,16 +70,20 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-[color:var(--color-fg)]/60">
           {project.date && (
             <time dateTime={project.date}>
-              {new Date(project.date).toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              {new Date(project.date).toLocaleDateString(undefined, {
+                month: "long",
+                year: "numeric",
+              })}
             </time>
           )}
-          {project.tags?.length ? (
-            <span aria-hidden>•</span>
-          ) : null}
+          {project.tags?.length ? <span aria-hidden>•</span> : null}
           {project.tags?.length ? (
             <ul className="flex flex-wrap gap-2">
-              {project.tags.map(t => (
-                <li key={t} className="rounded-full border border-white/10 px-2 py-0.5 text-xs">
+              {project.tags.map((t) => (
+                <li
+                  key={t}
+                  className="rounded-full border border-white/10 px-2 py-0.5 text-xs"
+                >
                   {t}
                 </li>
               ))}
@@ -89,12 +99,14 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15, duration: 0.45 }}
-        className="prose prose-invert max-w-none mt-10 text-[color:var(--color-fg)]/90"
+        className="prose prose-invert mt-10 max-w-none text-[color:var(--color-fg)]/90"
         dangerouslySetInnerHTML={{ __html: project.contentHtml ?? "" }}
       />
 
       <footer className="mt-16 border-t border-white/10 pt-6 text-sm text-[color:var(--color-fg)]/60">
-        <a href="/work/projects" className="hover:underline">← Back to all projects</a>
+        <a href="/work/projects" className="hover:underline">
+          ← Back to all projects
+        </a>
       </footer>
     </article>
   );
