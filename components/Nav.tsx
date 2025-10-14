@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (keeps search, adds precise visor sync)
+// components/Nav.tsx — FULL REPLACEMENT (recede removed)
 "use client";
 
 import Link from "next/link";
@@ -10,7 +10,6 @@ import projects from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import now from "@/data/now.json";
 import { PILLS as PRESS_PILLS } from "@/components/HeroPressPills";
-import { mountRecede } from "@/lib/recede";
 
 const ease = cubicBezier(0.2, 0, 0, 1);
 
@@ -19,50 +18,6 @@ export default function Nav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
 
-  // Mount recede controller
-  useEffect(() => {
-    mountRecede();
-  }, []);
-
-  // Keep #header-visor exactly aligned to #header-card
-  useEffect(() => {
-    const card = document.getElementById("header-card");
-    const visor = document.getElementById("header-visor");
-    if (!card || !visor) return;
-  
-    const debug = true; // set false after confirming alignment
-  
-    const sync = () => {
-      const r = card.getBoundingClientRect();
-      visor.style.position = "fixed";
-      visor.style.top = `${r.top}px`;
-      visor.style.left = `${r.left}px`;
-      visor.style.width = `${r.width}px`;
-      visor.style.height = `${r.height}px`;
-      visor.style.pointerEvents = "none";
-      visor.style.zIndex = debug ? "9999" : "49"; // bring above header for visibility
-  
-      if (debug) {
-        visor.style.background = "rgba(255, 0, 0, 0.05)";
-        visor.style.outline = "2px solid red";
-      } else {
-        visor.style.background = "";
-        visor.style.outline = "";
-      }
-    };
-  
-    const ro = new ResizeObserver(sync);
-    ro.observe(card);
-    window.addEventListener("scroll", sync, { passive: true });
-    window.addEventListener("resize", sync, { passive: true });
-    sync();
-  
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("scroll", sync);
-      window.removeEventListener("resize", sync);
-    };
-  }, []);
   // Build search index: all text; photos only by location
   const all = projects as Project[];
   const indexText = useMemo(() => {
@@ -125,7 +80,7 @@ export default function Nav() {
     let lastY = window.scrollY;
     const onScroll = () => {
       const y = window.scrollY;
-      if (y < lastY) setSearchOpen(false); // close when scrolling up
+      if (y < lastY) setSearchOpen(false);
       lastY = y;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
