@@ -1,19 +1,29 @@
-// lib/recede.ts — FULL REPLACEMENT (band-only, bidirectional, tapered “road”)
+// lib/recede.ts — FULL REPLACEMENT (band-only, tapered, bidirectional, no ghosts)
 export function mountRecede() {
   if (typeof window === "undefined") return;
 
   const visor = document.getElementById("header-visor");
   if (!visor) return;
 
+  // Respect reduced motion
+  const prefersReduced =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   Object.assign(visor.style, {
+    position: "fixed",
     overflow: "hidden",
     pointerEvents: "none",
     transformStyle: "preserve-3d",
+    perspective: "900px",
     willChange: "transform",
   } as CSSStyleDeclaration);
 
   const sections = () =>
-    Array.from(document.querySelectorAll("#content section, main section")) as HTMLElement[];
+    Array.from(
+      document.querySelectorAll("#content section, main section")
+    ) as HTMLElement[];
 
   let raf: number | null = null;
   let active: HTMLElement | null = null;
@@ -41,16 +51,21 @@ export function mountRecede() {
     clear();
     active = target;
 
-    // wrapper inside visor with soft top/bottom fade
+    // Wrapper inside visor with soft fade at top/bottom of band
     wrap = document.createElement("div");
     wrap.style.position = "absolute";
-    wrap.style.inset = "0";
+    wrap.style.top = "0";
+    wrap.style.left = "0";
+    wrap.style.width = "100%";
+    wrap.style.height = "100%";
     wrap.style.transformStyle = "preserve-3d";
-    wrap.style.willChange = "transform";
+    wrap.style.willChange = "transform,opacity,filter";
+
     const mask =
       "linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)";
     (wrap.style as any).maskImage = mask;
     (wrap.style as any).webkitMaskImage = mask;
+
     visor.appendChild(wrap);
 
     cloneEl = target.cloneNode(true) as HTMLElement;
@@ -76,7 +91,7 @@ export function mountRecede() {
     const dirUp = window.scrollY < lastY;
     lastY = window.scrollY;
 
-    // pick first intersecting section
+    // First section intersecting band
     let target: HTMLElement | null = null;
     let r!: DOMRect;
     for (const s of sections()) {
@@ -94,20 +109,18 @@ export function mountRecede() {
       return;
     }
 
-    // strictly in-band only
+    // Strict band-only
     if (r.bottom <= bandTop || r.top >= bandBottom) {
       clear();
       raf = requestAnimationFrame(frame);
       return;
     }
 
-    // progress across band
+    // Progress across band
     const t = Math.min(Math.max((bandBottom - r.top) / bandH, 0), 1);
 
-    // direction-aware mapping:
-    // coming from BELOW (normal scroll-down): use p = ease(t)
-    // coming from ABOVE (scroll-up into view): use p = ease(1 - t) so it appears from distance
-    const comingFromAbove = r.top < bandTop; // top already inside band, i.e., section was above
+    // Direction-aware: coming from above appears from distance
+    const comingFromAbove = r.top < bandTop || dirUp;
     const base = comingFromAbove ? 1 - t : t;
     const p = easeInOutCubic(base);
 
@@ -117,76 +130,78 @@ export function mountRecede() {
       return;
     }
 
-    // align wrapper horizontally with section
+    // Align wrapper horizontally with section
     const left = Math.round(r.left - vb.left);
     wrap.style.left = `${left}px`;
     wrap.style.width = `${r.width}px`;
 
-    // overlap amount
+    // Overlap size
     const overlapPx = Math.min(bandBottom, r.bottom) - Math.max(bandTop, r.top);
-    const liveTopClipPx = Math.max(0, bandBottom - r.top);
-    const liveBottomClipPx = Math.max(0, r.bottom - bandTop);
 
-    // live section clip: remove only the overlapped strip, direction-aware
+    // Live section: clip away ONLY the overlapped slice (no early disappear)
     if (comingFromAbove) {
-      // section descending from above: clip from bottom
-      const clip = `inset(0 0 ${Math.min(liveBottomClipPx, r.height)}px 0)`;
+      const liveBottomClipPx = Math.min(Math.max(0, r.bottom - bandTop), r.height);
+      const clip = `inset(0 0 ${liveBottomClipPx}px 0)`;
       target.style.clipPath = clip;
       (target.style as any).webkitClipPath = clip;
     } else {
-      // section ascending from below: clip from top
-      const clip = `inset(${Math.min(liveTopClipPx, r.height)}px 0 0 0)`;
+      const liveTopClipPx = Math.min(Math.max(0, bandBottom - r.top), r.height);
+      const clip = `inset(${liveTopClipPx}px 0 0 0)`;
       target.style.clipPath = clip;
       (target.style as any).webkitClipPath = clip;
     }
     target.style.visibility = "visible";
 
-    // clone clip: show only the band slice (top or bottom slice to match)
+    // Clone in visor: show exactly the overlapped strip
     if (comingFromAbove) {
-      // show the bottom slice of the section inside the band
       const cloneTopHidden = Math.max(0, r.height - overlapPx);
       const clip = `inset(${cloneTopHidden}px 0 0 0)`;
       c.style.clipPath = clip;
       (c.style as any).webkitClipPath = clip;
     } else {
-      // show the top slice of the section inside the band
       const cloneBottomHidden = Math.max(0, r.height - overlapPx);
       const clip = `inset(0 0 ${cloneBottomHidden}px 0)`;
       c.style.clipPath = clip;
       (c.style as any).webkitClipPath = clip;
     }
 
-    // tapered “road” look: anisotropic scale (scaleX more than scaleY), mild rotateX, depth, gentle rise
-    const translateZ = -250 * p;
-    const translateY = -20 * p - 6 * p * p;
-    const rotateX = 12 * p;
-    const scaleX = 1 - 0.14 * p; // stronger to create taper
-    const scaleY = 1 - 0.06 * p; // smaller reduction to keep structure
-    const blur = 1.1 * p;
-    const opacity = 1 - 0.22 * p;
+    // Motion: tapered “road” with rounded path
+    if (prefersReduced) {
+      c.style.transform = "none";
+      c.style.filter = "none";
+      c.style.opacity = "1";
+    } else {
+      const translateZ = -250 * p;
+      const translateY = -20 * p - 6 * p * p; // subtle curve
+      const rotateX = 12 * p; // conveys ~100° belt feel
+      const scaleX = 1 - 0.14 * p; // taper inward
+      const scaleY = 1 - 0.06 * p; // keep structure
+      const blur = 1.1 * p;
+      const opacity = 1 - 0.22 * p;
 
-    c.style.transform = `perspective(900px) translateZ(${translateZ}px) translateY(${translateY}px) rotateX(${rotateX}deg) scale3d(${scaleX}, ${scaleY}, 1)`;
-    c.style.filter = `blur(${blur}px)`;
-    c.style.opacity = String(opacity);
+      c.style.transform = `perspective(900px) translateZ(${translateZ}px) translateY(${translateY}px) rotateX(${rotateX}deg) scale3d(${scaleX}, ${scaleY}, 1)`;
+      c.style.filter = `blur(${blur}px)`;
+      c.style.opacity = String(opacity);
+    }
 
     raf = requestAnimationFrame(frame);
   };
 
-  if (raf) cancelAnimationFrame(raf);
-  raf = requestAnimationFrame(frame);
-
-  // housekeeping
   const stop = () => {
     if (raf) cancelAnimationFrame(raf);
     raf = null;
     clear();
   };
-  const resume = () => {
-    if (!raf) raf = requestAnimationFrame(frame);
+  const start = () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(frame);
   };
-  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : resume()), {
+
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()), {
     passive: true,
   });
-  window.addEventListener("resize", resume, { passive: true });
-  window.addEventListener("scroll", resume, { passive: true });
+  window.addEventListener("resize", start, { passive: true });
+  window.addEventListener("scroll", start, { passive: true });
+
+  start();
 }
