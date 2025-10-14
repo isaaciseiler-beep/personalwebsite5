@@ -1,32 +1,32 @@
-// components/PressRow.tsx — FULL REPLACEMENT
+// components/PressRow.tsx — FULL REPLACEMENT (reads from the same list; text fallback if no logos)
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { PILLS } from "@/components/HeroPressPills";
+import Image from "next/image";
+import { pressItems } from "@/components/HeroPressPills";
 
 export default function PressRow() {
-  if (!PILLS.length) return null;
+  if (!pressItems.length) return null;
   return (
     <div className="flex flex-wrap items-center gap-6 opacity-80">
-      {PILLS.map((it) => (
+      {pressItems.map(item => (
         <Link
-          key={it.name}
-          href={it.href}
+          key={item.href}
+          href={item.href}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2"
         >
-          {it.logo ? (
+          {item.logo ? (
             <Image
-              src={it.logo}
-              alt={it.alt ?? it.name}
+              src={item.logo}
+              alt={item.alt ?? item.name}
               width={96}
               height={24}
               className="h-6 w-auto object-contain"
             />
           ) : (
-            <span className="text-sm">{it.name}</span>
+            <span className="text-sm">{item.name}</span>
           )}
         </Link>
       ))}
