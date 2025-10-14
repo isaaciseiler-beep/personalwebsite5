@@ -1,7 +1,7 @@
 // app/layout.tsx — FULL FILE REPLACEMENT (adds SearchProvider, keeps your structure)
 import type { Metadata } from "next";
 import "./globals.css";
-import { Nav } from "@/components/Nav";
+import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import RouteProgress from "@/components/RouteProgress";
 import ScrollProgress from "@/components/ScrollProgress";
