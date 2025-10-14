@@ -1,110 +1,210 @@
+// components/Hero.tsx — FULL REPLACEMENT (navy recessed “camera-bump” hero)
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState } from "react";
+import { motion } from "framer-motion";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const NAME = "isaac seiler";
 
 export default function Hero() {
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 300], [0, -12]);
-  const scale = useTransform(scrollY, [0, 300], [1, 0.985]);
+  // Reduce motion respect
+  const [reduceMotion, setRM] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setRM(mq.matches);
+    const l = (e: MediaQueryListEvent) => setRM(e.matches);
+    mq.addEventListener?.("change", l);
+    return () => mq.removeEventListener?.("change", l);
+  }, []);
+
+  // Shared easing
+  const tr = { duration: 0.45, ease: [0.2, 0, 0, 1] };
 
   return (
-    <section className="relative isolate">
-      <motion.div style={{ y, scale }} className="mx-auto max-w-5xl px-4 pt-20 pb-10 sm:pt-28 sm:pb-14">
-        <h1
-          className="select-none text-[12vw] leading-[0.9] tracking-tight sm:text-[8rem]"
-          aria-label={NAME}
+    <section
+      id="hero"
+      className="relative isolate"
+      aria-label="intro"
+    >
+      {/* Recessed navy slab (inverse camera bump) */}
+      <div
+        className="mx-auto w-full max-w-6xl px-4"
+        style={{ paddingTop: "min(8vh, 56px)" }}
+      >
+        <motion.div
+          initial={reduceMotion ? undefined : { opacity: 0, y: 14 }}
+          animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={tr}
+          className="relative rounded-3xl overflow-hidden"
+          style={{
+            // Deep navy base with vertical gradient
+            background:
+              "linear-gradient(180deg, rgba(10,18,36,0.86) 0%, rgba(8,14,28,0.92) 100%)",
+            // Recessed illusion: multiple inset shadows + subtle outer penumbra
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.06), " +            // top inner highlight
+              "inset 0 -1px 0 rgba(0,0,0,0.35), " +                 // bottom inner shade
+              "inset 0 22px 60px rgba(255,255,255,0.04), " +        // broad inner lift
+              "inset 0 -28px 60px rgba(0,0,0,0.35), " +             // broad inner recess
+              "0 22px 60px rgba(0,0,0,0.32)",                       // outer soft drop
+            border: "1px solid rgba(255,255,255,0.05)",
+            // Size: fill front screen nicely
+            minHeight: "min(72vh, 760px)",
+          }}
         >
-          <AnimatedName text={NAME} />
-        </h1>
+          {/* Subtle noise + vignette for material feel */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 55%), radial-gradient(100% 100% at 50% 100%, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 50%)",
+              mixBlendMode: "overlay",
+            }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'>\
+<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter>\
+<rect width='160' height='160' filter='url(%23n)' opacity='0.03'/></svg>\")",
+            }}
+          />
 
-        <p className="mt-6 max-w-2xl text-pretty text-base text-[color:var(--color-fg)]/80">
-          Portfolio, experiments, and work notes at the edge of AI, product, and communications.
-        </p>
+          {/* Animated top edge “chamfer” highlight */}
+          <motion.div
+            aria-hidden
+            initial={reduceMotion ? undefined : { opacity: 0 }}
+            animate={reduceMotion ? undefined : { opacity: 1 }}
+            transition={{ ...tr, delay: 0.15 }}
+            className="absolute inset-x-0 -top-px h-1"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)",
+              filter: "blur(0.5px)",
+              opacity: 0.7,
+            }}
+          />
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Link href="/experience" className="pressable text-reactive rounded-xl border border-white/10 px-4 py-2 text-sm">
-            Experience
-          </Link>
-          <Link href="/work/projects" className="pressable text-reactive rounded-xl border border-white/10 px-4 py-2 text-sm">
-            Projects
-          </Link>
-          <Link href="/about" className="pressable text-reactive rounded-xl border border-white/10 px-4 py-2 text-sm">
-            About
-          </Link>
-          <a
-            href="mailto:isaac.seiler@outlook.com"
-            className="pressable text-reactive rounded-xl border border-white/10 px-4 py-2 text-sm"
-          >
-            Contact
-          </a>
-        </div>
-      </motion.div>
+          {/* Content */}
+          <div className="relative z-10 flex min-h-[56vh] flex-col items-center justify-center px-6 py-12 sm:py-16">
+            {/* Name */}
+            <motion.h1
+              initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
+              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={{ ...tr, delay: 0.05 }}
+              aria-label={NAME}
+              className="select-none text-center font-extrabold leading-[0.92] tracking-tight"
+              style={{
+                // Large but fluid
+                fontSize: "clamp(2.8rem, 9vw, 6.8rem)",
+                // Dim silver at rest → bright on hover
+                color: "rgba(229,233,242,0.82)",
+                textShadow:
+                  "0 1px 0 rgba(0,0,0,0.35), 0 14px 40px rgba(0,0,0,0.35)",
+              }}
+            >
+              {NAME}
+            </motion.h1>
+
+            {/* Subtitle */}
+            <motion.p
+              initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
+              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={{ ...tr, delay: 0.15 }}
+              className="mt-5 max-w-2xl text-center text-base sm:text-lg"
+              style={{ color: "rgba(225,229,238,0.78)" }}
+            >
+              Portfolio, experiments, and work notes at the edge of AI, product, and communications.
+            </motion.p>
+
+            {/* Buttons */}
+            <motion.div
+              initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
+              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={{ ...tr, delay: 0.25 }}
+              className="mt-8 flex flex-wrap items-center justify-center gap-3"
+            >
+              <CTA href="/experience" label="Experience" />
+              <CTA href="/work/projects" label="Projects" />
+              <CTA href="/about" label="About" />
+              <CTA href="mailto:isaac.seiler@outlook.com" label="Contact" external />
+            </motion.div>
+          </div>
+
+          {/* Inner inset ring for extra recess depth */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-4 rounded-2xl"
+            style={{
+              boxShadow:
+                "inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 18px 50px rgba(255,255,255,0.03), inset 0 -18px 60px rgba(0,0,0,0.35)",
+            }}
+          />
+        </motion.div>
+      </div>
     </section>
   );
 }
 
-function AnimatedName({ text }: { text: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [hover, setHover] = useState(false);
-  const [pos, setPos] = useState({ x: 0.5, y: 0.5 });
-
-  const onMove = (e: React.MouseEvent) => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    setPos({
-      x: (e.clientX - rect.left) / rect.width,
-      y: (e.clientY - rect.top) / rect.height,
-    });
+function CTA({
+  href,
+  label,
+  external,
+}: {
+  href: string;
+  label: string;
+  external?: boolean;
+}) {
+  const base =
+    "rounded-xl border border-white/10 px-4 py-2 text-sm leading-none transition-transform will-change-transform";
+  const style: React.CSSProperties = {
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.02) 100%)",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.25)",
+    color: "rgba(235,239,248,0.92)",
+  };
+  const hover: React.CSSProperties = {
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 28px rgba(0,0,0,0.34)",
+    transform: "translateY(-1px)",
   };
 
-  const onLeave = () => setHover(false);
-
-  // Idle: dim gray. Hover: radial lighting.
-  const idleFill = "rgba(156,163,175,0.42)"; // ~gray-400 @ 42%
-  const idleStroke = "0.6px rgba(156,163,175,0.35)";
-  const bgBase = "#000"; // backdrop for gradient falloff on hover
-
-  const gradient = `radial-gradient(circle at ${pos.x * 100}% ${pos.y * 100}%, white 10%, #ccc 30%, ${bgBase} 100%)`;
+  if (external) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={base + " pressable text-reactive"}
+        style={style}
+        onMouseEnter={(e) => Object.assign((e.currentTarget as HTMLAnchorElement).style, hover)}
+        onMouseLeave={(e) =>
+          Object.assign((e.currentTarget as HTMLAnchorElement).style, style)
+        }
+      >
+        {label}
+      </a>
+    );
+  }
 
   return (
-    <motion.span
-      ref={ref}
-      onMouseMove={(e) => {
-        setHover(true);
-        onMove(e);
-      }}
-      onMouseLeave={onLeave}
-      className="inline-block relative cursor-default"
-      style={{
-        color: hover ? "transparent" : idleFill,
-        WebkitTextStroke: hover ? "0.6px rgba(255,255,255,0.35)" : idleStroke,
-        backgroundImage: hover ? gradient : "none",
-        backgroundClip: "text",
-        WebkitBackgroundClip: "text",
-        transition: "background-image 0.25s cubic-bezier(.2,0,0,1), color 0.2s cubic-bezier(.2,0,0,1)",
-      }}
+    <Link
+      href={href}
+      prefetch
+      className={base + " pressable text-reactive"}
+      style={style}
+      onMouseEnter={(e) => Object.assign((e.currentTarget as HTMLAnchorElement).style, hover)}
+      onMouseLeave={(e) =>
+        Object.assign((e.currentTarget as HTMLAnchorElement).style, style)
+      }
     >
-      {text}
-      {hover && (
-        <motion.span
-          aria-hidden
-          className="absolute inset-0 blur-[8px] opacity-30"
-          style={{
-            backgroundImage: gradient,
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-          }}
-          transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
-        >
-          {text}
-        </motion.span>
-      )}
-    </motion.span>
+      {label}
+    </Link>
   );
 }
