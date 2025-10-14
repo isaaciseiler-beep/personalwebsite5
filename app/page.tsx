@@ -1,4 +1,4 @@
-// app/page.tsx — FULL REPLACEMENT (adds HeroPressPills + PressRow under featured photos)
+// app/page.tsx — FULL REPLACEMENT (fix PressRow props)
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
@@ -18,11 +18,15 @@ import NowBar from "@/components/NowBar";
 import HeroPressPills from "@/components/HeroPressPills";
 import PressRow from "@/components/PressRow";
 
+// press data
+import press from "@/data/press.json";
+import type { Press as PressItem } from "@/types/press";
+const pressItems = press as PressItem[];
+
 export default function HomePage() {
   const all = projects as Project[];
   const featuredProjects = all.filter(p => p.kind === "project").slice(0, 3);
 
-  // explicitly select by slug, in the desired order
   const featuredPhotoSlugs = ["photo-08", "photo-12", "photo-10"];
   const photos = featuredPhotoSlugs
     .map(slug => all.find(p => p.slug === slug))
@@ -90,7 +94,7 @@ export default function HomePage() {
           <HeroPressPills />
         </div>
         <div className="mt-6">
-          <PressRow />
+          <PressRow items={pressItems} />
         </div>
       </section>
 
