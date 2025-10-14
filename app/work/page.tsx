@@ -1,4 +1,4 @@
-// app/work/page.tsx — FULL REPLACEMENT
+// app/work/page.tsx — FULL REPLACEMENT (query + lightbox, type-safe search)
 "use client";
 
 import { useMemo, useState } from "react";
@@ -19,28 +19,26 @@ export default function WorkPage({ searchParams }: Params) {
 
   const { proj, photos, total } = useMemo(() => {
     if (!q) {
-      const proj = all.filter(p => p.kind === "project");
-      const photos = all.filter(p => p.kind === "photo").slice(0, 9);
+      const proj = all.filter((p) => p.kind === "project");
+      const photos = all.filter((p) => p.kind === "photo").slice(0, 9);
       return { proj, photos, total: proj.length + photos.length };
     }
     const text = q.toLowerCase();
+
     const match = (p: Project) => {
-      const hay = [
-        p.title,
-        p.location,
-        p.summary,
-        p.description,
-        Array.isArray((p as any).tags) ? (p as any).tags.join(" ") : "",
-      ]
+      const tags = Array.isArray((p as any).tags) ? (p as any).tags.join(" ") : "";
+      const desc = (p as any)?.description ?? "";
+      const hay = [p.title, p.location, p.summary, desc, tags]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
       return hay.includes(text);
     };
+
     const hits = all.filter(match);
     return {
-      proj: hits.filter(p => p.kind === "project"),
-      photos: hits.filter(p => p.kind === "photo"),
+      proj: hits.filter((p) => p.kind === "project"),
+      photos: hits.filter((p) => p.kind === "photo"),
       total: hits.length,
     };
   }, [q, all]);
@@ -48,7 +46,11 @@ export default function WorkPage({ searchParams }: Params) {
   // lightbox state for photo grid
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
-  const items = photos.map(p => ({ src: p.image ?? "", alt: p.title, caption: p.location || p.title }));
+  const items = photos.map((p) => ({
+    src: p.image ?? "",
+    alt: p.title,
+    caption: p.location || p.title,
+  }));
 
   const hasQuery = q.length > 0;
 
@@ -57,7 +59,13 @@ export default function WorkPage({ searchParams }: Params) {
       <Reveal>
         <section className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight">
-            {hasQuery ? <>results for <span className="font-semibold">“{q}”</span></> : "work"}
+            {hasQuery ? (
+              <>
+                results for <span className="font-semibold">“{q}”</span>
+              </>
+            ) : (
+              "work"
+            )}
           </h1>
           <p className="mt-2 text-muted">
             {hasQuery ? `${total} match${total === 1 ? "" : "es"}` : "projects and photos."}
@@ -65,10 +73,9 @@ export default function WorkPage({ searchParams }: Params) {
         </section>
       </Reveal>
 
-      {/* projects */}
       {proj.length > 0 && (
         <section className="mb-10">
-          <h2 className="text-xl mb-4">projects</h2>
+          <h2 className="mb-4 text-xl">projects</h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {proj.map((p, i) => (
               <Reveal key={p.slug} delay={i * 0.04}>
@@ -81,7 +88,6 @@ export default function WorkPage({ searchParams }: Params) {
         </section>
       )}
 
-      {/* photos */}
       <section className="mb-10">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl">photos</h2>
@@ -98,7 +104,13 @@ export default function WorkPage({ searchParams }: Params) {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {photos.map((p, i) => (
               <Reveal key={p.slug} delay={i * 0.03}>
-                <PhotoCard item={p} onClick={() => { setIdx(i); setOpen(true); }} />
+                <PhotoCard
+                  item={p}
+                  onClick={() => {
+                    setIdx(i);
+                    setOpen(true);
+                  }}
+                />
               </Reveal>
             ))}
           </div>
