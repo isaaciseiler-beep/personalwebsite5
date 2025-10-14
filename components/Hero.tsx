@@ -64,11 +64,12 @@ function AnimatedName({ text }: { text: string }) {
 
   const onLeave = () => setHover(false);
 
-  // soft radial lighting gradient only when hovering
-  const base = "black";
-  const gradient = hover
-    ? `radial-gradient(circle at ${pos.x * 100}% ${pos.y * 100}%, white 10%, #ccc 30%, ${base} 100%)`
-    : base;
+  // Idle: dim gray. Hover: radial lighting.
+  const idleFill = "rgba(156,163,175,0.42)"; // ~gray-400 @ 42%
+  const idleStroke = "0.6px rgba(156,163,175,0.35)";
+  const bgBase = "#000"; // backdrop for gradient falloff on hover
+
+  const gradient = `radial-gradient(circle at ${pos.x * 100}% ${pos.y * 100}%, white 10%, #ccc 30%, ${bgBase} 100%)`;
 
   return (
     <motion.span
@@ -80,11 +81,12 @@ function AnimatedName({ text }: { text: string }) {
       onMouseLeave={onLeave}
       className="inline-block relative cursor-default"
       style={{
-        color: hover ? "transparent" : base,
-        backgroundImage: gradient,
+        color: hover ? "transparent" : idleFill,
+        WebkitTextStroke: hover ? "0.6px rgba(255,255,255,0.35)" : idleStroke,
+        backgroundImage: hover ? gradient : "none",
         backgroundClip: "text",
         WebkitBackgroundClip: "text",
-        transition: "background 0.4s ease, color 0.4s ease",
+        transition: "background-image 0.25s cubic-bezier(.2,0,0,1), color 0.2s cubic-bezier(.2,0,0,1)",
       }}
     >
       {text}
@@ -98,7 +100,7 @@ function AnimatedName({ text }: { text: string }) {
             WebkitBackgroundClip: "text",
             color: "transparent",
           }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
         >
           {text}
         </motion.span>
