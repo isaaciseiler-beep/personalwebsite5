@@ -1,8 +1,13 @@
-// tailwind.config.ts — FULL FILE
+// tailwind.config.ts — FULL REPLACEMENT
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  content: [
+    "./app/**/*.{js,jsx,ts,tsx,mdx}",
+    "./components/**/*.{js,jsx,ts,tsx,mdx}",
+    "./lib/**/*.{js,jsx,ts,tsx}",
+    "./data/**/*.{json}"
+  ],
   theme: {
     extend: {
       colors: {
@@ -17,4 +22,5 @@ const config: Config = {
   },
   plugins: []
 };
+
 export default config;
