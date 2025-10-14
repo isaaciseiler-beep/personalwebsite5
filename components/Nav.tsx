@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (syncs visor to card + keeps search/links)
+// components/Nav.tsx — FULL REPLACEMENT (keeps your header/search; syncs visor to card; no bleed)
 "use client";
 
 import Link from "next/link";
@@ -19,31 +19,33 @@ export default function Nav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
 
-  // mount recede once
+  // Mount recede controller
   useEffect(() => {
     mountRecede();
   }, []);
 
-  // keep #header-visor aligned to the actual header card
+  // Keep visor exactly over the visual card (no misalignment = no jank)
   useEffect(() => {
     const card = document.getElementById("header-card");
     const visor = document.getElementById("header-visor");
     if (!card || !visor) return;
+
     const sync = () => {
       const r = card.getBoundingClientRect();
-      Object.assign(visor.style, {
-        top: `${Math.max(0, window.scrollY + r.top)}px`,
-        left: `${Math.max(0, window.scrollX + r.left)}px`,
-        width: `${r.width}px`,
-        height: `${r.height}px`,
-        transform: "none",
-      });
+      visor.style.position = "fixed";
+      visor.style.top = `${r.top}px`;
+      visor.style.left = `${r.left}px`;
+      visor.style.width = `${r.width}px`;
+      visor.style.height = `${r.height}px`;
+      visor.style.zIndex = "49"; // below header card (50), above content
     };
+
     const ro = new ResizeObserver(sync);
     ro.observe(card);
     window.addEventListener("scroll", sync, { passive: true });
-    window.addEventListener("resize", sync);
+    window.addEventListener("resize", sync, { passive: true });
     sync();
+
     return () => {
       ro.disconnect();
       window.removeEventListener("scroll", sync);
@@ -51,44 +53,54 @@ export default function Nav() {
     };
   }, []);
 
-  // build search index: all site text; photos only by location
+  // Build search index (all text; photos only by location)
   const all = projects as Project[];
   const indexText = useMemo(() => {
     const items: Array<{ title: string; href: string; kind: string; hay: string }> = [];
+
     for (const p of all.filter((x) => x.kind === "project")) {
       const tags = Array.isArray((p as any).tags) ? (p as any).tags.join(" ") : "";
       const desc = (p as any)?.description ?? "";
       const hay = [p.title, p.summary, p.location, tags, desc].filter(Boolean).join(" ").toLowerCase();
       items.push({ title: p.title, href: `/work/projects#${p.slug}`, kind: "project", hay });
     }
+
     for (const p of all.filter((x) => x.kind === "photo")) {
       const loc = (p.location ?? "").toLowerCase();
       if (!loc) continue;
       items.push({ title: p.location || p.title || "photo", href: "/work/photos", kind: "photo", hay: loc });
     }
+
     const nowText = (now as any)?.text ? String((now as any).text) : "";
     if (nowText) items.push({ title: nowText, href: "/#nowbar", kind: "now", hay: nowText.toLowerCase() });
+
     for (const pill of PRESS_PILLS) {
       items.push({ title: pill.name, href: pill.href, kind: "press", hay: pill.name.toLowerCase() });
     }
+
     return items;
   }, [all]);
+
   const results = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return [];
     return indexText.filter((r) => r.hay.includes(s)).slice(0, 8);
   }, [q, indexText]);
 
-  // shortcuts + close behaviors
+  // Shortcuts + close
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const metaK = e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
-      if (metaK || e.key === "/") { e.preventDefault(); setSearchOpen(true); }
+      if (metaK || e.key === "/") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
       if (e.key === "Escape") setSearchOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
   const popRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!searchOpen) return;
@@ -98,9 +110,14 @@ export default function Nav() {
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, [searchOpen]);
+
   useEffect(() => {
     let lastY = window.scrollY;
-    const onScroll = () => { const y = window.scrollY; if (y < lastY) setSearchOpen(false); lastY = y; };
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < lastY) setSearchOpen(false);
+      lastY = y;
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -158,7 +175,9 @@ export default function Nav() {
               className="md:hidden mx-auto max-w-5xl px-4"
             >
               <div className="mt-2 rounded-2xl bg-card/80 backdrop-blur-md shadow-xl">
-                <div className="px-4 py-4"><NavLinks /></div>
+                <div className="px-4 py-4">
+                  <NavLinks />
+                </div>
               </div>
             </motion.div>
           )}
@@ -190,7 +209,11 @@ function NavLinks() {
       <li><Item href="/experience" label="experience" /></li>
       <li><Item href="/work" label="work" /></li>
       <li><Item href="/about" label="about" /></li>
-      <li><a href={linkedin} target="_blank" rel="noopener noreferrer" className="relative text-sm text-[color:var(--color-fg)]/85">linkedin</a></li>
+      <li>
+        <a href={linkedin} target="_blank" rel="noopener noreferrer" className="relative text-sm text-[color:var(--color-fg)]/85">
+          linkedin
+        </a>
+      </li>
     </ul>
   );
 }
@@ -211,7 +234,9 @@ function SearchCluster({
         className="group flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-[color:var(--color-muted)]"
       >
         <Search size={18} />
-        <span className="rounded-md border border-subtle px-1.5 py-0.5 text-[10px] text-muted group-hover:text-[color:var(--color-fg)]/90">⌘K</span>
+        <span className="rounded-md border border-subtle px-1.5 py-0.5 text-[10px] text-muted group-hover:text-[color:var(--color-fg)]/90">
+          ⌘K
+        </span>
       </button>
 
       <AnimatePresence>
