@@ -1,11 +1,7 @@
+// components/MapView.tsx — FULL REPLACEMENT
 "use client";
 
-// client-only CSS load to avoid SSR issues
-if (typeof window !== "undefined") {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  require("mapbox-gl/dist/mapbox-gl.css");
-}
-
+import "mapbox-gl/dist/mapbox-gl.css";
 import Map, { MapRef, Marker } from "react-map-gl/mapbox";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/types/project";
@@ -26,7 +22,6 @@ function useTheme(): "dark" | "light" {
 
 type Pin = { slug: string; title: string; lat: number; lng: number };
 
-// normalize coords from either schema
 function getCoords(p: any): { lat: number; lng: number } | null {
   if (typeof p?.lat === "number" && typeof p?.lng === "number")
     return { lat: p.lat, lng: p.lng };
