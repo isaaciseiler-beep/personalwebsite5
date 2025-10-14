@@ -1,61 +1,73 @@
-// lib/recede.ts — WORLD-CLASS VERSION (final)
+// lib/recede.ts — FULL REPLACEMENT (band-only, rounded, no ghosts)
 export function mountRecede() {
   if (typeof window === "undefined") return;
 
   const visor = document.getElementById("header-visor");
   if (!visor) return;
 
-  // Defensive setup for the visor.
+  // One active clone max
+  let activeEl: HTMLElement | null = null;
+  let wrapEl: HTMLElement | null = null;
+  let cloneEl: HTMLElement | null = null;
+  let raf: number | null = null;
+
+  // Visor is a clipped 3D stage
   Object.assign(visor.style, {
     overflow: "hidden",
     pointerEvents: "none",
     transformStyle: "preserve-3d",
     willChange: "transform",
-  });
+  } as CSSStyleDeclaration);
 
   const getSections = () =>
     Array.from(
       document.querySelectorAll("#content section, main section")
     ) as HTMLElement[];
 
-  let active: HTMLElement | null = null;
-  let clone: HTMLElement | null = null;
-  let wrap: HTMLElement | null = null;
-  let raf: number | null = null;
-
   const clear = () => {
-    if (clone) clone.remove();
-    if (wrap) wrap.remove();
-    if (active) active.style.visibility = "";
-    clone = wrap = active = null;
+    if (cloneEl) cloneEl.remove();
+    if (wrapEl) wrapEl.remove();
+    if (activeEl) activeEl.style.visibility = "";
+    activeEl = wrapEl = cloneEl = null;
   };
 
-  const ensureClone = (target: HTMLElement, bandRect: DOMRect) => {
-    if (active === target && clone && wrap) return clone;
+  const ensureClone = (target: HTMLElement) => {
+    if (activeEl === target && wrapEl && cloneEl) return cloneEl;
 
     clear();
+    activeEl = target;
 
-    active = target;
-    wrap = document.createElement("div");
-    wrap.style.position = "absolute";
-    wrap.style.inset = "0";
-    wrap.style.transformStyle = "preserve-3d";
-    visor.appendChild(wrap);
+    // Wrapper aligns to target rect inside visor and applies soft band masks
+    wrapEl = document.createElement("div");
+    wrapEl.style.position = "absolute";
+    wrapEl.style.inset = "0";
+    wrapEl.style.transformStyle = "preserve-3d";
+    wrapEl.style.willChange = "transform,opacity,filter";
+    // Rounded fade at top/bottom of the band to avoid hard edges
+    const mask =
+      "linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)";
+    (wrapEl.style as any).webkitMaskImage = mask;
+    (wrapEl.style as any).maskImage = mask;
 
-    clone = target.cloneNode(true) as HTMLElement;
-    Object.assign(clone.style, {
+    visor.appendChild(wrapEl);
+
+    // Clone of the intersecting section
+    cloneEl = target.cloneNode(true) as HTMLElement;
+    Object.assign(cloneEl.style, {
       margin: "0",
       width: "100%",
       position: "absolute",
       top: "0",
       left: "0",
       transformOrigin: "top center",
-      willChange: "transform, opacity, filter",
       backfaceVisibility: "hidden",
-    });
-    wrap.appendChild(clone);
-    return clone;
+      willChange: "transform,opacity,filter",
+    } as CSSStyleDeclaration);
+    wrapEl.appendChild(cloneEl);
+    return cloneEl;
   };
+
+  const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 
   const frame = () => {
     const vb = visor.getBoundingClientRect();
@@ -63,9 +75,9 @@ export function mountRecede() {
     const bandBottom = vb.bottom;
     const bandH = Math.max(1, bandBottom - bandTop);
 
+    // First section intersecting the band
     const sections = getSections();
     let target: HTMLElement | null = null;
-
     for (const s of sections) {
       const r = s.getBoundingClientRect();
       if (r.top < bandBottom && r.bottom > bandTop) {
@@ -74,7 +86,6 @@ export function mountRecede() {
       }
     }
 
-    // Nothing intersecting the header zone
     if (!target) {
       clear();
       raf = requestAnimationFrame(frame);
@@ -83,67 +94,65 @@ export function mountRecede() {
 
     const r = target.getBoundingClientRect();
 
-    // Progress strictly within header band (0 at entry, 1 at exit)
-    const t = Math.min(Math.max((bandBottom - r.top) / bandH, 0), 1);
-
-    // Out of band → reset
+    // Strict band confinement
     if (r.bottom <= bandTop || r.top >= bandBottom) {
       clear();
       raf = requestAnimationFrame(frame);
       return;
     }
 
-    const c = ensureClone(target, vb);
-    if (!c || !wrap) {
+    // Progress within the band
+    const t = Math.min(Math.max((bandBottom - r.top) / bandH, 0), 1);
+    const p = easeOutCubic(t);
+
+    const c = ensureClone(target)!;
+    if (!wrapEl || !c) {
       raf = requestAnimationFrame(frame);
       return;
     }
 
-    // Align wrapper horizontally with section
+    // Align wrapper with target’s x/width relative to visor
     const left = Math.round(r.left - vb.left);
-    wrap.style.left = `${left}px`;
-    wrap.style.width = `${r.width}px`;
+    wrapEl.style.left = `${left}px`;
+    wrapEl.style.width = `${r.width}px`;
 
-    // Map t ∈ [0,1] → transform parameters
-    // Easing curve (gentle acceleration + deceleration)
-    const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
-    const p = easeOutCubic(t);
+    // Rounded, conveyor-like motion: depth + mild rise + slight tilt + tiny curvature
+    const translateZ = -240 * p;
+    const translateY = -18 * p + -6 * (p * p); // extra curve
+    const rotateX = 12 * p; // apparent ~100° belt feel
+    const scale = 1 - 0.10 * p;
+    const blur = 1.0 * p;
+    const opacity = 1 - 0.22 * p;
 
-    const translateZ = -250 * p;
-    const translateY = -20 * p;
-    const scale = 1 - 0.12 * p;
-    const blur = 1.2 * p;
-    const opacity = 1 - 0.25 * p;
-
-    c.style.transform = `perspective(900px) translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`;
+    c.style.transform = `perspective(900px) translateZ(${translateZ}px) translateY(${translateY}px) rotateX(${rotateX}deg) scale(${scale})`;
     c.style.filter = `blur(${blur}px)`;
     c.style.opacity = String(opacity);
 
-    // Hide real element only while inside the header band
-    target.style.visibility =
-      r.top < bandBottom && r.bottom > bandTop ? "hidden" : "";
+    // Hide real element only while overlapping the band
+    target.style.visibility = "hidden";
 
     raf = requestAnimationFrame(frame);
   };
 
-  // Robustness: clear on route/unmount
+  const start = () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(frame);
+  };
+
   const stop = () => {
     if (raf) cancelAnimationFrame(raf);
+    raf = null;
     clear();
   };
 
-  // Auto cleanup on visibility change or navigation
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stop();
-    else raf = requestAnimationFrame(frame);
-  });
+  // Robustness
+  document.addEventListener(
+    "visibilitychange",
+    () => (document.hidden ? stop() : start()),
+    { passive: true }
+  );
+  window.addEventListener("resize", start, { passive: true });
+  window.addEventListener("scroll", start, { passive: true });
 
-  // Handle window resizes (viewport changes header position)
-  window.addEventListener("resize", () => {
-    clear();
-  });
-
-  // Kick off animation loop
-  if (raf) cancelAnimationFrame(raf);
-  raf = requestAnimationFrame(frame);
+  start();
 }
