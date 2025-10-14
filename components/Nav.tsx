@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (card-style header, no borders)
+// components/Nav.tsx — FULL REPLACEMENT (adds recede-on-overlap effect)
 "use client";
 
 import Link from "next/link";
@@ -20,47 +20,28 @@ export default function Nav() {
 
   // ---------- Search index ----------
   const all = projects as Project[];
-  const indexText: Array<{ title: string; href: string; kind: string; hay: string }> = useMemo(() => {
+  const indexText = useMemo(() => {
     const items: Array<{ title: string; href: string; kind: string; hay: string }> = [];
 
-    // projects: index all text fields
-    for (const p of all.filter((x) => x.kind === "project")) {
+    for (const p of all.filter(x => x.kind === "project")) {
       const tags = Array.isArray((p as any).tags) ? (p as any).tags.join(" ") : "";
       const desc = (p as any)?.description ?? "";
       const hay = [p.title, p.summary, p.location, tags, desc].filter(Boolean).join(" ").toLowerCase();
       items.push({ title: p.title, href: `/work/projects#${p.slug}`, kind: "project", hay });
     }
 
-    // photos: index only location
-    for (const p of all.filter((x) => x.kind === "photo")) {
+    for (const p of all.filter(x => x.kind === "photo")) {
       const loc = (p.location ?? "").toLowerCase();
       if (!loc) continue;
-      items.push({
-        title: p.title || p.location || "photo",
-        href: "/work/photos",
-        kind: "photo",
-        hay: loc,
-      });
+      items.push({ title: p.title || p.location || "photo", href: "/work/photos", kind: "photo", hay: loc });
     }
 
-    // now text
     if ((now as any)?.text) {
-      items.push({
-        title: (now as any).text as string,
-        href: "/#nowbar",
-        kind: "now",
-        hay: String((now as any).text).toLowerCase(),
-      });
+      items.push({ title: (now as any).text as string, href: "/#nowbar", kind: "now", hay: String((now as any).text).toLowerCase() });
     }
 
-    // press pills
     for (const pill of PRESS_PILLS) {
-      items.push({
-        title: pill.name,
-        href: pill.href,
-        kind: "press",
-        hay: pill.name.toLowerCase(),
-      });
+      items.push({ title: pill.name, href: pill.href, kind: "press", hay: pill.name.toLowerCase() });
     }
 
     return items;
@@ -69,17 +50,14 @@ export default function Nav() {
   const results = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return [];
-    return indexText.filter((r) => r.hay.includes(s)).slice(0, 8);
+    return indexText.filter(r => r.hay.includes(s)).slice(0, 8);
   }, [q, indexText]);
 
-  // keyboard: "/" or ⌘K / Ctrl+K
+  // keyboard open/close
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const metaK = e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
-      if (metaK || e.key === "/") {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
+      if (metaK || e.key === "/") { e.preventDefault(); setSearchOpen(true); }
       if (e.key === "Escape") setSearchOpen(false);
     };
     window.addEventListener("keydown", onKey);
@@ -90,10 +68,7 @@ export default function Nav() {
   const popRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!searchOpen) return;
-    const onClick = (e: MouseEvent) => {
-      if (!popRef.current) return;
-      if (!popRef.current.contains(e.target as Node)) setSearchOpen(false);
-    };
+    const onClick = (e: MouseEvent) => { if (popRef.current && !popRef.current.contains(e.target as Node)) setSearchOpen(false); };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, [searchOpen]);
@@ -101,29 +76,18 @@ export default function Nav() {
   // close on scroll up
   useEffect(() => {
     let lastY = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (y < lastY) setSearchOpen(false);
-      lastY = y;
-    };
+    const onScroll = () => { const y = window.scrollY; if (y < lastY) setSearchOpen(false); lastY = y; };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
     <>
-      {/* Card-style header */}
-      <header className="fixed top-3 left-0 right-0 z-50">
+      {/* Card-style header (no borders) */}
+      <header id="site-header" className="fixed top-3 left-0 right-0 z-50">
         <div className="mx-auto max-w-5xl px-4">
-          <div
-            className="rounded-2xl bg-card/80 backdrop-blur-md shadow-xl"
-            style={{
-              // match card proportions: same radii and inner padding as Card.tsx
-              // no borders per request
-            }}
-          >
+          <div className="rounded-2xl bg-card/80 backdrop-blur-md shadow-xl">
             <div className="flex items-center px-4 py-3">
-              {/* left: logo */}
               <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
                 <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
                   <ThemeLogo size={38} />
@@ -131,36 +95,26 @@ export default function Nav() {
                 <span className="sr-only">isaac</span>
               </Link>
 
-              {/* right cluster */}
               <nav className="ml-auto hidden md:flex items-center gap-6">
                 <NavLinks />
-                <SearchCluster
-                  open={searchOpen}
-                  setOpen={setSearchOpen}
-                  q={q}
-                  setQ={setQ}
-                  results={results}
-                  popRef={popRef}
-                />
+                <SearchCluster open={searchOpen} setOpen={setSearchOpen} q={q} setQ={setQ} results={results} popRef={popRef} />
               </nav>
 
-              {/* mobile */}
               <div className="ml-auto md:hidden flex items-center gap-2">
                 <button
                   type="button"
                   className="rounded-xl border border-subtle p-2"
                   aria-label="toggle menu"
                   aria-expanded={menuOpen}
-                  onClick={() => setMenuOpen((v) => !v)}
+                  onClick={() => setMenuOpen(v => !v)}
                 >
-                  {menuOpen ? <X size={18} /> : <Menu size={18} />}
+                  {menuOpen ? <Menu size={18} /> : <Menu size={18} />}
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* mobile drawer */}
         <AnimatePresence>
           {menuOpen && (
             <motion.div
@@ -180,8 +134,11 @@ export default function Nav() {
         </AnimatePresence>
       </header>
 
-      {/* spacer to offset fixed card height */}
+      {/* spacer to offset fixed header */}
       <div aria-hidden className="h-[82px] md:h-[88px]" />
+
+      {/* recede-on-overlap script */}
+      <RecedeScript />
     </>
   );
 }
@@ -189,7 +146,6 @@ export default function Nav() {
 /* ---------- Subcomponents ---------- */
 
 function NavLinks() {
-  // monochrome, dynamic hover: shimmer underline + slight skew/lift
   const Item = ({ href, label }: { href: string; label: string }) => (
     <Link href={href} prefetch className="relative text-sm text-[color:var(--color-fg)]/85">
       <span className="group inline-block will-change-transform transition-transform duration-150 ease-[cubic-bezier(.2,0,0,1)] group-hover:-translate-y-0.5 group-hover:skew-x-[1deg]">
@@ -203,65 +159,36 @@ function NavLinks() {
       </span>
     </Link>
   );
-
   const linkedin = process.env.NEXT_PUBLIC_LINKEDIN_URL || "#";
   return (
     <ul className="flex items-center gap-6">
       <li><Item href="/experience" label="experience" /></li>
       <li><Item href="/work" label="work" /></li>
       <li><Item href="/about" label="about" /></li>
-      <li>
-        <a
-          href={linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="relative text-sm text-[color:var(--color-fg)]/85"
-          aria-label="linkedin"
-        >
-          <span className="group inline-block will-change-transform transition-transform duration-150 ease-[cubic-bezier(.2,0,0,1)] group-hover:-translate-y-0.5 group-hover:skew-x-[1deg]">
-            <span className="relative z-10">linkedin</span>
-            <span aria-hidden className="pointer-events-none absolute inset-x-0 -bottom-1 h-[1.5px] overflow-hidden">
-              <span className="block h-full w-full origin-left scale-x-0 bg-white/70 transition-transform duration-200 ease-[cubic-bezier(.2,0,0,1)] group-hover:scale-x-100" />
-              <span className="absolute inset-0 -translate-x-full bg-[linear-gradient(120deg,transparent,white,transparent)] opacity-80 transition duration-300 group-hover:translate-x-0" />
-            </span>
-          </span>
-        </a>
-      </li>
+      <li><a href={linkedin} target="_blank" rel="noopener noreferrer" className="relative text-sm text-[color:var(--color-fg)]/85">linkedin</a></li>
     </ul>
   );
 }
 
 function SearchCluster({
-  open,
-  setOpen,
-  q,
-  setQ,
-  results,
-  popRef,
+  open, setOpen, q, setQ, results, popRef,
 }: {
-  open: boolean;
-  setOpen: (v: boolean) => void;
-  q: string;
-  setQ: (v: string) => void;
+  open: boolean; setOpen: (v: boolean) => void; q: string; setQ: (v: string) => void;
   results: Array<{ title: string; href: string; kind: string }>;
   popRef: React.RefObject<HTMLDivElement>;
 }) {
   return (
     <div className="relative">
-      {/* trigger with ⌘K keycap */}
       <button
         type="button"
         aria-label="open search"
         onClick={() => setOpen(true)}
         className="group flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-[color:var(--color-muted)]"
       >
-        <Search size={18} />
-        <span className="rounded-md border border-subtle px-1.5 py-0.5 text-[10px] text-muted group-hover:text-[color:var(--color-fg)]/90">
-          ⌘K
-        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" className="opacity-90"><path fill="currentColor" d="M10 18a7.95 7.95 0 0 0 4.9-1.7l4.4 4.4l1.4-1.4l-4.4-4.4A8 8 0 1 0 10 18m0-14a6 6 0 1 1 0 12a6 6 0 0 1 0-12" /></svg>
+        <span className="rounded-md border border-subtle px-1.5 py-0.5 text-[10px] text-muted group-hover:text-[color:var(--color-fg)]/90">⌘K</span>
       </button>
 
-      {/* anchored popover at right; glassy, borderless, card-like */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -271,30 +198,20 @@ function SearchCluster({
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.16, ease }}
             className="absolute right-0 mt-2 w-[min(420px,25vw)] overflow-hidden rounded-2xl shadow-xl backdrop-blur-md"
-            style={{
-              background:
-                "color-mix(in srgb, var(--color-bg) 55%, transparent)",
-            }}
+            style={{ background: "color-mix(in srgb, var(--color-bg) 55%, transparent)" }}
           >
             <div className="flex items-center gap-2 px-3 py-2">
-              <Search size={16} aria-hidden />
+              <svg width="16" height="16" viewBox="0 0 24 24" className="opacity-90"><path fill="currentColor" d="M10 18a7.95 7.95 0 0 0 4.9-1.7l4.4 4.4l1.4-1.4l-4.4-4.4A8 8 0 1 0 10 18m0-14a6 6 0 1 1 0 12a6 6 0 0 1 0-12" /></svg>
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search across site…"
                 className="w-full bg-transparent text-base outline-none focus:outline-none ring-0 focus:ring-0 caret-white placeholder:text-muted-foreground"
                 autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const top = results[0];
-                    if (top) window.location.href = top.href;
-                  }
-                }}
+                onKeyDown={(e) => { if (e.key === "Enter") { const top = results[0]; if (top) window.location.href = top.href; } }}
               />
             </div>
-
             <div className="h-px w-full bg-[color:var(--color-border)]/60" />
-
             <div>
               <AnimatePresence initial={false}>
                 {q.trim().length === 0 ? (
@@ -325,4 +242,71 @@ function SearchCluster({
       </AnimatePresence>
     </div>
   );
+}
+
+/* ---------- Recede effect ---------- */
+
+function RecedeScript() {
+  useEffect(() => {
+    const header = document.getElementById("site-header");
+    if (!header) return;
+
+    const sections = Array.from(document.querySelectorAll("main section")) as HTMLElement[];
+    sections.forEach(s => {
+      s.style.transformStyle = "preserve-3d";
+      s.style.willChange = "transform, filter, opacity";
+      s.style.transformOrigin = "top center";
+    });
+
+    const apply = () => {
+      const hb = header.getBoundingClientRect();
+      const bandTop = hb.top;
+      const bandBottom = hb.bottom; // card height
+      const bandH = bandBottom - bandTop;
+
+      let target: HTMLElement | null = null;
+      let minDist = Infinity;
+
+      for (const el of sections) {
+        const r = el.getBoundingClientRect();
+        // choose the section whose top is within the header band or just beneath it
+        const dist = Math.abs(r.top - bandBottom);
+        if (r.top < bandBottom + 8 && r.bottom > bandTop && dist < minDist) {
+          target = el;
+          minDist = dist;
+        } else {
+          // reset others
+          el.style.transform = "";
+          el.style.opacity = "";
+          el.style.filter = "";
+        }
+      }
+
+      if (target) {
+        const rt = target.getBoundingClientRect();
+        const t = Math.min(Math.max((bandBottom - rt.top) / bandH, 0), 1); // 0..1 within band
+        const translateZ = -90 * t; // px
+        const translateY = -10 * t;
+        const scale = 1 - 0.08 * t;
+        const blur = 0.6 * t;
+
+        target.style.transform = `perspective(900px) translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`;
+        target.style.opacity = String(1 - 0.08 * t);
+        target.style.filter = `blur(${blur}px)`;
+      }
+    };
+
+    const onScroll = () => apply();
+    const onResize = () => apply();
+    apply();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      sections.forEach(s => { s.style.transform = ""; s.style.opacity = ""; s.style.filter = ""; });
+    };
+  }, []);
+
+  return null;
 }
