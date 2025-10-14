@@ -1,14 +1,15 @@
-// components/Nav.tsx — FULL REPLACEMENT (adds working Search)
+// components/Nav.tsx — FULL REPLACEMENT (type-safe easing)
 "use client";
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, Search } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, cubicBezier } from "framer-motion";
 import ThemeLogo from "@/components/ThemeLogo";
 
 const MotionSpan = motion.span;
+const ease = cubicBezier(0.2, 0, 0, 1);
 
 function useTheme(): "dark" | "light" {
   const [t, setT] = useState<"dark" | "light">("dark");
@@ -23,7 +24,7 @@ function useTheme(): "dark" | "light" {
   return t;
 }
 
-export function Nav() {
+export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -31,12 +32,12 @@ export function Nav() {
   const theme = useTheme();
   const router = useRouter();
   const linkedin = process.env.NEXT_PUBLIC_LINKEDIN_URL || "#";
-  const linkHover = { y: -1, transition: { duration: 0.12, ease: [0.2, 0, 0, 1] } };
 
-  // open search with "/" and ⌘K / Ctrl+K
+  const linkHover = { y: -1, transition: { duration: 0.12, ease } };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const metaK = (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey));
+      const metaK = e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
       const slash = e.key === "/";
       if (metaK || slash) {
         e.preventDefault();
@@ -56,7 +57,7 @@ export function Nav() {
     e?.preventDefault();
     const term = q.trim();
     setSearchOpen(false);
-    if (term.length === 0) return;
+    if (!term) return;
     router.push(`/work?query=${encodeURIComponent(term)}`);
   };
 
@@ -137,7 +138,6 @@ export function Nav() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {/* Search button (desktop + mobile) */}
             <button
               type="button"
               className="rounded-xl border border-subtle p-2 hover:bg-[color:var(--color-muted)]"
@@ -147,7 +147,6 @@ export function Nav() {
               <Search size={18} />
             </button>
 
-            {/* Mobile menu */}
             <button
               type="button"
               className="md:hidden rounded-xl border border-subtle p-2"
@@ -160,14 +159,13 @@ export function Nav() {
           </div>
         </div>
 
-        {/* Mobile drawer */}
         <AnimatePresence>
           {menuOpen && (
             <motion.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.16, ease: [0.2, 0, 0, 1] }}
+              transition={{ duration: 0.16, ease }}
               className="md:hidden border-t border-subtle bg-card/80 backdrop-blur-sm"
             >
               <div className="mx-auto max-w-5xl px-4 py-4">
@@ -178,7 +176,6 @@ export function Nav() {
         </AnimatePresence>
       </header>
 
-      {/* Search overlay */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div
@@ -194,7 +191,7 @@ export function Nav() {
               initial={{ y: -8, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -8, opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: 0.15, ease }}
               className="mx-auto mt-28 w-full max-w-xl"
               onSubmit={onSubmit}
               onClick={(e) => e.stopPropagation()}
@@ -222,10 +219,7 @@ export function Nav() {
         )}
       </AnimatePresence>
 
-      {/* spacer to offset header height */}
       <div aria-hidden className="h-[72px] md:h-[84px]" />
     </>
   );
 }
-
-export default Nav;
