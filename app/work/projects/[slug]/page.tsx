@@ -1,10 +1,7 @@
 // app/work/projects/[slug]/page.tsx — FULL REPLACEMENT
-"use client";
-
 import { notFound } from "next/navigation";
 import projects from "@/data/projects.json";
 import ShimmerImage from "@/components/ShimmerImage";
-import { motion } from "framer-motion";
 
 export const runtime = "nodejs";
 export const dynamic = "force-static";
@@ -48,11 +45,7 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-20">
-      <motion.header
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-      >
+      <header>
         {project.image && (
           <div className="overflow-hidden rounded-2xl border border-white/10">
             <ShimmerImage
@@ -93,12 +86,9 @@ export default function ProjectPage({ params }: { params: { slug: string } }) {
         {project.excerpt && (
           <p className="mt-4 text-[color:var(--color-fg)]/80">{project.excerpt}</p>
         )}
-      </motion.header>
+      </header>
 
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15, duration: 0.45 }}
+      <section
         className="prose prose-invert mt-10 max-w-none text-[color:var(--color-fg)]/90"
         dangerouslySetInnerHTML={{ __html: project.contentHtml ?? "" }}
       />
