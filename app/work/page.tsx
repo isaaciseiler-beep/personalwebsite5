@@ -1,9 +1,7 @@
 // app/work/page.tsx — FULL REPLACEMENT
-// Fixes Lightbox usage to the new {items,index,setIndex} API.
-
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PageTransition } from "@/components/PageTransition";
 import Reveal from "@/components/Reveal";
 import projects from "@/data/projects.json";
@@ -13,53 +11,105 @@ import PhotoCard from "@/components/PhotoCard";
 import { Lightbox } from "@/components/Lightbox";
 import Link from "next/link";
 
-export default function WorkPage() {
-  const all = projects as Project[];
-  const proj = all.filter((p) => p.kind === "project");
-  const photos = all.filter((p) => p.kind === "photo").slice(0, 9);
+type Params = { searchParams?: { query?: string } };
 
-  // lightbox state for the small photo sampler on /work
+export default function WorkPage({ searchParams }: Params) {
+  const q = (searchParams?.query ?? "").trim();
+  const all = projects as Project[];
+
+  const { proj, photos, total } = useMemo(() => {
+    if (!q) {
+      const proj = all.filter(p => p.kind === "project");
+      const photos = all.filter(p => p.kind === "photo").slice(0, 9);
+      return { proj, photos, total: proj.length + photos.length };
+    }
+    const text = q.toLowerCase();
+    const match = (p: Project) => {
+      const hay = [
+        p.title,
+        p.location,
+        p.summary,
+        p.description,
+        Array.isArray((p as any).tags) ? (p as any).tags.join(" ") : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(text);
+    };
+    const hits = all.filter(match);
+    return {
+      proj: hits.filter(p => p.kind === "project"),
+      photos: hits.filter(p => p.kind === "photo"),
+      total: hits.length,
+    };
+  }, [q, all]);
+
+  // lightbox state for photo grid
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
-  const items = photos.map((p) => ({ src: p.image ?? "", alt: p.title, caption: p.location || p.title }));
+  const items = photos.map(p => ({ src: p.image ?? "", alt: p.title, caption: p.location || p.title }));
+
+  const hasQuery = q.length > 0;
 
   return (
     <PageTransition>
       <Reveal>
         <section className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">work</h1>
-          <p className="mt-2 text-muted">projects and photos.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {hasQuery ? <>results for <span className="font-semibold">“{q}”</span></> : "work"}
+          </h1>
+          <p className="mt-2 text-muted">
+            {hasQuery ? `${total} match${total === 1 ? "" : "es"}` : "projects and photos."}
+          </p>
         </section>
       </Reveal>
 
-      {/* projects grid */}
-      <section className="mb-10">
-        <h2 className="text-xl mb-4">projects</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-          {proj.map((p, i) => (
-            <Reveal key={p.slug} delay={i * 0.04}>
-              <div className="h-full">
-                <Card item={p} />
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {/* projects */}
+      {proj.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-xl mb-4">projects</h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+            {proj.map((p, i) => (
+              <Reveal key={p.slug} delay={i * 0.04}>
+                <div className="h-full">
+                  <Card item={p} />
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* quick photo sampler that links to full gallery */}
+      {/* photos */}
       <section className="mb-10">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl">photos</h2>
-          <Link href="/work/photos" className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]">see all</Link>
+          {!hasQuery && (
+            <Link
+              href="/work/photos"
+              className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]"
+            >
+              see all
+            </Link>
+          )}
         </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-          {photos.map((p, i) => (
-            <Reveal key={p.slug} delay={i * 0.03}>
-              <PhotoCard item={p} onClick={() => { setIdx(i); setOpen(true); }} />
-            </Reveal>
-          ))}
-        </div>
+        {photos.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+            {photos.map((p, i) => (
+              <Reveal key={p.slug} delay={i * 0.03}>
+                <PhotoCard item={p} onClick={() => { setIdx(i); setOpen(true); }} />
+              </Reveal>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[color:var(--color-fg)]/75">No photo matches.</p>
+        )}
       </section>
+
+      {hasQuery && total === 0 && (
+        <p className="text-[color:var(--color-fg)]/75">No matches. Try different keywords.</p>
+      )}
 
       <Lightbox open={open} items={items} index={idx} setIndex={setIdx} onClose={() => setOpen(false)} />
     </PageTransition>
