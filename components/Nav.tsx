@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (keeps your header/search; syncs visor to card; no bleed)
+// components/Nav.tsx — FULL REPLACEMENT (keeps search, adds precise visor sync)
 "use client";
 
 import Link from "next/link";
@@ -24,7 +24,7 @@ export default function Nav() {
     mountRecede();
   }, []);
 
-  // Keep visor exactly over the visual card (no misalignment = no jank)
+  // Keep #header-visor exactly aligned to #header-card
   useEffect(() => {
     const card = document.getElementById("header-card");
     const visor = document.getElementById("header-visor");
@@ -37,7 +37,7 @@ export default function Nav() {
       visor.style.left = `${r.left}px`;
       visor.style.width = `${r.width}px`;
       visor.style.height = `${r.height}px`;
-      visor.style.zIndex = "49"; // below header card (50), above content
+      visor.style.zIndex = "49"; // content < visor < header card
     };
 
     const ro = new ResizeObserver(sync);
@@ -53,7 +53,7 @@ export default function Nav() {
     };
   }, []);
 
-  // Build search index (all text; photos only by location)
+  // Build search index: all text; photos only by location
   const all = projects as Project[];
   const indexText = useMemo(() => {
     const items: Array<{ title: string; href: string; kind: string; hay: string }> = [];
@@ -115,7 +115,7 @@ export default function Nav() {
     let lastY = window.scrollY;
     const onScroll = () => {
       const y = window.scrollY;
-      if (y < lastY) setSearchOpen(false);
+      if (y < lastY) setSearchOpen(false); // close when scrolling up
       lastY = y;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
