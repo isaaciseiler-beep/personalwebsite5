@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (validated syntax)
+// components/Nav.tsx — FULL REPLACEMENT (syncs visor to card + keeps search/links)
 "use client";
 
 import Link from "next/link";
@@ -10,65 +10,85 @@ import projects from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import now from "@/data/now.json";
 import { PILLS as PRESS_PILLS } from "@/components/HeroPressPills";
+import { mountRecede } from "@/lib/recede";
 
 const ease = cubicBezier(0.2, 0, 0, 1);
 
-/* ─────────────── HEADER COMPONENT ─────────────── */
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
 
-  /* ---------- SEARCH INDEX ---------- */
+  // mount recede once
+  useEffect(() => {
+    mountRecede();
+  }, []);
+
+  // keep #header-visor aligned to the actual header card
+  useEffect(() => {
+    const card = document.getElementById("header-card");
+    const visor = document.getElementById("header-visor");
+    if (!card || !visor) return;
+    const sync = () => {
+      const r = card.getBoundingClientRect();
+      Object.assign(visor.style, {
+        top: `${Math.max(0, window.scrollY + r.top)}px`,
+        left: `${Math.max(0, window.scrollX + r.left)}px`,
+        width: `${r.width}px`,
+        height: `${r.height}px`,
+        transform: "none",
+      });
+    };
+    const ro = new ResizeObserver(sync);
+    ro.observe(card);
+    window.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync);
+    sync();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("scroll", sync);
+      window.removeEventListener("resize", sync);
+    };
+  }, []);
+
+  // build search index: all site text; photos only by location
   const all = projects as Project[];
   const indexText = useMemo(() => {
     const items: Array<{ title: string; href: string; kind: string; hay: string }> = [];
-
     for (const p of all.filter((x) => x.kind === "project")) {
       const tags = Array.isArray((p as any).tags) ? (p as any).tags.join(" ") : "";
       const desc = (p as any)?.description ?? "";
       const hay = [p.title, p.summary, p.location, tags, desc].filter(Boolean).join(" ").toLowerCase();
       items.push({ title: p.title, href: `/work/projects#${p.slug}`, kind: "project", hay });
     }
-
     for (const p of all.filter((x) => x.kind === "photo")) {
       const loc = (p.location ?? "").toLowerCase();
       if (!loc) continue;
       items.push({ title: p.location || p.title || "photo", href: "/work/photos", kind: "photo", hay: loc });
     }
-
-    if ((now as any)?.text) {
-      const t = String((now as any).text);
-      items.push({ title: t, href: "/#nowbar", kind: "now", hay: t.toLowerCase() });
-    }
-
+    const nowText = (now as any)?.text ? String((now as any).text) : "";
+    if (nowText) items.push({ title: nowText, href: "/#nowbar", kind: "now", hay: nowText.toLowerCase() });
     for (const pill of PRESS_PILLS) {
       items.push({ title: pill.name, href: pill.href, kind: "press", hay: pill.name.toLowerCase() });
     }
-
     return items;
   }, [all]);
-
   const results = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return [];
     return indexText.filter((r) => r.hay.includes(s)).slice(0, 8);
   }, [q, indexText]);
 
-  /* ---------- SHORTCUTS & CLOSE ---------- */
+  // shortcuts + close behaviors
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const metaK = e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
-      if (metaK || e.key === "/") {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
+      if (metaK || e.key === "/") { e.preventDefault(); setSearchOpen(true); }
       if (e.key === "Escape") setSearchOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
   const popRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!searchOpen) return;
@@ -78,31 +98,21 @@ export default function Nav() {
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, [searchOpen]);
-
   useEffect(() => {
     let lastY = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (y < lastY) setSearchOpen(false);
-      lastY = y;
-    };
+    const onScroll = () => { const y = window.scrollY; if (y < lastY) setSearchOpen(false); lastY = y; };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* ---------- HEADER ---------- */
   return (
     <>
       <header id="site-header" className="fixed top-3 left-0 right-0 z-50">
         <div className="mx-auto max-w-5xl px-4">
-          <div className="rounded-2xl bg-card/80 backdrop-blur-md shadow-xl overflow-hidden">
-            {/* CLIPPED STAGE FOR RECEDING CONTENT */}
-            <div
-              id="recede-stage"
-              aria-hidden
-              className="pointer-events-none relative h-2 overflow-hidden"
-              style={{ transformStyle: "preserve-3d", perspective: "900px" }}
-            />
+          <div
+            id="header-card"
+            className="rounded-2xl bg-card/80 backdrop-blur-md shadow-xl overflow-hidden"
+          >
             <div className="flex items-center px-4 py-3">
               <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
                 <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
@@ -148,9 +158,7 @@ export default function Nav() {
               className="md:hidden mx-auto max-w-5xl px-4"
             >
               <div className="mt-2 rounded-2xl bg-card/80 backdrop-blur-md shadow-xl">
-                <div className="px-4 py-4">
-                  <NavLinks />
-                </div>
+                <div className="px-4 py-4"><NavLinks /></div>
               </div>
             </motion.div>
           )}
@@ -158,12 +166,10 @@ export default function Nav() {
       </header>
 
       <div aria-hidden className="h-[82px] md:h-[88px]" />
-      <RecedeController />
     </>
   );
 }
 
-/* ─────────────── NAV LINKS ─────────────── */
 function NavLinks() {
   const Item = ({ href, label }: { href: string; label: string }) => (
     <Link href={href} prefetch className="relative text-sm text-[color:var(--color-fg)]/85">
@@ -178,41 +184,21 @@ function NavLinks() {
       </span>
     </Link>
   );
-
   const linkedin = process.env.NEXT_PUBLIC_LINKEDIN_URL || "#";
-
   return (
     <ul className="flex items-center gap-6">
       <li><Item href="/experience" label="experience" /></li>
       <li><Item href="/work" label="work" /></li>
       <li><Item href="/about" label="about" /></li>
-      <li>
-        <a
-          href={linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="relative text-sm text-[color:var(--color-fg)]/85"
-        >
-          linkedin
-        </a>
-      </li>
+      <li><a href={linkedin} target="_blank" rel="noopener noreferrer" className="relative text-sm text-[color:var(--color-fg)]/85">linkedin</a></li>
     </ul>
   );
 }
 
-/* ─────────────── SEARCH CLUSTER ─────────────── */
 function SearchCluster({
-  open,
-  setOpen,
-  q,
-  setQ,
-  results,
-  popRef,
+  open, setOpen, q, setQ, results, popRef,
 }: {
-  open: boolean;
-  setOpen: (v: boolean) => void;
-  q: string;
-  setQ: (v: string) => void;
+  open: boolean; setOpen: (v: boolean) => void; q: string; setQ: (v: string) => void;
   results: Array<{ title: string; href: string; kind: string }>;
   popRef: React.RefObject<HTMLDivElement>;
 }) {
@@ -225,9 +211,7 @@ function SearchCluster({
         className="group flex items-center gap-2 rounded-xl px-3 py-2 hover:bg-[color:var(--color-muted)]"
       >
         <Search size={18} />
-        <span className="rounded-md border border-subtle px-1.5 py-0.5 text-[10px] text-muted group-hover:text-[color:var(--color-fg)]/90">
-          ⌘K
-        </span>
+        <span className="rounded-md border border-subtle px-1.5 py-0.5 text-[10px] text-muted group-hover:text-[color:var(--color-fg)]/90">⌘K</span>
       </button>
 
       <AnimatePresence>
@@ -286,96 +270,4 @@ function SearchCluster({
       </AnimatePresence>
     </div>
   );
-}
-
-/* ─────────────── RECEDE CONTROLLER ─────────────── */
-function RecedeController() {
-  useEffect(() => {
-    const header = document.getElementById("site-header");
-    const stage = document.getElementById("recede-stage");
-    if (!header || !stage) return;
-
-    let active: { el: HTMLElement; clone: HTMLElement } | null = null;
-
-    const sections = Array.from(document.querySelectorAll("main section")) as HTMLElement[];
-
-    const resetActive = () => {
-      if (!active) return;
-      active.el.style.visibility = "";
-      active.clone.remove();
-      active = null;
-    };
-
-    const apply = () => {
-      const hb = header.getBoundingClientRect();
-      const bandTop = hb.top;
-      const bandBottom = hb.bottom;
-      const bandH = Math.max(1, bandBottom - bandTop);
-
-      let target: HTMLElement | null = null;
-      for (const el of sections) {
-        const r = el.getBoundingClientRect();
-        if (r.top < bandBottom && r.bottom > bandTop) {
-          target = el;
-          break;
-        }
-      }
-
-      if (!target) {
-        resetActive();
-        return;
-      }
-
-      const tb = target.getBoundingClientRect();
-      const t = Math.min(Math.max((bandBottom - tb.top) / bandH, 0), 1);
-
-      if (t <= 0) {
-        resetActive();
-        return;
-      }
-
-      if (!active || active.el !== target) {
-        if (active) resetActive();
-        const clone = target.cloneNode(true) as HTMLElement;
-        clone.style.margin = "0";
-        clone.style.position = "absolute";
-        clone.style.top = "0";
-        clone.style.left = `${tb.left}px`;
-        clone.style.width = `${tb.width}px`;
-        clone.style.willChange = "transform, opacity, filter";
-        stage.appendChild(clone);
-        active = { el: target, clone };
-      }
-
-      const clone = active.clone;
-      const translateZ = -200 * t;
-      const translateY = -20 * t;
-      const scale = 1 - 0.15 * t;
-      const opacity = 1 - 0.2 * t;
-      const blur = 1 * t;
-
-      clone.style.transform = `perspective(900px) translateZ(${translateZ}px) translateY(${translateY}px) scale(${scale})`;
-      clone.style.opacity = String(opacity);
-      clone.style.filter = `blur(${blur}px)`;
-      target.style.visibility = "hidden";
-
-      if (t >= 1 || tb.bottom <= bandTop) {
-        resetActive();
-      }
-    };
-
-    const onScroll = () => apply();
-    const onResize = () => apply();
-    apply();
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
-      resetActive();
-    };
-  }, []);
-
-  return null;
 }
