@@ -1,14 +1,13 @@
-// components/Nav.tsx — FULL REPLACEMENT (type-safe easing)
+// components/Nav.tsx — FULL REPLACEMENT
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, Search } from "lucide-react";
 import { motion, AnimatePresence, cubicBezier } from "framer-motion";
 import ThemeLogo from "@/components/ThemeLogo";
 
-const MotionSpan = motion.span;
 const ease = cubicBezier(0.2, 0, 0, 1);
 
 function useTheme(): "dark" | "light" {
@@ -33,13 +32,11 @@ export default function Nav() {
   const router = useRouter();
   const linkedin = process.env.NEXT_PUBLIC_LINKEDIN_URL || "#";
 
-  const linkHover = { y: -1, transition: { duration: 0.12, ease } };
-
+  // keyboard: "/" or ⌘K / Ctrl+K
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const metaK = e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
-      const slash = e.key === "/";
-      if (metaK || slash) {
+      if (metaK || e.key === "/") {
         e.preventDefault();
         setSearchOpen(true);
       }
@@ -61,37 +58,6 @@ export default function Nav() {
     router.push(`/work?query=${encodeURIComponent(term)}`);
   };
 
-  const NavLinks = () => (
-    <ul className="flex flex-col md:flex-row gap-6 md:gap-4 items-start md:items-center">
-      <li>
-        <Link href="/experience" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
-          <MotionSpan whileHover={linkHover}>experience</MotionSpan>
-        </Link>
-      </li>
-      <li>
-        <Link href="/work" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
-          <MotionSpan whileHover={linkHover}>work</MotionSpan>
-        </Link>
-      </li>
-      <li>
-        <Link href="/about" prefetch className="link-underline hover:text-[color:var(--color-accent)]">
-          <MotionSpan whileHover={linkHover}>about</MotionSpan>
-        </Link>
-      </li>
-      <li>
-        <a
-          href={linkedin}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-underline hover:text-[color:var(--color-accent)]"
-          aria-label="linkedin"
-        >
-          <MotionSpan whileHover={linkHover}>linkedin</MotionSpan>
-        </a>
-      </li>
-    </ul>
-  );
-
   const tint =
     theme === "light"
       ? "color-mix(in srgb, var(--color-bg) 70%, transparent)"
@@ -103,6 +69,37 @@ export default function Nav() {
 <filter id=\"n\"><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.9\" numOctaves=\"2\" stitchTiles=\"stitch\"/></filter>\
 <rect width=\"160\" height=\"160\" filter=\"url(%23n)\" opacity=\"0.035\"/>\
 </svg>')";
+
+  const NavLinks = () => (
+    <ul className="flex items-center gap-6">
+      {[
+        { href: "/experience", label: "experience" },
+        { href: "/work", label: "work" },
+        { href: "/about", label: "about" },
+      ].map(({ href, label }) => (
+        <li key={href}>
+          <Link
+            href={href}
+            prefetch
+            className="link-underline text-sm text-[color:var(--color-fg)]/80 transition-transform hover:-translate-y-0.5 hover:text-[color:var(--color-accent)]"
+          >
+            {label}
+          </Link>
+        </li>
+      ))}
+      <li>
+        <a
+          href={linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="linkedin"
+          className="link-underline text-sm text-[color:var(--color-fg)]/80 transition-transform hover:-translate-y-0.5 hover:text-[color:var(--color-accent)]"
+        >
+          linkedin
+        </a>
+      </li>
+    </ul>
+  );
 
   return (
     <>
@@ -123,9 +120,8 @@ export default function Nav() {
           }}
         />
 
-        <div className="relative mx-auto max-w-5xl flex items-center justify-between px-4 py-6">
-          <a href="#content" className="skip-link">skip to content</a>
-
+        <div className="relative mx-auto flex max-w-5xl items-center px-4 py-6">
+          {/* left: logo */}
           <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
             <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
               <ThemeLogo size={42} />
@@ -133,11 +129,9 @@ export default function Nav() {
             <span className="sr-only">isaac</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-4">
+          {/* right: links */}
+          <nav className="ml-auto hidden md:flex items-center gap-6">
             <NavLinks />
-          </nav>
-
-          <div className="flex items-center gap-2">
             <button
               type="button"
               className="rounded-xl border border-subtle p-2 hover:bg-[color:var(--color-muted)]"
@@ -146,19 +140,31 @@ export default function Nav() {
             >
               <Search size={18} />
             </button>
+          </nav>
 
+          {/* mobile buttons */}
+          <div className="ml-auto md:hidden flex items-center gap-2">
             <button
               type="button"
-              className="md:hidden rounded-xl border border-subtle p-2"
+              className="rounded-xl border border-subtle p-2"
               aria-label="toggle menu"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen(v => !v)}
             >
               {menuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
+            <button
+              type="button"
+              className="rounded-xl border border-subtle p-2"
+              aria-label="open search"
+              onClick={() => setSearchOpen(true)}
+            >
+              <Search size={18} />
+            </button>
           </div>
         </div>
 
+        {/* mobile drawer */}
         <AnimatePresence>
           {menuOpen && (
             <motion.div
@@ -176,6 +182,7 @@ export default function Nav() {
         </AnimatePresence>
       </header>
 
+      {/* search overlay */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div
@@ -193,7 +200,13 @@ export default function Nav() {
               exit={{ y: -8, opacity: 0 }}
               transition={{ duration: 0.15, ease }}
               className="mx-auto mt-28 w-full max-w-xl"
-              onSubmit={onSubmit}
+              onSubmit={(e) => {
+                e.preventDefault();
+                const term = q.trim();
+                setSearchOpen(false);
+                if (!term) return;
+                router.push(`/work?query=${encodeURIComponent(term)}`);
+              }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center rounded-2xl border border-subtle bg-card px-3 py-2 shadow-lg">
@@ -219,6 +232,7 @@ export default function Nav() {
         )}
       </AnimatePresence>
 
+      {/* spacer */}
       <div aria-hidden className="h-[72px] md:h-[84px]" />
     </>
   );
