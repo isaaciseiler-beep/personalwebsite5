@@ -1,4 +1,4 @@
-// app/page.tsx — FULL REPLACEMENT (featured photos restored; uses PhotoCard + captions in lightbox)
+// app/page.tsx — FULL REPLACEMENT (adds HeroPressPills + PressRow under featured photos)
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
@@ -15,10 +15,13 @@ import EdgeProgress from "@/components/EdgeProgress";
 import PinnedAbout from "@/components/PinnedAbout";
 import now from "@/data/now.json";
 import NowBar from "@/components/NowBar";
+import HeroPressPills from "@/components/HeroPressPills";
+import PressRow from "@/components/PressRow";
 
 export default function HomePage() {
   const all = projects as Project[];
   const featuredProjects = all.filter(p => p.kind === "project").slice(0, 3);
+
   // explicitly select by slug, in the desired order
   const featuredPhotoSlugs = ["photo-08", "photo-12", "photo-10"];
   const photos = featuredPhotoSlugs
@@ -78,6 +81,16 @@ export default function HomePage() {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* pills + in the news */}
+      <section className="mx-auto max-w-5xl px-4 pb-8">
+        <div className="mt-2">
+          <HeroPressPills />
+        </div>
+        <div className="mt-6">
+          <PressRow />
         </div>
       </section>
 
