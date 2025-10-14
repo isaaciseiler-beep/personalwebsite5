@@ -1,4 +1,4 @@
-// app/layout.tsx — FULL FILE REPLACEMENT (adds SearchProvider, keeps your structure)
+// app/layout.tsx — FULL REPLACEMENT (adds header visor + recede stage, keeps all providers)
 import type { Metadata } from "next";
 import "./globals.css";
 import Nav from "@/components/Nav";
@@ -40,7 +40,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           crossOrigin=""
         />
       </head>
-      <body className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-fg)] selection:bg-[color:var(--color-accent)]/20 selection:text-[var(--color-fg)]">
+
+      <body className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-fg)] selection:bg-[color:var(--color-accent)]/20 selection:text-[var(--color-fg)] relative overflow-x-hidden">
+        {/* --- splash + root styles --- */}
         <Splash
           preloadUrls={preloadUrls}
           logoDark="/logo-light.png"
@@ -53,12 +55,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SearchProvider>
           <RouteProgress />
           <ScrollProgress />
+
+          {/* Fixed transparent visor that clips content behind the header */}
+          <div
+            id="header-visor"
+            className="pointer-events-none fixed top-3 left-1/2 z-[45] h-[84px] w-full max-w-5xl -translate-x-1/2 overflow-hidden"
+            style={{ perspective: "900px" }}
+          />
+
           <Nav />
 
           <div id="app-root" className="app-root">
             <main id="content" className="mx-auto max-w-5xl px-4 py-10">
               {children}
             </main>
+
             <div className="mx-auto max-w-5xl px-4">
               <Footer />
             </div>
