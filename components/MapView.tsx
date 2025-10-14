@@ -1,16 +1,18 @@
-// components/MapView.tsx — FULL REPLACEMENT
 "use client";
 
-import "mapbox-gl/dist/mapbox-gl.css";
+// client-only CSS load to avoid SSR issues
+if (typeof window !== "undefined") {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require("mapbox-gl/dist/mapbox-gl.css");
+}
+
 import Map, { MapRef, Marker } from "react-map-gl/mapbox";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Project } from "@/types/project";
 
-/* theme watcher (client-safe) */
 function useTheme(): "dark" | "light" {
   const [t, setT] = useState<"dark" | "light">("dark");
   useEffect(() => {
-    if (typeof document === "undefined") return;
     const el = document.documentElement;
     const set = () =>
       setT(el.getAttribute("data-theme") === "light" ? "light" : "dark");
@@ -22,28 +24,33 @@ function useTheme(): "dark" | "light" {
   return t;
 }
 
-/* pin type */
-type Pin = {
-  slug: string;
-  title: string;
-  lat: number;
-  lng: number;
-};
+type Pin = { slug: string; title: string; lat: number; lng: number };
 
-/* build pins from projects with geo */
+// normalize coords from either schema
+function getCoords(p: any): { lat: number; lng: number } | null {
+  if (typeof p?.lat === "number" && typeof p?.lng === "number")
+    return { lat: p.lat, lng: p.lng };
+  const loc = p?.location;
+  if (loc && typeof loc === "object" && typeof loc.lat === "number" && typeof loc.lng === "number")
+    return { lat: loc.lat, lng: loc.lng };
+  return null;
+}
+
 function usePins(projects: Project[]): Pin[] {
-  return useMemo(
-    () =>
-      projects
-        .filter((p) => p.location && typeof p.location.lat === "number" && typeof p.location.lng === "number")
-        .map((p) => ({
-          slug: p.slug,
-          title: p.title,
-          lat: p.location!.lat!,
-          lng: p.location!.lng!,
-        })),
-    [projects]
-  );
+  return useMemo(() => {
+    const pins: Pin[] = [];
+    for (const p of projects) {
+      const c = getCoords(p);
+      if (!c) continue;
+      pins.push({
+        slug: (p as any).slug ?? `${c.lat},${c.lng}`,
+        title: (p as any).title ?? "photo",
+        lat: c.lat,
+        lng: c.lng,
+      });
+    }
+    return pins;
+  }, [projects]);
 }
 
 type Props = {
@@ -64,7 +71,6 @@ export default function MapView({ projects, initialZoom = 2.6, className }: Prop
       ? "mapbox://styles/mapbox/light-v11"
       : "mapbox://styles/mapbox/dark-v11";
 
-  // bounds from pins
   const bounds = useMemo<[number, number, number, number] | null>(() => {
     if (points.length === 0) return null;
     let minLng = Infinity,
@@ -82,7 +88,6 @@ export default function MapView({ projects, initialZoom = 2.6, className }: Prop
 
   useEffect(() => {
     if (!mapRef.current || !bounds) return;
-    // fit to bounds with padding
     try {
       mapRef.current.fitBounds(bounds, { padding: 80, duration: 600 });
     } catch {}
@@ -92,17 +97,17 @@ export default function MapView({ projects, initialZoom = 2.6, className }: Prop
     <div className={className ?? ""}>
       <Map
         ref={mapRef}
-        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        mapboxAccessToken={
+          process.env.NEXT_PUBLIC_MAPBOX_TOKEN ??
+          (() => {
+            throw new Error("Missing NEXT_PUBLIC_MAPBOX_TOKEN");
+          })()
+        }
         mapStyle={styleUrl}
-        initialViewState={{
-          longitude: 0,
-          latitude: 20,
-          zoom: initialZoom,
-        }}
+        initialViewState={{ longitude: 0, latitude: 20, zoom: initialZoom }}
         style={{ width: "100%", height: "520px", borderRadius: "12px" }}
         attributionControl={false}
       >
-        {/* zoom controls */}
         <div className="pointer-events-auto absolute right-3 top-3 z-10 flex flex-col gap-2">
           <button
             onClick={() => {
@@ -128,7 +133,6 @@ export default function MapView({ projects, initialZoom = 2.6, className }: Prop
           </button>
         </div>
 
-        {/* non-clickable, differentiated pins */}
         {points.map((p) => (
           <Marker key={p.slug} longitude={p.lng} latitude={p.lat} anchor="bottom">
             <div className="relative">
@@ -171,18 +175,9 @@ export default function MapView({ projects, initialZoom = 2.6, className }: Prop
           );
         }
         @keyframes pinPulse {
-          0% {
-            transform: scale(0.9);
-            opacity: 0.7;
-          }
-          70% {
-            transform: scale(1.2);
-            opacity: 0;
-          }
-          100% {
-            transform: scale(0.9);
-            opacity: 0;
-          }
+          0% { transform: scale(0.9); opacity: 0.7; }
+          70% { transform: scale(1.2); opacity: 0; }
+          100% { transform: scale(0.9); opacity: 0; }
         }
       `}</style>
     </div>
