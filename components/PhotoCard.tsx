@@ -1,75 +1,143 @@
-// components/PhotoCard.tsx — FULL REPLACEMENT
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
-import type { Project } from "@/types/project";
-import CardMotion from "@/components/CardMotion";
+import clsx from "clsx";
 
 /**
- * PhotoCard
- * - Full-width bottom pill (no border), shorter height.
- * - Hard clipping to prevent corner bleed.
+ * Assumptions that match your existing cards:
+ * - Each photo card is 440px tall on desktop (same as your Card/PhotoCard).
+ * - Vertical gap between rows is 24px (gap-y-6).
+ * Change ROW_H or GAP_Y to match future tweaks.
  */
-type Props = {
-  item: Project;
-  onClick?: (src: string, alt: string, caption?: string) => void;
-  ratio?: "square" | "video";
+const ROW_H = 440;     // px
+const GAP_Y = 24;      // px
+const TOTAL_H = ROW_H * 2 + GAP_Y;
+
+/**
+ * Fade math, expressed in absolute px so we can crop layout height precisely:
+ * - Second row starts at 50% of TOTAL_H.
+ * - Fade starts 20% into row 2 → 50% + 20% of row height.
+ * - Fade ends   40% into row 2 → 50% + 40% of row height.
+ */
+const FADE_START = 0.5 * TOTAL_H + 0.2 * ROW_H; // px
+const FADE_END   = 0.5 * TOTAL_H + 0.4 * ROW_H; // px
+const CROP_H     = Math.round(FADE_END);        // section ends exactly where fade reaches full black
+
+type Photo = {
+  id: string;
+  src: string;
+  alt: string;
+  label: string;
 };
 
-export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
-  const src = (item as any)?.image ?? "";
-  const alt = item.title ?? "photo";
-  const location =
-    (item as any)?.location ??
-    (item as any)?.category ??
-    (item as any)?.role ??
-    "";
+const photos: Photo[] = [
+  { id: "1", src: "/photos/reykjavik.jpg", alt: "Reykjavik, Iceland", label: "Reykjavik, Iceland" },
+  { id: "2", src: "/photos/hokitika.jpg", alt: "Hokitika, New Zealand", label: "Hokitika, New Zealand" },
+  { id: "3", src: "/photos/gore-bay.jpg", alt: "Gore Bay, New Zealand", label: "Gore Bay, New Zealand" },
+  // add more to fill two rows
+];
 
-  const aspectClass = ratio === "video" ? "aspect-video" : "aspect-square";
-
+export default function FeaturedPhotos() {
   return (
-    <button
-      aria-label={`view ${alt}`}
-      className="card-focusable block w-full text-left"
-      onClick={() => src && onClick?.(src, alt, location)}
+    <section
+      aria-labelledby="featured-photos-heading"
+      className="relative"
+      style={{ height: CROP_H, overflow: "hidden" }} // hard crop at fade end
     >
-      <CardMotion maxTiltDeg={3.5} scale={1.01} className="h-full rounded-2xl">
+      <div className="relative">
+        <div className="mb-4 flex items-baseline justify-between px-4 sm:px-0">
+          <h2 id="featured-photos-heading" className="text-3xl sm:text-4xl font-semibold">
+            featured photos
+          </h2>
+
+          {/* This “see all” is hidden at top. The real CTA is in the fade band below. */}
+          <Link
+            href="/photos"
+            className="sr-only"
+          >
+            see all
+          </Link>
+        </div>
+
+        {/* Two rows of photos */}
         <div
-          className={`relative ${aspectClass} rounded-2xl border border-subtle bg-card`}
+          className={clsx(
+            "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-6",
+            "px-4 sm:px-0"
+          )}
           style={{
-            overflow: "hidden",
-            clipPath: "inset(0 round 16px)",
-            WebkitMaskImage: "linear-gradient(#000,#000)",
-            maskImage: "linear-gradient(#000,#000)",
-            contain: "paint",
+            // Ensure each item is 440px tall, matching your Card/PhotoCard
+            // If you swap to auto height, update the constants above and remove this.
+            gridAutoRows: `${ROW_H}px`,
           }}
         >
-          <div className="absolute inset-0 will-change-transform">
-            {src ? (
-              <Image
-                src={src}
-                alt={alt}
-                fill
-                sizes="(min-width:768px) 33vw, 100vw"
-                className="object-cover transition-transform duration-[1100ms] ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.022]"
-                priority={false}
-              />
-            ) : (
-              <div className="h-full w-full bg-neutral-800" />
-            )}
-          </div>
-
-          {/* full-width bottom pill: no border, slightly shorter, keeps rounded proportions */}
-          {location && (
-            <div
-              className="pointer-events-none absolute left-2 right-2 bottom-2 z-10 flex min-h-[30px] items-center rounded-full bg-white/10 px-3 text-[13px] font-medium text-white/92 backdrop-blur-[10px]"
-              style={{ clipPath: "inset(0 round 999px)" }}
+          {photos.map((p) => (
+            <figure
+              key={p.id}
+              className="relative overflow-hidden rounded-2xl"
+              style={{ height: ROW_H }}
             >
-              <span className="truncate">{location}</span>
-            </div>
-          )}
+              <Image
+                src={p.src}
+                alt={p.alt}
+                fill
+                className="object-cover"
+                sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
+                priority={p.id === "1"}
+              />
+              <figcaption className="pointer-events-none absolute inset-x-4 bottom-4 rounded-full bg-gradient-to-r from-neutral-800/60 to-neutral-800/40 px-4 py-2 text-lg">
+                {p.label}
+              </figcaption>
+            </figure>
+          ))}
         </div>
-      </CardMotion>
-    </button>
+
+        {/* Gradient veil + centered CTA.
+            Mask after FADE_END. Gradient runs FADE_START→FADE_END. */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0"
+          style={{
+            height: TOTAL_H, // overlay spans full intrinsic two-row height
+            WebkitMaskImage: `linear-gradient(
+              to bottom,
+              black 0px,
+              black ${FADE_START}px,
+              rgba(0,0,0,0.0) ${FADE_START}px,  /* start easing */
+              rgba(0,0,0,0.0) ${FADE_END}px,    /* end easing */
+              transparent ${FADE_END}px         /* fully hidden below; we also hard-cropped layout to FADE_END */
+            )`,
+            maskImage: `linear-gradient(
+              to bottom,
+              black 0px,
+              black ${FADE_START}px,
+              rgba(0,0,0,0.0) ${FADE_START}px,
+              rgba(0,0,0,0.0) ${FADE_END}px,
+              transparent ${FADE_END}px
+            )`,
+          }}
+        >
+          {/* Solid black overlay beneath the mask */}
+          <div className="absolute inset-0 bg-black" />
+        </div>
+
+        {/* Real CTA positioned within the fade band; pointer events enabled */}
+        <div
+          className="absolute inset-x-0 flex justify-center"
+          style={{
+            top: `${(FADE_START + FADE_END) / 2}px`,
+            transform: "translateY(-50%)",
+            pointerEvents: "auto",
+          }}
+        >
+          <Link
+            href="/photos"
+            className="rounded-full border border-neutral-700 bg-neutral-900 px-5 py-2 text-sm font-medium hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-sky-500"
+          >
+            see all
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }
