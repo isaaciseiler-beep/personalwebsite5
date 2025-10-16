@@ -179,3 +179,9 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   outline-offset:2px;
   box-shadow:none;
 }
+/* global motion polish */
+@media (hover: hover) {
+  .group:hover img {
+    transition-timing-function: cubic-bezier(.16,1,.3,1);
+  }
+}
