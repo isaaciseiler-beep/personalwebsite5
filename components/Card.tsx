@@ -1,4 +1,3 @@
-// components/Card.tsx — FULL REPLACEMENT
 "use client";
 
 import Link from "next/link";
