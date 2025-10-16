@@ -13,55 +13,21 @@ type PressItem = {
 };
 
 const pressItems: PressItem[] = [
-  {
-    title: "Featured in launch of ChatGPT Pulse",
-    href: "https://openai.com/index/introducing-chatgpt-pulse/",
-    source: "OpenAI",
-    image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/pulse.jpg`,
-  },
-  {
-    title: "OpenAI Instagram spotlight on ChatGPT Study Mode",
-    href: "https://www.instagram.com/chatgpt/reel/DNyG5VvXEZM/",
-    source: "OpenAI",
-    image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/study-mode.jpg`,
-  },
-  {
-    title: "WashU Rhodes Scholar finalist",
-    href: "https://source.wustl.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/",
-    source: "Rhodes Trust",
-    image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/rhodes.jpg`,
-  },
-  {
-    title: "Co-published Book on Education Uses of ChatGPT",
-    href: "https://chatgpt.com/100chats-project",
-    source: "OpenAI",
-    image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/100chats.jpg`,
-  },
-  {
-    title: "Awarded 2024 Michigan Truman Scholarship",
-    href: "https://www.forbes.com/sites/michaeltnietzel/2024/04/13/the-truman-scholars-for-2024-are-announced/",
-    source: "Forbes",
-    image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/truman.jpg`,
-  },
-  {
-    title: "Awarded 2025 Fulbright to Taiwan",
-    href: "https://source.wustl.edu/2025/06/several-alumni-earn-fulbright-awards/",
-    source: "Washington University",
-    image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/fulbright.jpg`,
-  },
-  {
-    title: "University profile",
-    href: "https://artsci.wustl.edu/ampersand/isaac-seiler-setting-his-sights-high",
-    source: "Washington University",
-    image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/wustl.jpg`,
-  },
+  { title: "Featured in launch of ChatGPT Pulse", href: "https://openai.com/index/introducing-chatgpt-pulse/", source: "OpenAI", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/pulse.jpg` },
+  { title: "OpenAI Instagram spotlight on ChatGPT Study Mode", href: "https://www.instagram.com/chatgpt/reel/DNyG5VvXEZM/", source: "OpenAI", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/study-mode.jpg` },
+  { title: "WashU Rhodes Scholar finalist", href: "https://source.wustl.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/", source: "Rhodes Trust", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/rhodes.jpg` },
+  { title: "Co-published Book on Education Uses of ChatGPT", href: "https://chatgpt.com/100chats-project", source: "OpenAI", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/100chats.jpg` },
+  { title: "Awarded 2024 Michigan Truman Scholarship", href: "https://artsci.washu.edu/ampersand/junior-seiler-awarded-truman-scholarship", source: "Washington University", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/truman.jpg` },
+  { title: "Awarded 2025 Fulbright to Taiwan", href: "https://source.wustl.edu/2025/06/several-alumni-earn-fulbright-awards/", source: "Washington University", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/fulbright.jpg` },
+  { title: "University profile", href: "https://artsci.wustl.edu/ampersand/isaac-seiler-setting-his-sights-high", source: "Washington University", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/wustl.jpg` },
 ];
 
 export default function PressShowcase() {
   return (
-    <section className="mx-auto mt-6 max-w-6xl px-4"> {/* reduced from mt-14 */}
-      <h2 className="mb-4 text-2xl md:text-3xl font-semibold text-neutral-100">in the news</h2> {/* match photos header */}
-
+    <section className="mx-auto mt-4 max-w-6xl px-4"> {/* tighter spacing vs photos */}
+      <h2 className="mb-3 text-2xl md:text-[1.65rem] font-normal text-neutral-100">
+        in the news
+      </h2> {/* not bold, slightly smaller than photos */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {pressItems.map((item, i) => (
           <PressCard key={i} item={item} />
@@ -102,7 +68,6 @@ function PressCard({ item }: { item: PressItem }) {
       style={{ backgroundImage: glow }}
       className="group relative flex min-h-[170px] items-stretch overflow-hidden rounded-2xl border border-neutral-800/70 bg-neutral-950/80 text-left text-neutral-100 shadow-[0_0_20px_rgba(0,0,0,0.25)] backdrop-blur-md transition-transform duration-300"
     >
-      {/* Left content */}
       <div className="flex min-w-0 flex-[0_0_67%] flex-col justify-center gap-1 p-5">
         <h3 className="text-[1.05rem] leading-snug tracking-tight">
           <span className="bg-[linear-gradient(white,white)] bg-[length:0%_2px] bg-left-bottom bg-no-repeat transition-[background-size,transform] duration-300 group-hover:bg-[length:100%_2px]">
@@ -112,7 +77,6 @@ function PressCard({ item }: { item: PressItem }) {
         {item.source && <p className="text-sm text-neutral-400">{item.source}</p>}
       </div>
 
-      {/* Right 33% image */}
       <div className="relative flex-[0_0_33%] select-none pointer-events-none">
         {item.image ? (
           <Image
