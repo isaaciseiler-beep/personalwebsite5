@@ -5,20 +5,13 @@ import { Github, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 
-type Props = {
-  repoUrl: string;
-  gitUrl: string;
-  stars: number | null;
-  shortSha: string;
-};
+type Props = { repoUrl: string; gitUrl: string; stars: number | null; shortSha: string };
 
 export default function FooterReveal({ repoUrl, gitUrl, stars, shortSha }: Props) {
   const [open, setOpen] = useState(false);
   const lastY = useRef(0);
   const compactStars =
-    typeof stars === "number"
-      ? new Intl.NumberFormat("en-US", { notation: "compact" }).format(stars)
-      : "—";
+    typeof stars === "number" ? new Intl.NumberFormat("en-US", { notation: "compact" }).format(stars) : "—";
 
   useEffect(() => {
     const onScroll = () => {
@@ -31,7 +24,7 @@ export default function FooterReveal({ repoUrl, gitUrl, stars, shortSha }: Props
   }, [open]);
 
   return (
-    <div className="relative ml-auto">
+    <div className="relative ml-auto" data-no-fx>
       <motion.button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -61,6 +54,7 @@ export default function FooterReveal({ repoUrl, gitUrl, stars, shortSha }: Props
             transition={{ type: "spring", stiffness: 240, damping: 24 }}
             className={clsx(
               "absolute right-0 bottom-full z-50 mb-2 w-[min(92vw,560px)] overflow-hidden",
+              // solid surface + pronounced shadow
               "rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)] shadow-2xl"
             )}
             role="dialog"
@@ -72,10 +66,7 @@ export default function FooterReveal({ repoUrl, gitUrl, stars, shortSha }: Props
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
               transition={{ type: "spring", stiffness: 210, damping: 18 }}
-              style={{
-                transformOrigin: "right",
-                background: "linear-gradient(90deg, transparent, var(--color-accent))",
-              }}
+              style={{ transformOrigin: "right", background: "linear-gradient(90deg, transparent, var(--color-accent))" }}
             />
             <div className="p-4 sm:p-5">
               <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
