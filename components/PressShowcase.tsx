@@ -23,7 +23,7 @@ const pressItems: PressItem[] = [
   { title: "University profile", href: "https://artsci.wustl.edu/ampersand/isaac-seiler-setting-his-sights-high", source: "Washington University", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/wustl.jpg` },
 ];
 
-/** Back-compat export for Nav.tsx and legacy imports */
+/** Canonical pills export (label + href) */
 export const PILLS: Pill[] = pressItems.map(({ href, title }) => ({ href, label: title }));
 
 export default function PressShowcase() {
