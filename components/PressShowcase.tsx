@@ -22,9 +22,7 @@ const pressItems: PressItem[] = [
 export default function PressShowcase() {
   return (
     <section className="mx-auto mt-20 max-w-6xl px-4">
-      <h2 className="mb-6 text-2xl font-semibold text-neutral-100">
-        in the news
-      </h2>
+      <h2 className="mb-6 text-2xl font-semibold text-neutral-100">in the news</h2>
 
       <motion.div
         initial="hidden"
@@ -47,14 +45,13 @@ function PressCard({ item }: { item: PressItem }) {
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
 
-  // ✅ Type-safe transform mapping
   const background = useTransform<[number, number], string>(
     [x, y],
-    ([lx, ly]) =>
+    ([lx, ly]: [number, number]) =>
       `radial-gradient(400px circle at ${lx * 100}% ${ly * 100}%, rgba(59,130,246,0.08), transparent 70%)`
   );
 
-  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+  function handleMouseMove(e: React.MouseEvent<HTMLAnchorElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
     const nx = (e.clientX - rect.left) / rect.width;
     const ny = (e.clientY - rect.top) / rect.height;
@@ -85,23 +82,19 @@ function PressCard({ item }: { item: PressItem }) {
         transition: { type: "spring", stiffness: 220, damping: 15 },
       }}
       style={{ background }}
-      className="relative flex min-h-[120px] flex-col justify-center rounded-2xl border border-neutral-800/70 bg-neutral-950/70 p-5 text-left shadow-[0_0_20px_rgba(0,0,0,0.3)] backdrop-blur-md transition-transform duration-300"
+      className="group relative flex min-h-[120px] flex-col justify-center rounded-2xl border border-neutral-800/70 bg-neutral-950/70 p-5 text-left shadow-[0_0_20px_rgba(0,0,0,0.3)] backdrop-blur-md transition-transform duration-300"
     >
       <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.03] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
       <h3
         className={`text-[1.05rem] leading-snug text-neutral-100 transition-colors duration-300 ${
-          hovered
-            ? "text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400"
-            : ""
+          hovered ? "text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400" : ""
         }`}
       >
         {item.title}
       </h3>
 
-      {item.source && (
-        <p className="mt-2 text-sm text-neutral-500">{item.source}</p>
-      )}
+      {item.source && <p className="mt-2 text-sm text-neutral-500">{item.source}</p>}
     </motion.a>
   );
 }
