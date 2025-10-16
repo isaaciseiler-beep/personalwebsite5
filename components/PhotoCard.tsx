@@ -5,9 +5,7 @@ import type { Project } from "@/types/project";
 import CardMotion from "@/components/CardMotion";
 
 /**
- * PhotoCard
- * Reintroduces top-left translucent pill and bottom caption.
- * Rounded corners and smooth tilt unified via CardMotion.
+ * PhotoCard — unified smooth tilt with full-width bottom pill
  */
 type Props = {
   item: Project;
@@ -18,12 +16,7 @@ type Props = {
 export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
   const src = (item as any)?.image ?? "";
   const alt = item.title ?? "photo";
-  const caption =
-    (item as any)?.description ??
-    (item as any)?.caption ??
-    (item as any)?.location ??
-    undefined;
-  const tag =
+  const location =
     (item as any)?.location ??
     (item as any)?.category ??
     (item as any)?.role ??
@@ -34,7 +27,7 @@ export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
     <button
       aria-label={`view ${alt}`}
       className="card-focusable block w-full text-left"
-      onClick={() => src && onClick?.(src, alt, caption)}
+      onClick={() => src && onClick?.(src, alt, location)}
     >
       <CardMotion maxTiltDeg={3} scale={1.008} className="h-full rounded-2xl">
         <div
@@ -52,17 +45,10 @@ export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
             <div className="h-full w-full bg-neutral-800" />
           )}
 
-          {/* translucent pill */}
-          {tag && (
-            <div className="absolute left-2 top-2 rounded-full border border-white/25 bg-white/10 px-2 py-0.5 text-[11px] text-white/90 backdrop-blur-[6px]">
-              {tag}
-            </div>
-          )}
-
-          {/* caption gradient */}
-          {caption && (
-            <div className="absolute inset-x-0 bottom-0 p-3 text-xs text-white/90 backdrop-blur-[8px] bg-gradient-to-t from-black/40 via-black/15 to-transparent">
-              {caption}
+          {/* full-width translucent bottom pill */}
+          {location && (
+            <div className="absolute inset-x-0 bottom-0 flex items-center px-3 py-1.5 text-[13px] text-white/90 backdrop-blur-[8px] bg-[rgba(255,255,255,0.10)] border-t border-white/15">
+              <span className="truncate">{location}</span>
             </div>
           )}
         </div>
