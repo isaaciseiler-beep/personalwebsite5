@@ -11,14 +11,13 @@ export default async function Footer() {
     typeof meta.stars === "number"
       ? new Intl.NumberFormat("en-US", { notation: "compact" }).format(meta.stars)
       : "—";
-
   const shortSha = meta.sha ? meta.sha.slice(0, 7) : "dev";
 
   return (
     <footer className="mx-auto w-full max-w-6xl px-4 pb-10 pt-12">
       {/* OSS strip */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex flex-wrap items-center gap-3 text-sm">
           <Github className="h-4 w-4" aria-hidden />
           <span className="text-[var(--color-muted)]">Open-source:</span>
           <Link
@@ -63,7 +62,6 @@ export default async function Footer() {
         {/* Site */}
         <nav className="text-sm">
           <div className="mb-3 font-medium">Site</div>
-          {/* Only link to pages that exist. “About” anchors to section until page exists. */}
           <ul className="space-y-2">
             <li>
               <Link href="/#work" className="hover:underline underline-offset-4">
@@ -95,17 +93,11 @@ export default async function Footer() {
         <nav className="text-sm">
           <div className="mb-3 font-medium">Meta</div>
           <ul className="space-y-2">
+            {/* Use anchor, not onClick, to avoid server-event handlers */}
             <li>
-              <button
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }
-                }}
-                className="hover:underline underline-offset-4"
-              >
+              <Link href="#" className="hover:underline underline-offset-4">
                 Back to top
-              </button>
+              </Link>
             </li>
             <li className="text-[var(--color-muted)]">
               Built with Next.js · Tailwind · Framer Motion · Vercel · R2
