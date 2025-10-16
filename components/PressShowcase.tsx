@@ -3,41 +3,23 @@
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { useState } from "react";
 
-type NewsItem = {
+type PressItem = {
   title: string;
-  source?: string;
   href?: string;
+  source?: string;
   date?: string;
 };
 
-const newsItems: NewsItem[] = [
-  {
-    title: "Isaac featured in launch of ChatGPT Pulse",
-    href: "#",
-  },
-  {
-    title: "Isaac on OpenAI’s social media discussing uses of ChatGPT Study Mode",
-    href: "#",
-  },
-  {
-    title: "Isaac Seiler becomes Rhodes Scholar finalist",
-    href: "#",
-  },
-  {
-    title: "Isaac Seiler awarded the Truman Scholarship",
-    href: "#",
-  },
-  {
-    title: "Isaac wins a Fulbright Scholarship to Taiwan",
-    href: "#",
-  },
-  {
-    title: "Isaac’s profile by Washington University",
-    href: "#",
-  },
+const pressItems: PressItem[] = [
+  { title: "Isaac featured in launch of ChatGPT Pulse", href: "#" },
+  { title: "Isaac on OpenAI’s social media discussing uses of ChatGPT Study Mode", href: "#" },
+  { title: "Isaac Seiler becomes Rhodes Scholar finalist", href: "#" },
+  { title: "Isaac Seiler awarded the Truman Scholarship", href: "#" },
+  { title: "Isaac wins a Fulbright Scholarship to Taiwan", href: "#" },
+  { title: "Isaac’s profile by Washington University", href: "#" },
 ];
 
-export default function NewsSection() {
+export default function PressShowcase() {
   return (
     <section className="mx-auto mt-20 max-w-6xl px-4">
       <h2 className="mb-6 text-2xl font-semibold text-neutral-100">
@@ -48,40 +30,36 @@ export default function NewsSection() {
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
-        transition={{ staggerChildren: 0.1 }}
-        variants={{
-          hidden: {},
-          visible: {},
-        }}
+        transition={{ staggerChildren: 0.12 }}
+        variants={{ hidden: {}, visible: {} }}
         className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
       >
-        {newsItems.map((item, i) => (
-          <NewsCard key={i} item={item} />
+        {pressItems.map((item, i) => (
+          <PressCard key={i} item={item} />
         ))}
       </motion.div>
     </section>
   );
 }
 
-function NewsCard({ item }: { item: NewsItem }) {
+function PressCard({ item }: { item: PressItem }) {
   const [hovered, setHovered] = useState(false);
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
 
-  const background = useTransform(
+  // ✅ Type-safe transform mapping
+  const background = useTransform<[number, number], string>(
     [x, y],
-    ([latestX, latestY]) =>
-      `radial-gradient(400px circle at ${latestX * 100}% ${
-        latestY * 100
-      }%, rgba(56,189,248,0.08), transparent 70%)`
+    ([lx, ly]) =>
+      `radial-gradient(400px circle at ${lx * 100}% ${ly * 100}%, rgba(59,130,246,0.08), transparent 70%)`
   );
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    const newX = (e.clientX - rect.left) / rect.width;
-    const newY = (e.clientY - rect.top) / rect.height;
-    x.set(newX);
-    y.set(newY);
+    const nx = (e.clientX - rect.left) / rect.width;
+    const ny = (e.clientY - rect.top) / rect.height;
+    x.set(nx);
+    y.set(ny);
   }
 
   return (
@@ -113,7 +91,9 @@ function NewsCard({ item }: { item: NewsItem }) {
 
       <h3
         className={`text-[1.05rem] leading-snug text-neutral-100 transition-colors duration-300 ${
-          hovered ? "text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400" : ""
+          hovered
+            ? "text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400"
+            : ""
         }`}
       >
         {item.title}
