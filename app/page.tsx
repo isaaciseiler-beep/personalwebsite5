@@ -1,3 +1,4 @@
+// app/page.tsx — FULL REPLACEMENT
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
@@ -34,17 +35,17 @@ export default function HomePage() {
       <EdgeProgress />
       <Hero />
 
-     <PinnedAbout
-      lines={[
-        "designerly research at the edge of ai and policy.",
-        "shipping visual explainers and field notes.",
-        "based in taipei • open to collabs.",
-      ]}
-      imageName="about/isaac-about-card.jpg"  // upload to R2 and set this name
-    />
+      <PinnedAbout
+        lines={[
+          "designerly research at the edge of ai and policy.",
+          "shipping visual explainers and field notes.",
+          "based in taipei • open to collabs.",
+        ]}
+        imageName="about/isaac-about-card.jpg"
+      />
 
       {/* projects */}
-      <section className="py-8">
+      <section className="py-10 md:py-12">
         <div className="mx-auto max-w-5xl px-4">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl">featured projects</h2>
@@ -62,15 +63,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* in the news — moved above photos */}
-      <PressShowcase />
+      {/* in the news — consistent spacing */}
+      <section className="py-10 md:py-12">
+        <PressShowcase />
+      </section>
 
       {/* featured photos */}
-      <section className="pb-8">
+      <section className="py-10 md:py-12">
         <div className="mx-auto max-w-5xl px-4">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl">featured photos</h2>
-            <Link href="/work/photos" className="link-underline text-sm text-muted hover:text:[color:var(--color-accent)]" prefetch>
+            <Link href="/work/photos" className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]" prefetch>
               see all
             </Link>
           </div>
