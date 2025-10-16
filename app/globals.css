@@ -185,3 +185,5 @@ h2{@apply text-xl md:text-2xl tracking-tight}
     transition-timing-function: cubic-bezier(.16,1,.3,1);
   }
 }
+/* Prevent image corner bleed on any rounded, scaled surfaces */
+.rounded-2xl > .media-clip { clip-path: inset(0 round 16px); -webkit-mask-image: linear-gradient(#000,#000); mask-image: linear-gradient(#000,#000); }
