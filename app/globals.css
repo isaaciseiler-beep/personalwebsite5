@@ -1,3 +1,5 @@
+/* app/globals.css — FULL REPLACEMENT */
+
 /* ========== Tailwind base ========== */
 @tailwind base;
 @tailwind components;
@@ -179,11 +181,19 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   outline-offset:2px;
   box-shadow:none;
 }
-/* global motion polish */
-@media (hover: hover) {
-  .group:hover img {
+
+/* global motion polish for media */
+@media (hover: hover){
+  .group:hover :where(img,video){
     transition-timing-function: cubic-bezier(.16,1,.3,1);
   }
 }
+
 /* Prevent image corner bleed on any rounded, scaled surfaces */
-.rounded-2xl > .media-clip { clip-path: inset(0 round 16px); -webkit-mask-image: linear-gradient(#000,#000); mask-image: linear-gradient(#000,#000); }
+.rounded-2xl > .media-clip{
+  overflow:hidden;
+  border-radius:inherit;
+  clip-path: inset(0 round 16px);
+  -webkit-mask-image: linear-gradient(#000,#000);
+          mask-image: linear-gradient(#000,#000);
+}
