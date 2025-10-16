@@ -9,13 +9,49 @@ import PhotoCard from "@/components/PhotoCard";
 import projects from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Lightbox } from "@/components/Lightbox";
 import EdgeProgress from "@/components/EdgeProgress";
 import PinnedAbout from "@/components/PinnedAbout";
 import now from "@/data/now.json";
 import NowBar from "@/components/NowBar";
 import PressShowcase from "@/components/PressShowcase";
+
+/** Shim to force PressShowcase items to behave like the Projects/Photos grid and to add inner padding. */
+function NewsGridShim({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const cards = root.querySelectorAll<HTMLElement>("a, article, li, .card, [data-card]");
+    cards.forEach((el) => {
+      el.style.padding = "20px"; // ~ p-5
+      el.style.width = "100%";
+      el.style.height = "100%";
+      el.style.boxSizing = "border-box";
+    });
+  }, []);
+
+  return (
+    <>
+      <style jsx global>{`
+        /* Flatten common wrappers so direct children are grid items */
+        .news-grid > * { display: contents; }
+        /* Remove internal caps/margins so content aligns with container */
+        .news-grid * { max-width: none; margin: 0; padding-left: 0; padding-right: 0; }
+        /* Hide any internal title or 'see all' coming from PressShowcase */
+        .news-grid h2, .news-grid a[href*="/press"] { display: none !important; }
+      `}</style>
+      <div
+        ref={ref}
+        className="news-grid grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3"
+      >
+        {children}
+      </div>
+    </>
+  );
+}
 
 export default function HomePage() {
   const all = projects as Project[];
@@ -65,37 +101,14 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* in the news — header spacing matches; tabs follow width on resize */}
+          {/* in the news — header spacing matches; cards resize like Projects/Photos; inner padding restored */}
           <section className="m-0 p-0">
             <div className="mb-3">
               <h2 className="text-xl leading-none">in the news</h2>
             </div>
-            <div
-              className="
-                w-full
-                [&_*]:max-w-none [&_*]:mx-0 [&_*]:px-0 [&_*]:mt-0
-                [&_h2]:hidden
-                [&_a[href*='/press']]:hidden
-
-                /* Make tabs size with the container like Projects */
-                [&_[role='tablist']]:grid
-                [&_[role='tablist']]:gap-2 md:[&_[role='tablist']]:gap-3
-                [&_[role='tablist']]:grid-cols-2
-                sm:[&_[role='tablist']]:grid-cols-3
-                md:[&_[role='tablist']]:grid-cols-4
-
-                [&_[role='tab']]:w-full
-                [&_[role='tab']]:min-w-0
-                [&_[role='tab']]:truncate
-                [&_[role='tab']]:px-3
-                [&_[role='tab']]:py-2
-
-                /* Restore inner padding on each news card */
-                [&_.news-card]:p-4 md:[&_.news-card]:p-5
-              "
-            >
+            <NewsGridShim>
               <PressShowcase />
-            </div>
+            </NewsGridShim>
           </section>
 
           {/* photos */}
