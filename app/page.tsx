@@ -1,3 +1,4 @@
+// app/page.tsx — FULL REPLACEMENT
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
@@ -55,7 +56,7 @@ export default function HomePage() {
 
           {/* projects */}
           <section className="m-0 p-0">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xl leading-none">featured projects</h2>
               <Link
                 href="/work/projects"
@@ -76,32 +77,31 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* in the news — normalized header + full-width content */}
-          <section
-            className="
-              m-0 p-0
-              [&_h2]:text-xl [&_h2]:leading-none [&_h2]:mb-2
-              [&_[role='tablist']]:w-full
-              [&_[role='tab']]:flex-1 [&_[role='tab']]:text-center
-              [&_*]:max-w-none
-            "
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <h2>in the news</h2>
-              <Link
-                href="/press"
-                className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]"
-                prefetch
-              >
-                see all
-              </Link>
+          {/* in the news — single header, no 'see all', full-width content */}
+          <section className="m-0 p-0">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-xl leading-none">in the news</h2>
             </div>
-            <PressShowcase />
+
+            {/* Width + spacing normalizer for PressShowcase */}
+            <div
+              className="
+                w-full
+                [&_*]:max-w-none
+                [&_[role='tablist']]:w-full
+                [&_[role='tab']]:flex-1 [&_[role='tab']]:text-center
+                [&_h2]:hidden
+                [&_a[href*='/press']]:hidden
+                [&>div]:px-0
+              "
+            >
+              <PressShowcase />
+            </div>
           </section>
 
           {/* featured photos */}
           <section className="m-0 p-0">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xl leading-none">featured photos</h2>
               <Link
                 href="/work/photos"
