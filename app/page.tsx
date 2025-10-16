@@ -2,12 +2,22 @@
 
 import React, { useState } from "react";
 
-// --- MOCK DATA & COMPONENTS TO RESOLVE IMPORTS ---
-// NOTE: These are placeholders to make the file runnable in this environment.
-// In your project, your original imports will work correctly.
+// --- MOCK DATA & TYPED COMPONENTS TO RESOLVE ERRORS ---
+// NOTE: These placeholders include TypeScript types to fix the build error.
+// They are designed to work in your project if copy-pasted.
+
+// Type definition to satisfy TypeScript
+type Project = {
+  slug: string;
+  kind: string;
+  title: string;
+  category?: string;
+  image?: string;
+  location?: string;
+};
 
 // Mock data to replace JSON imports
-const projects = [
+const projects: Project[] = [
   { slug: "project-1", kind: "project", title: "Project One", category: "Web Development", image: "https://placehold.co/600x400/1a1a1a/ffffff?text=Project+1" },
   { slug: "project-2", kind: "project", title: "Project Two", category: "AI Research", image: "https://placehold.co/600x400/1a1a1a/ffffff?text=Project+2" },
   { slug: "project-3", kind: "project", title: "Project Three", category: "Design", image: "https://placehold.co/600x400/1a1a1a/ffffff?text=Project+3" },
@@ -17,16 +27,16 @@ const projects = [
 ];
 const now = { text: "Currently exploring new creative opportunities and collaborations." };
 
-// Dummy components to replace imports from "@/components/..."
-const PageTransition = ({ children }) => <div className="fade-in">{children}</div>;
-const Reveal = ({ children }) => <div>{children}</div>;
+// Properly typed dummy components
+const PageTransition = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+const Reveal = ({ children, delay }: { children: React.ReactNode; delay?: number }) => <div>{children}</div>;
 const Hero = () => (
   <header className="py-20 text-center">
     <h1 className="text-5xl font-bold">Isaac</h1>
     <p className="text-xl text-gray-400 mt-2">Designer & Researcher</p>
   </header>
 );
-const Card = ({ item }) => (
+const Card = ({ item }: { item: Project }) => (
     <div className="bg-neutral-900 rounded-lg overflow-hidden h-full group">
         <img src={item.image} alt={item.title} className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105" />
         <div className="p-4">
@@ -35,12 +45,12 @@ const Card = ({ item }) => (
         </div>
     </div>
 );
-const PhotoCard = ({ item, onClick }) => (
+const PhotoCard = ({ item, onClick }: { item: Project; onClick: () => void }) => (
     <div onClick={onClick} className="bg-neutral-900 rounded-lg overflow-hidden h-full cursor-pointer group">
         <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
     </div>
 );
-const Lightbox = ({ open, onClose, items, index }) => {
+const Lightbox = ({ open, items, index, setIndex, onClose }: { open: boolean; items: any[]; index: number; setIndex: (i: number) => void; onClose: () => void; }) => {
   if (!open) return null;
   const item = items[index];
   return (
@@ -54,24 +64,20 @@ const Lightbox = ({ open, onClose, items, index }) => {
   );
 };
 const EdgeProgress = () => null;
-const PinnedAbout = ({ lines }) => (
+const PinnedAbout = ({ compact, lines, imageName }: { compact: boolean; lines: string[]; imageName: string; }) => (
   <div className="bg-neutral-900 p-6 rounded-lg flex items-center gap-6">
-      <img src="https://placehold.co/128x128/1a1a1a/ffffff?text=IA" alt="Isaac" className="w-24 h-24 rounded-full" />
+      <img src="https://placehold.co/128x128/1a1a1a/ffffff?text=IA" alt="About Isaac" className="w-24 h-24 rounded-full" />
       <div>
         {lines.map((line, i) => <p key={i} className="text-lg text-gray-300">{line}</p>)}
       </div>
   </div>
 );
-const NowBar = ({ text }) => <div className="py-4 mt-12 text-center bg-neutral-900"><p>{text}</p></div>;
+const NowBar = ({ text }: { text: string }) => <div className="py-4 mt-12 text-center bg-neutral-900"><p>{text}</p></div>;
 
-// The PressShowcase component should define its own grid for its children.
-// This is the key fix for the layout width.
 const PressShowcase = () => {
   const pressItems = [
     { title: "Featured in launch of ChatGPT Pulse", org: "OpenAI" },
     { title: "OpenAI Instagram spotlight on ChatGPT Study Mode", org: "OpenAI" },
-    { title: "WashU Rhodes Scholar finalist", org: "Rhodes Trust" },
-    { title: "Co-published Book on Education Uses of ChatGPT", org: "OpenAI" },
   ];
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -87,19 +93,9 @@ const PressShowcase = () => {
   );
 };
 
-// Mock Next.js Link component
-const Link = ({ href, children, className }) => <a href={href} className={className}>{children}</a>;
+const Link = ({ href, children, className, prefetch }: { href: string; children: React.ReactNode; className?: string; prefetch?: boolean; }) => <a href={href} className={className}>{children}</a>;
 
-// Type definition to satisfy the original code
-type Project = {
-  slug: string;
-  kind: string;
-  title: string;
-  category?: string;
-  image?: string;
-  location?: string;
-};
-
+// --- MAIN PAGE COMPONENT ---
 
 export default function HomePage() {
   const all = projects as Project[];
@@ -144,13 +140,14 @@ export default function HomePage() {
               <Link
                 href="/work/projects"
                 className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]"
+                prefetch
               >
                 see all
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
               {featuredProjects.map((item, i) => (
-                <Reveal key={item.slug}>
+                <Reveal key={item.slug} delay={i * 0.06}>
                   <div className="h-full">
                     <Card item={item} />
                   </div>
@@ -161,11 +158,9 @@ export default function HomePage() {
 
           {/* in the news — FIXED */}
           <section className="m-0 p-0">
-            {/* Simplified header with only the title, as requested. */}
             <div className="mb-3">
               <h2 className="text-xl leading-none">in the news</h2>
             </div>
-            {/* By calling PressShowcase directly, it can now control its own internal grid and fill the container's width, matching the other sections. */}
             <PressShowcase />
           </section>
 
@@ -176,13 +171,14 @@ export default function HomePage() {
               <Link
                 href="/work/photos"
                 className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]"
+                prefetch
               >
                 see all
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
               {photos.map((item, i) => (
-                <Reveal key={item.slug}>
+                <Reveal key={item.slug} delay={i * 0.06}>
                   <PhotoCard
                     item={item}
                     onClick={() => {
@@ -208,5 +204,3 @@ export default function HomePage() {
     </PageTransition>
   );
 }
-
-
