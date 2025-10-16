@@ -39,8 +39,8 @@ const pressItems: PressItem[] = [
   },
   {
     title: "Awarded 2024 Michigan Truman Scholarship",
-    href: "https://artsci.wustl.edu/ampersand/junior-seiler-awarded-truman-scholarship",
-    source: "Washington University",
+    href: "https://www.forbes.com/sites/michaeltnietzel/2024/04/13/the-truman-scholars-for-2024-are-announced/",
+    source: "Forbes",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/truman.jpg`,
   },
   {
