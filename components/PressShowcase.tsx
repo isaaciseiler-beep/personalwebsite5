@@ -31,6 +31,12 @@ const pressItems: PressItem[] = [
     source: "Rhodes Trust",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/rhodes.jpg`,
   },
+   {
+    title: "Co-published Book on Education Uses of ChatGPT",
+    href: "#",
+    source: "OpenAI",
+    image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/100chats.jpg`,
+  },
   {
     title: "Awarded 2024 Michigan Truman Scholarship",
     href: "#",
