@@ -240,3 +240,16 @@ h2{@apply text-xl md:text-2xl tracking-tight}
     .hero-stroke { animation: none; }
   }
 }
+/* Motion-reduced fallback */
+@media (prefers-reduced-motion: reduce) {
+  .group[style] { transform: none !important; }
+  .group:hover[style] { transform: none !important; }
+}
+
+/* Ensure keyboard focus is visible above overlay */
+.card-focusable:focus-visible {
+  outline: 2px solid var(--color-accent, currentColor);
+  outline-offset: 2px;
+  position: relative;
+  z-index: 1; /* sits above the spotlight overlay */
+}
