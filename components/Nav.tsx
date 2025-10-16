@@ -9,7 +9,7 @@ import ThemeLogo from "@/components/ThemeLogo";
 import projects from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import now from "@/data/now.json";
-import { PILLS as PRESS_PILLS } from "@/components/HeroPressPills";
+import { PRESS_PILLS } from "@/components/HeroPressPills";;
 
 const ease = cubicBezier(0.2, 0, 0, 1);
 
