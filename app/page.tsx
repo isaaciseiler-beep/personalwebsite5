@@ -36,13 +36,14 @@ export default function HomePage() {
       <Hero />
 
       <PinnedAbout
-        lines={[
-          "designerly research at the edge of ai and policy.",
-          "shipping visual explainers and field notes.",
-          "based in taipei • open to collabs.",
-        ]}
-        imageName="about/isaac-about-card.jpg"
-      />
+      <PinnedAbout
+      lines={[
+        "designerly research at the edge of ai and policy.",
+        "shipping visual explainers and field notes.",
+        "based in taipei • open to collabs.",
+      ]}
+      imageName="about/isaac-about-card.jpg"
+    />
 
       {/* projects — remove buffer, make snug */}
       <section className="py-6 md:py-8">
