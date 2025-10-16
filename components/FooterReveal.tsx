@@ -14,13 +14,12 @@ type Props = {
 
 export default function FooterReveal({ repoUrl, gitUrl, stars, shortSha }: Props) {
   const [open, setOpen] = useState(false);
-  const lastY = useRef<number>(0);
+  const lastY = useRef(0);
   const compactStars =
     typeof stars === "number"
       ? new Intl.NumberFormat("en-US", { notation: "compact" }).format(stars)
       : "—";
 
-  // Close on scroll
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY || 0;
@@ -33,14 +32,13 @@ export default function FooterReveal({ repoUrl, gitUrl, stars, shortSha }: Props
 
   return (
     <div className="relative ml-auto">
-      {/* Rounded trigger stays rounded always (no shared layoutId) */}
       <motion.button
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Open build and repo info"
         className={clsx(
           "inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)]",
-          "bg-[var(--color-card)] p-2 text-sm shadow-md backdrop-blur-sm"
+          "bg-[var(--color-card)] p-2 text-sm shadow-md"
         )}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 320, damping: 26 }}
@@ -53,7 +51,6 @@ export default function FooterReveal({ repoUrl, gitUrl, stars, shortSha }: Props
         <code className="rounded-md bg-black/20 px-1.5 py-0.5 text-xs">{shortSha}</code>
       </motion.button>
 
-      {/* Popover expands UPWARD from the button */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -64,19 +61,21 @@ export default function FooterReveal({ repoUrl, gitUrl, stars, shortSha }: Props
             transition={{ type: "spring", stiffness: 240, damping: 24 }}
             className={clsx(
               "absolute right-0 bottom-full z-50 mb-2 w-[min(92vw,560px)] overflow-hidden",
-              "rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-2xl backdrop-blur-md"
+              "rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)] shadow-2xl"
             )}
             role="dialog"
             aria-modal="true"
             style={{ transformOrigin: "bottom right" }}
           >
-            {/* Liquid header bar */}
             <motion.div
               className="h-1 w-full"
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
               transition={{ type: "spring", stiffness: 210, damping: 18 }}
-              style={{ transformOrigin: "right", background: "linear-gradient(90deg, transparent, var(--color-accent))" }}
+              style={{
+                transformOrigin: "right",
+                background: "linear-gradient(90deg, transparent, var(--color-accent))",
+              }}
             />
             <div className="p-4 sm:p-5">
               <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-[var(--color-muted)]">
