@@ -1,4 +1,4 @@
-// components/Nav.tsx — FULL REPLACEMENT (adds fixed top→header-mid gradient)
+// components/Nav.tsx — FULL REPLACEMENT
 "use client";
 
 import Link from "next/link";
@@ -9,7 +9,6 @@ import ThemeLogo from "@/components/ThemeLogo";
 import projects from "@/data/projects.json";
 import type { Project } from "@/types/project";
 import now from "@/data/now.json";
-import { PRESS_PILLS } from "@/components/HeroPressPills";;
 
 const ease = cubicBezier(0.2, 0, 0, 1);
 
@@ -57,9 +56,9 @@ export default function Nav() {
     }
     const nowText = (now as any)?.text ? String((now as any).text) : "";
     if (nowText) items.push({ title: nowText, href: "/#nowbar", kind: "now", hay: nowText.toLowerCase() });
-    for (const pill of PRESS_PILLS) {
-      items.push({ title: pill.name, href: pill.href, kind: "press", hay: pill.name.toLowerCase() });
-    }
+
+    // Press links intentionally excluded from search index. PressShowcase owns its data/UI.
+
     return items;
   }, [all]);
 
@@ -112,7 +111,6 @@ export default function Nav() {
         aria-hidden
         className="fixed inset-x-0 top-0 z-40 pointer-events-none"
         style={{
-          // height is set via effect; gradient is constant
           background:
             "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.32) 12%, rgba(0,0,0,0.22) 32%, rgba(0,0,0,0.10) 60%, rgba(0,0,0,0) 100%)",
         }}
