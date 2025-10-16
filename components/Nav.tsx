@@ -1,4 +1,3 @@
-// components/Nav.tsx — FULL REPLACEMENT
 "use client";
 
 import Link from "next/link";
@@ -17,7 +16,6 @@ export default function Nav() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [q, setQ] = useState("");
 
-  // Fixed shadow height = header midpoint (top + half height)
   useEffect(() => {
     const card = document.getElementById("header-card");
     const drop = document.getElementById("header-drop");
@@ -39,7 +37,6 @@ export default function Nav() {
     };
   }, []);
 
-  // Build search index: all text; photos only by location
   const all = projects as Project[];
   const indexText = useMemo(() => {
     const items: Array<{ title: string; href: string; kind: string; hay: string }> = [];
@@ -57,9 +54,7 @@ export default function Nav() {
     const nowText = (now as any)?.text ? String((now as any).text) : "";
     if (nowText) items.push({ title: nowText, href: "/#nowbar", kind: "now", hay: nowText.toLowerCase() });
 
-    // Press links intentionally excluded from search index. PressShowcase owns its data/UI.
-
-    return items;
+    return items; // press removed from index
   }, [all]);
 
   const results = useMemo(() => {
@@ -68,7 +63,6 @@ export default function Nav() {
     return indexText.filter((r) => r.hay.includes(s)).slice(0, 8);
   }, [q, indexText]);
 
-  // Shortcuts + close
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const metaK = e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey);
@@ -105,32 +99,28 @@ export default function Nav() {
 
   return (
     <>
-      {/* Fixed, full-width dark→transparent gradient from page top to header mid */}
       <div
         id="header-drop"
         aria-hidden
-        className="fixed inset-x-0 top-0 z-40 pointer-events-none"
+        className="pointer-events-none fixed inset-x-0 top-0 z-40"
         style={{
           background:
             "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.32) 12%, rgba(0,0,0,0.22) 32%, rgba(0,0,0,0.10) 60%, rgba(0,0,0,0) 100%)",
         }}
       />
 
-      <header id="site-header" className="fixed top-3 left-0 right-0 z-50">
+      <header id="site-header" className="fixed left-0 right-0 top-3 z-50">
         <div className="mx-auto max-w-5xl px-4">
-          <div
-            id="header-card"
-            className="rounded-2xl bg-card/80 backdrop-blur-md shadow-xl overflow-hidden"
-          >
+          <div id="header-card" className="overflow-hidden rounded-2xl bg-card/80 shadow-xl backdrop-blur-md">
             <div className="flex items-center px-4 py-3">
-              <Link href="/" prefetch className="flex items-center gap-2 font-semibold tracking-tight text-lg">
+              <Link href="/" prefetch className="flex items-center gap-2 text-lg font-semibold tracking-tight">
                 <motion.div whileHover={{ scale: 1.02, rotate: 2 }} whileTap={{ scale: 0.98 }}>
                   <ThemeLogo size={38} />
                 </motion.div>
                 <span className="sr-only">isaac</span>
               </Link>
 
-              <nav className="ml-auto hidden md:flex items-center gap-6">
+              <nav className="ml-auto hidden items-center gap-6 md:flex">
                 <NavLinks />
                 <SearchCluster
                   open={searchOpen}
@@ -142,7 +132,7 @@ export default function Nav() {
                 />
               </nav>
 
-              <div className="ml-auto md:hidden flex items-center gap-2">
+              <div className="ml-auto flex items-center gap-2 md:hidden">
                 <button
                   type="button"
                   className="rounded-xl border border-subtle p-2"
@@ -164,9 +154,9 @@ export default function Nav() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.16, ease }}
-              className="md:hidden mx-auto max-w-5xl px-4"
+              className="mx-auto mt-2 max-w-5xl px-4 md:hidden"
             >
-              <div className="mt-2 rounded-2xl bg-card/80 backdrop-blur-md shadow-xl">
+              <div className="rounded-2xl bg-card/80 shadow-xl backdrop-blur-md">
                 <div className="px-4 py-4">
                   <NavLinks />
                 </div>
@@ -248,7 +238,7 @@ function SearchCluster({
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search across site…"
-                className="w-full bg-transparent text-base outline-none focus:outline-none ring-0 focus:ring-0 caret-white placeholder:text-muted-foreground"
+                className="w-full bg-transparent text-base outline-none ring-0 placeholder:text-muted-foreground"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
