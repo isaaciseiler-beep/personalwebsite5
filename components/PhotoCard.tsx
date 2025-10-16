@@ -1,3 +1,4 @@
+// components/PhotoCard.tsx — FULL REPLACEMENT
 "use client";
 
 import Image from "next/image";
@@ -6,8 +7,8 @@ import CardMotion from "@/components/CardMotion";
 
 /**
  * PhotoCard
- * - Bottom full-width *pill* (rounded-full), text left.
- * - No corner bleed on hover (hard clip + mask).
+ * - Full-width bottom pill (no border), shorter height.
+ * - Hard clipping to prevent corner bleed.
  */
 type Props = {
   item: Project;
@@ -35,16 +36,14 @@ export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
       <CardMotion maxTiltDeg={3.5} scale={1.01} className="h-full rounded-2xl">
         <div
           className={`relative ${aspectClass} rounded-2xl border border-subtle bg-card`}
-          // Safari + Chrome GPU-safe clipping (prevents bottom-corner bleed)
           style={{
             overflow: "hidden",
-            clipPath: "inset(0 round 16px)", // matches rounded-2xl
+            clipPath: "inset(0 round 16px)",
             WebkitMaskImage: "linear-gradient(#000,#000)",
             maskImage: "linear-gradient(#000,#000)",
-            contain: "paint", // isolates paints for scaling children
+            contain: "paint",
           }}
         >
-          {/* hard clip wrapper to ensure scaled image never overflows corners */}
           <div className="absolute inset-0 will-change-transform">
             {src ? (
               <Image
@@ -60,11 +59,10 @@ export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
             )}
           </div>
 
-          {/* full-width bottom pill (rounded-full), text left */}
+          {/* full-width bottom pill: no border, slightly shorter, keeps rounded proportions */}
           {location && (
             <div
-              className="pointer-events-none absolute left-2 right-2 bottom-2 z-10 flex min-h-[36px] items-center rounded-full border border-white/18 bg-white/10 px-3 text-[13px] font-medium text-white/92 backdrop-blur-[10px]"
-              // keep ends perfectly round when container is very narrow
+              className="pointer-events-none absolute left-2 right-2 bottom-2 z-10 flex min-h-[30px] items-center rounded-full bg-white/10 px-3 text-[13px] font-medium text-white/92 backdrop-blur-[10px]"
               style={{ clipPath: "inset(0 round 999px)" }}
             >
               <span className="truncate">{location}</span>
