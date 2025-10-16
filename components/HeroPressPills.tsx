@@ -1,13 +1,20 @@
 // components/HeroPressPills.tsx — FULL REPLACEMENT (compat shim)
+"use client";
+
+// Keep default component import working for older code.
 export { default } from "@/components/PressShowcase";
-export type { Pill } from "@/components/PressShowcase";
+
 import { PILLS as BASE } from "@/components/PressShowcase";
+
+/** New canonical shape used across app: { label, href } */
+export type Pill = { href: string; label: string };
+export const PILLS: Pill[] = BASE;
 
 /** Legacy shape expected by Nav.tsx: { name, href } */
 export type LegacyPill = { href: string; name: string };
 
-/** PRESS_PILLS keeps Nav.tsx working without edits */
-export const PRESS_PILLS: LegacyPill[] = BASE.map(p => ({ href: p.href, name: p.label }));
-
-/** Also re-export PILLS for any new code using { label, href } */
-export const PILLS = BASE;
+/** Explicitly export PRESS_PILLS in the legacy shape. */
+export const PRESS_PILLS = BASE.map(p => ({ href: p.href, name: p.label })) as readonly {
+  href: string;
+  name: string;
+}[];
