@@ -1,54 +1,34 @@
-// components/HeroPressPills.tsx — FULL REPLACEMENT (retains your exact copy)
 "use client";
 
-export type Press = { name: string; href: string; logo?: string; alt?: string };
+import CardMotion from "@/components/CardMotion";
 
-// Single source of truth used by both pills and PressRow.
-export const PILLS: Press[] = [
-  {
-    name: "Isaac featured in launch of ChatGPT Pulse",
-    href: "https://openai.com/index/introducing-chatgpt-pulse/",
-  },
-  {
-    name: "Isaac on OpenAI’s social media discussing uses of ChatGPT Study Mode",
-    href: "https://www.instagram.com/reel/DNyG5VvXEZM/?hl=en",
-  },
-  {
-    name: "Isaac Seiler becomes Rhodes Scholar finalist",
-    href: "https://source.washu.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/",
-  },
-  {
-    name: "Isaac Seiler awarded the Truman Scholarship",
-    href: "https://artsci.washu.edu/ampersand/junior-seiler-awarded-truman-scholarship",
-  },
-  {
-    name: "Isaac wins a Fulbright Scholarship to Taiwan",
-    href: "https://source.washu.edu/2025/06/several-alumni-earn-fulbright-awards/",
-  },
-  {
-    name: "Isaac’s profile by Washington University",
-    href: "https://artsci.washu.edu/ampersand/isaac-seiler-setting-his-sights-high",
-  },
+const base =
+  "inline-block rounded-full border border-subtle px-3 py-1 text-sm transition-colors hover:border-[color:var(--color-accent)]/60 bg-card";
+
+type Pill = { href: string; label: string };
+
+const pills: Pill[] = [
+  { href: "https://openai.com/index/introducing-chatgpt-pulse/", label: "OpenAI: Introducing ChatGPT Pulse" },
+  { href: "https://www.whitehouse.gov/briefing-room/statements-releases/2025/05/02/fact-sheet-biden-harris-administration-announces-new-actions-to-advance-safe-secure-and-trustworthy-artificial-intelligence-2/", label: "White House: AI actions mention" },
+  { href: "https://truman.gov", label: "Truman Scholarship" },
+  { href: "https://source.washu.edu/2025/06/several-alumni-earn-fulbright-awards/", label: "Fulbright Taiwan" },
+  { href: "https://artsci.washu.edu/ampersand/isaac-seiler-setting-his-sights-high", label: "Ampersand profile" },
 ];
 
-// Export for PressRow
-export const pressItems: Press[] = PILLS.map(p => ({ ...p, alt: p.name }));
-
 export default function HeroPressPills() {
-  const base =
-    "inline-block rounded-full border border-subtle px-3 py-1 text-sm transition-colors hover:border-[color:var(--color-accent)]/60";
   return (
     <div className="flex flex-wrap gap-3">
-      {PILLS.map(p => (
-        <a
-          key={p.href}
-          href={p.href}
-          className={`card-hover ${base}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {p.name}
-        </a>
+      {pills.map((p) => (
+        <CardMotion key={p.href} maxTiltDeg={5} scale={1.02} className="rounded-full">
+          <a
+            href={p.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`card-hover ${base}`}
+          >
+            {p.label}
+          </a>
+        </CardMotion>
       ))}
     </div>
   );
