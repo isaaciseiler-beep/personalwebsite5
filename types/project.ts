@@ -1,16 +1,21 @@
-export type Project = {
+export type ProjectBase = {
+  kind: "project" | "photo";
   slug: string;
   title: string;
-  kind: "project" | "photo" | "video"; // added "video"
-  summary?: string;
-  image?: string;          // poster or thumbnail
-  video?: string;          // optional video src (mp4/webm), used when kind === "video"
-  tags?: string[];
-  year?: number;
-  url?: string;
-
-  // media location (for map)
-  location?: string;
-  lat?: number;
-  lng?: number;
 };
+
+export type ProjectExtra = {
+  image?: string;
+  tags?: string[];
+  description?: string;
+  category?: string;
+  role?: string;
+  type?: string;
+  location?: string;
+  url?: string;
+  subtitle?: string;
+  tagline?: string;
+  summary?: string;
+};
+
+export type Project = ProjectBase & Partial<ProjectExtra>;
