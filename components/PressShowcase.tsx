@@ -17,7 +17,7 @@ const pressItems: PressItem[] = [
   { title: "OpenAI Instagram spotlight on ChatGPT Study Mode", href: "https://www.instagram.com/chatgpt/reel/DNyG5VvXEZM/", source: "OpenAI", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/study-mode.jpg` },
   { title: "WashU Rhodes Scholar finalist", href: "https://source.wustl.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/", source: "Rhodes Trust", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/rhodes.jpg` },
   { title: "Co-published Book on Education Uses of ChatGPT", href: "https://chatgpt.com/100chats-project", source: "OpenAI", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/100chats.jpg` },
-  { title: "Awarded 2024 Michigan Truman Scholarship", href: "https://artsci.wustl.edu/ampersand/junior-seiler-awarded-truman-scholarship", source: "Washington University", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/truman.jpg` },
+  { title: "Awarded 2024 Michigan Truman Scholarship", href: "https://artsci.washu.edu/ampersand/junior-seiler-awarded-truman-scholarship", source: "Washington University", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/truman.jpg` },
   { title: "Awarded 2025 Fulbright to Taiwan", href: "https://source.wustl.edu/2025/06/several-alumni-earn-fulbright-awards/", source: "Washington University", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/fulbright.jpg` },
   { title: "University profile", href: "https://artsci.wustl.edu/ampersand/isaac-seiler-setting-his-sights-high", source: "Washington University", image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/wustl.jpg` },
 ];
@@ -25,9 +25,11 @@ const pressItems: PressItem[] = [
 export default function PressShowcase() {
   return (
     <section className="mx-auto mt-4 max-w-6xl px-4">
-      <h2 className="mb-3 text-[1.25rem] md:text-[1.5rem] font-normal text-neutral-100">
+      {/* match section header sizing: regular weight, slightly smaller */}
+      <h2 className="mb-4 text-xl md:text-2xl font-normal text-neutral-100">
         in the news
       </h2>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {pressItems.map((item, i) => (
           <PressCard key={i} item={item} />
