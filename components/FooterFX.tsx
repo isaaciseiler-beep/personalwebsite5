@@ -12,10 +12,9 @@ export default function FooterFX() {
     if (!root) return;
 
     const down = (e: PointerEvent) => {
-      // Ignore clicks on interactive elements marked with data-no-fx
       if ((e.target as HTMLElement)?.closest("[data-no-fx]")) return;
       clearTimeout(t.current ?? undefined);
-      t.current = window.setTimeout(() => setOn(true), 1000); // 1s hold
+      t.current = window.setTimeout(() => setOn(true), 1000);
     };
     const up = () => {
       clearTimeout(t.current ?? undefined);
@@ -48,13 +47,26 @@ export default function FooterFX() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
           aria-hidden
-          // Full footer background (edge-to-edge inside footer)
-          className="pointer-events-none absolute inset-0 z-[1]"
-          style={{
-            background:
-              "conic-gradient(from 90deg at 50% 50%, #e40303, #ff8c00, #ffed00, #008026, #24408e, #732982, #e40303)",
-          }}
-        />
+          className="pointer-events-none absolute inset-0 z-[1] overflow-hidden"
+        >
+          {/* Smooth, coreless rainbow using layered linear gradients */}
+          <div
+            className="absolute -inset-8 opacity-80 blur-2xl"
+            style={{
+              background:
+                "linear-gradient(95deg,#e40303, #ff8c00, #ffed00, #008026, #24408e, #732982)",
+            }}
+          />
+          {/* Soft light to avoid banding */}
+          <div
+            className="absolute inset-0"
+            style={{
+              mixBlendMode: "overlay",
+              backgroundImage:
+                "linear-gradient(180deg, rgba(255,255,255,.10), transparent 40% ), linear-gradient(0deg, rgba(255,255,255,.06), transparent 40%)",
+            }}
+          />
+        </motion.div>
       )}
     </AnimatePresence>
   );
