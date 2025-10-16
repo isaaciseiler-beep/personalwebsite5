@@ -47,7 +47,7 @@ export default function FeaturedPhotos({
           featured photos
         </h2>
         {/* top-right link hidden; real CTA lives in the fade */}
-        <Link href="/photos" className="sr-only">
+        <Link href="/work/photos" className="sr-only">
           see all
         </Link>
       </div>
@@ -119,7 +119,7 @@ export default function FeaturedPhotos({
             }}
           >
             <Link
-              href="/photos"
+              href="/work/photos"
               className="rounded-full border border-white/15 bg-neutral-950/90 px-5 py-2 text-sm font-medium text-white hover:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-sky-500"
             >
               see all
@@ -132,12 +132,12 @@ export default function FeaturedPhotos({
       <Lightbox
         open={open}
         onClose={() => setOpen(false)}
-        images={photos.map((p: any) => ({
+        items={photos.map((p: any) => ({
           src: p.image ?? p.src ?? p.photo,
           alt: p.alt ?? p.title ?? p.label ?? "photo",
         }))}
         index={idx}
-        onIndexChange={setIdx}
+        setIndex={setIdx}
       />
     </section>
   );
