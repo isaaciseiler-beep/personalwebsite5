@@ -1,4 +1,3 @@
-// components/PhotoCard.tsx — FULL REPLACEMENT
 "use client";
 
 import Image from "next/image";
@@ -8,7 +7,7 @@ import CardMotion from "@/components/CardMotion";
 type Props = {
   item: Project; // kind: "photo"
   onClick?: (src: string, alt: string, caption?: string) => void;
-  ratio?: "square" | "video"; // "video" => 16:9
+  ratio?: "square" | "video";
 };
 
 export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
@@ -19,24 +18,19 @@ export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
     (item as any)?.caption ??
     (item as any)?.location ??
     undefined;
+
   const aspectClass = ratio === "video" ? "aspect-video" : "aspect-square";
 
   return (
     <button
       aria-label={`view ${alt}`}
-      className="block w-full text-left card-focusable"
+      className="card-focusable block w-full text-left"
       onClick={() => src && onClick?.(src, alt, caption)}
     >
       <CardMotion maxTiltDeg={4} scale={1.015} className="h-full">
         <div className={`relative ${aspectClass} overflow-hidden rounded-xl border border-subtle bg-card`}>
           {src ? (
-            <Image
-              src={src}
-              alt={alt}
-              fill
-              sizes="(min-width: 768px) 33vw, 100vw"
-              className="object-cover"
-            />
+            <Image src={src} alt={alt} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
           ) : (
             <div className="h-full w-full bg-neutral-800" />
           )}
