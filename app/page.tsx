@@ -1,3 +1,4 @@
+// app/page.tsx — FULL REPLACEMENT
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
@@ -25,12 +26,7 @@ export default function HomePage() {
     .map(slug => all.find(p => p.slug === slug))
     .filter(Boolean) as Project[];
 
-  const gallery = photos.map(p => ({
-    src: p.image ?? "",
-    alt: p.title,
-    caption: p.location || p.title,
-  }));
-
+  const gallery = photos.map(p => ({ src: p.image ?? "", alt: p.title, caption: p.location || p.title }));
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
 
@@ -39,6 +35,7 @@ export default function HomePage() {
       <EdgeProgress />
       <Hero />
 
+      {/* single container controls width */}
       <div className="mx-auto max-w-5xl px-4">
         <div className="space-y-6 md:space-y-8">
           {/* about */}
@@ -54,43 +51,34 @@ export default function HomePage() {
 
           {/* projects */}
           <section className="m-0 p-0">
-            <div className="mb-2.5 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xl leading-none">featured projects</h2>
-              <Link
-                href="/work/projects"
-                className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]"
-                prefetch
-              >
+              <Link href="/work/projects" className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]" prefetch>
                 see all
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
               {featuredProjects.map((item, i) => (
                 <Reveal key={item.slug} delay={i * 0.06}>
-                  <div className="h-full">
-                    <Card item={item} />
-                  </div>
+                  <div className="h-full"><Card item={item} /></div>
                 </Reveal>
               ))}
             </div>
           </section>
 
-          {/* in the news — single header, tightened gap, full-width content */}
+          {/* in the news — match header spacing; full-width inside container */}
           <section className="m-0 p-0">
-            <div className="mb-2.5">
+            <div className="mb-3">
               <h2 className="text-xl leading-none">in the news</h2>
             </div>
-
-            {/* Normalizer: widen to container edges and remove internal caps/margins */}
             <div
               className="
-                -mx-4 md:-mx-4 -mt-1
-                w-[calc(100%+2rem)]
-                [&_*]:!max-w-none
-                [&_*]:!mx-0
-                [&_*]:!px-0
-                [&_h2]:hidden
-                [&_a[href*='/press']]:hidden
+                w-full
+                [&_*]:max-w-none        /* remove inner caps */
+                [&_*]:mx-0 [&_*]:px-0   /* align to container edges */
+                [&_*]:mt-0              /* kill extra top margins */
+                [&_h2]:hidden           /* hide any internal headings */
+                [&_a[href*='/press']]:hidden  /* hide internal 'see all' */
                 [&_[role='tablist']]:w-full
                 [&_[role='tab']]:flex-1 [&_[role='tab']]:text-center
               "
@@ -99,28 +87,18 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* featured photos */}
+          {/* photos */}
           <section className="m-0 p-0">
-            <div className="mb-2.5 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xl leading-none">featured photos</h2>
-              <Link
-                href="/work/photos"
-                className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]"
-                prefetch
-              >
+              <Link href="/work/photos" className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]" prefetch>
                 see all
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
               {photos.map((item, i) => (
                 <Reveal key={item.slug} delay={i * 0.06}>
-                  <PhotoCard
-                    item={item}
-                    onClick={() => {
-                      setIdx(i);
-                      setOpen(true);
-                    }}
-                  />
+                  <PhotoCard item={item} onClick={() => { setIdx(i); setOpen(true); }} />
                 </Reveal>
               ))}
             </div>
@@ -129,13 +107,7 @@ export default function HomePage() {
       </div>
 
       <NowBar text={now.text ?? ""} />
-      <Lightbox
-        open={open}
-        items={gallery}
-        index={idx}
-        setIndex={setIdx}
-        onClose={() => setOpen(false)}
-      />
+      <Lightbox open={open} items={gallery} index={idx} setIndex={setIdx} onClose={() => setOpen(false)} />
     </PageTransition>
   );
 }
