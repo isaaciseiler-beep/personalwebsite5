@@ -1,50 +1,127 @@
-// components/PressShowcase.tsx — FULL REPLACEMENT
 "use client";
 
-import Reveal from "@/components/Reveal";
-import CursorTilt from "@/components/CursorTilt";
+import { motion, useMotionValue, useTransform } from "framer-motion";
+import { useState } from "react";
 
-type Press = { name: string; href: string };
+type NewsItem = {
+  title: string;
+  source?: string;
+  href?: string;
+  date?: string;
+};
 
-const PRESS: Press[] = [
-  { name: "Isaac featured in launch of ChatGPT Pulse", href: "https://openai.com/index/introducing-chatgpt-pulse/" },
-  { name: "Isaac on OpenAI’s social media discussing uses of ChatGPT Study Mode", href: "https://www.instagram.com/reel/DNyG5VvXEZM/?hl=en" },
-  { name: "Isaac Seiler becomes Rhodes Scholar finalist", href: "https://source.washu.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/" },
-  { name: "Isaac Seiler awarded the Truman Scholarship", href: "https://artsci.washu.edu/ampersand/junior-seiler-awarded-truman-scholarship" },
-  { name: "Isaac wins a Fulbright Scholarship to Taiwan", href: "https://source.washu.edu/2025/06/several-alumni-earn-fulbright-awards/" },
-  { name: "Isaac’s profile by Washington University", href: "https://artsci.washu.edu/ampersand/isaac-seiler-setting-his-sights-high" },
+const newsItems: NewsItem[] = [
+  {
+    title: "Isaac featured in launch of ChatGPT Pulse",
+    href: "#",
+  },
+  {
+    title: "Isaac on OpenAI’s social media discussing uses of ChatGPT Study Mode",
+    href: "#",
+  },
+  {
+    title: "Isaac Seiler becomes Rhodes Scholar finalist",
+    href: "#",
+  },
+  {
+    title: "Isaac Seiler awarded the Truman Scholarship",
+    href: "#",
+  },
+  {
+    title: "Isaac wins a Fulbright Scholarship to Taiwan",
+    href: "#",
+  },
+  {
+    title: "Isaac’s profile by Washington University",
+    href: "#",
+  },
 ];
 
-export default function PressShowcase() {
+export default function NewsSection() {
   return (
-    <section className="pb-8">
-      <div className="mx-auto max-w-5xl px-4">
-        <div className="mb-4">
-          <h2 className="text-xl">in the news</h2>
-        </div>
+    <section className="mx-auto mt-20 max-w-6xl px-4">
+      <h2 className="mb-6 text-2xl font-semibold text-neutral-100">
+        in the news
+      </h2>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-          {PRESS.map((p, i) => (
-            <Reveal key={p.href} delay={i * 0.06}>
-              <CursorTilt className="h-full">
-                <a
-                  href={p.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={p.name}
-                  className="card-hover block h-full overflow-hidden rounded-xl border border-subtle bg-card p-5 transition-colors hover:border-[color:var(--color-accent)]/60"
-                >
-                  <div className="flex h-full items-center">
-                    <span className="text-base text-[color:var(--color-fg)]/90">
-                      {p.name}
-                    </span>
-                  </div>
-                </a>
-              </CursorTilt>
-            </Reveal>
-          ))}
-        </div>
-      </div>
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ staggerChildren: 0.1 }}
+        variants={{
+          hidden: {},
+          visible: {},
+        }}
+        className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        {newsItems.map((item, i) => (
+          <NewsCard key={i} item={item} />
+        ))}
+      </motion.div>
     </section>
+  );
+}
+
+function NewsCard({ item }: { item: NewsItem }) {
+  const [hovered, setHovered] = useState(false);
+  const x = useMotionValue(0.5);
+  const y = useMotionValue(0.5);
+
+  const background = useTransform(
+    [x, y],
+    ([latestX, latestY]) =>
+      `radial-gradient(400px circle at ${latestX * 100}% ${
+        latestY * 100
+      }%, rgba(56,189,248,0.08), transparent 70%)`
+  );
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const newX = (e.clientX - rect.left) / rect.width;
+    const newY = (e.clientY - rect.top) / rect.height;
+    x.set(newX);
+    y.set(newY);
+  }
+
+  return (
+    <motion.a
+      href={item.href || "#"}
+      target={item.href ? "_blank" : undefined}
+      rel="noopener noreferrer"
+      onMouseMove={handleMouseMove}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: { type: "spring", stiffness: 160, damping: 18 },
+        },
+      }}
+      whileHover={{
+        scale: 1.02,
+        rotateX: -2,
+        rotateY: 2,
+        transition: { type: "spring", stiffness: 220, damping: 15 },
+      }}
+      style={{ background }}
+      className="relative flex min-h-[120px] flex-col justify-center rounded-2xl border border-neutral-800/70 bg-neutral-950/70 p-5 text-left shadow-[0_0_20px_rgba(0,0,0,0.3)] backdrop-blur-md transition-transform duration-300"
+    >
+      <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.03] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+      <h3
+        className={`text-[1.05rem] leading-snug text-neutral-100 transition-colors duration-300 ${
+          hovered ? "text-transparent bg-clip-text bg-gradient-to-r from-white to-neutral-400" : ""
+        }`}
+      >
+        {item.title}
+      </h3>
+
+      {item.source && (
+        <p className="mt-2 text-sm text-neutral-500">{item.source}</p>
+      )}
+    </motion.a>
   );
 }
