@@ -1,23 +1,20 @@
 // components/PhotoCard.tsx — FULL REPLACEMENT
-// Supports ratio: "square" (default) or "video" (16:9)
-
 "use client";
 
 import Image from "next/image";
 import type { Project } from "@/types/project";
-import CursorTilt from "@/components/CursorTilt";
+import CardMotion from "@/components/CardMotion";
 
 type Props = {
-  item: Project;                    // kind: "photo"
+  item: Project; // kind: "photo"
   onClick?: (src: string, alt: string, caption?: string) => void;
-  ratio?: "square" | "video";       // "video" => 16:9
+  ratio?: "square" | "video"; // "video" => 16:9
 };
 
 export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
-  const src = item.image || "";
-  const alt = item.title || "photo";
-  const caption = item.location || item.title;
-
+  const src = item.image ?? "";
+  const alt = item.title ?? "photo";
+  const caption = item.description;
   const aspectClass = ratio === "video" ? "aspect-video" : "aspect-square";
 
   return (
@@ -26,25 +23,18 @@ export default function PhotoCard({ item, onClick, ratio = "square" }: Props) {
       className="block w-full text-left"
       onClick={() => src && onClick?.(src, alt, caption)}
     >
-      <CursorTilt maxTiltDeg={4} scale={1.015} className="h-full">
-        <div className={`card-hover relative ${aspectClass} overflow-hidden rounded-xl border border-subtle bg-card`}>
+      <CardMotion maxTiltDeg={4} scale={1.015} className="h-full">
+        <div className={`relative ${aspectClass} overflow-hidden rounded-xl border border-subtle bg-card`}>
           {src && (
-            <Image
-              src={src}
-              alt={alt}
-              fill
-              sizes="(min-width: 1024px) 50vw, (min-width: 640px) 50vw, 100vw"
-              className="object-cover"
-              placeholder="empty"
-            />
+            <Image src={src} alt={alt} fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
           )}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 p-2">
-            <div className="rounded-full border border-subtle bg-[color:var(--color-bg)]/60 px-2 py-0.5 text-xs backdrop-blur">
+          {caption ? (
+            <div className="absolute inset-x-0 bottom-0 p-3 text-xs text-fg/90 backdrop-blur-sm">
               {caption}
             </div>
-          </div>
+          ) : null}
         </div>
-      </CursorTilt>
+      </CardMotion>
     </button>
   );
 }
