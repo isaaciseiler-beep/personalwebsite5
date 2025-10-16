@@ -1,3 +1,3 @@
-// Back-compat shim. Old imports keep working.
+// components/HeroPressPills.tsx — FULL REPLACEMENT (shim)
 export { default } from "@/components/PressShowcase";
-export { PILLS as PRESS_PILLS, PILLS, type PressItem } from "@/components/PressShowcase";
+export { PILLS as PRESS_PILLS, PILLS, type Pill } from "@/components/PressShowcase";
