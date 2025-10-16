@@ -9,7 +9,7 @@ type PressItem = {
   href?: string;
   source?: string;
   date?: string;
-  image?: string; // Cloudflare R2 CDN URL
+  image?: string;
 };
 
 const pressItems: PressItem[] = [
@@ -34,7 +34,7 @@ const pressItems: PressItem[] = [
   {
     title: "Truman Scholarship",
     href: "#",
-    source: "The Truman Foundation",
+    source: "Truman Foundation",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/truman.jpg`,
   },
   {
@@ -53,10 +53,12 @@ const pressItems: PressItem[] = [
 
 export default function PressShowcase() {
   return (
-    <section className="mx-auto mt-20 max-w-6xl px-4">
-      <h2 className="mb-6 text-2xl font-semibold text-foreground">in the news</h2>
+    <section className="mx-auto mt-14 max-w-6xl px-4">
+      <h2 className="mb-4 text-2xl font-normal text-neutral-100">
+        in the news
+      </h2>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {pressItems.map((item, i) => (
           <PressCard key={i} item={item} />
         ))}
@@ -67,15 +69,14 @@ export default function PressShowcase() {
 
 function PressCard({ item }: { item: PressItem }) {
   const [hovered, setHovered] = useState(false);
-
-  // Cursor-responsive glow (very subtle for white cards; does not affect text)
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
+
   const gx = useTransform(x, (v) => v * 100);
   const gy = useTransform(y, (v) => v * 100);
-  const glow = useMotionTemplate`radial-gradient(400px circle at ${gx}% ${gy}%, rgba(0,0,0,0.06), transparent 70%)`;
+  const glow = useMotionTemplate`radial-gradient(400px circle at ${gx}% ${gy}%, rgba(56,189,248,0.08), transparent 70%)`;
 
-  function onMove(e: React.MouseEvent<HTMLAnchorElement>) {
+  function handleMove(e: React.MouseEvent<HTMLAnchorElement>) {
     const r = e.currentTarget.getBoundingClientRect();
     x.set((e.clientX - r.left) / r.width);
     y.set((e.clientY - r.top) / r.height);
@@ -86,7 +87,7 @@ function PressCard({ item }: { item: PressItem }) {
       href={item.href || "#"}
       target={item.href ? "_blank" : undefined}
       rel="noopener noreferrer"
-      onMouseMove={onMove}
+      onMouseMove={handleMove}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
       whileHover={{
@@ -96,33 +97,25 @@ function PressCard({ item }: { item: PressItem }) {
         transition: { type: "spring", stiffness: 220, damping: 16 },
       }}
       style={{ backgroundImage: glow }}
-      // card-hover class matches your other cards; white tile + soft border + true black text
-      className="card-hover group relative flex min-h-[150px] items-stretch overflow-hidden rounded-2xl border border-neutral-200 bg-white text-black shadow-sm transition-transform duration-300"
+      className="group relative flex min-h-[150px] items-stretch overflow-hidden rounded-2xl border border-neutral-800/70 bg-neutral-950/70 p-5 text-left text-neutral-100 shadow-[0_0_20px_rgba(0,0,0,0.25)] backdrop-blur-md transition-transform duration-300"
     >
-      {/* Left content (70%) */}
-      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 p-5">
-        <h3
-          // No color/opacity toggles -> no blink. Only transform/underline on hover.
-          className="text-[1.05rem] font-semibold leading-snug tracking-tight will-change-transform"
-        >
-          <span className="bg-gradient-to-r from-black to-black bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size,transform] duration-300 group-hover:bg-[length:100%_1px]">
+      {/* Left content */}
+      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 pr-3">
+        <h3 className="text-[1.05rem] leading-snug tracking-tight text-neutral-100">
+          <span className="bg-gradient-to-r from-sky-400/80 to-teal-300/80 bg-[length:0%_2px] bg-left-bottom bg-no-repeat transition-[background-size,transform] duration-300 group-hover:bg-[length:100%_2px]">
             {item.title}
           </span>
         </h3>
-
         {item.source && (
-          <p className="text-sm text-neutral-600">{item.source}</p>
+          <p className="text-sm text-neutral-400">{item.source}</p>
         )}
-
         {item.date && (
           <p className="text-xs text-neutral-500">{item.date}</p>
         )}
       </div>
 
-      {/* Right media (30%) */}
-      <div className="relative hidden w-[30%] shrink-0 items-stretch sm:flex">
-        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        {/* Image wrapper with subtle parallax */}
+      {/* Right image */}
+      <div className="relative hidden w-[30%] shrink-0 sm:block">
         <motion.div
           className="relative h-full w-full"
           whileHover={{ scale: 1.03 }}
@@ -138,15 +131,11 @@ function PressCard({ item }: { item: PressItem }) {
               className="object-cover"
             />
           ) : (
-            <div className="h-full w-full bg-neutral-100" />
+            <div className="h-full w-full bg-neutral-800" />
           )}
-          {/* soft left fade for text readability */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-white to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-neutral-950 to-transparent" />
         </motion.div>
       </div>
-
-      {/* Focus ring */}
-      <span className="pointer-events-none absolute inset-0 rounded-2xl ring-0 ring-black/0 transition-shadow duration-300 group-focus-visible:ring-2 group-focus-visible:ring-black/20" />
     </motion.a>
   );
 }
