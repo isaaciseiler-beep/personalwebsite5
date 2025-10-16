@@ -1,4 +1,4 @@
-// components/NowBar.tsx — FINAL
+// components/NowBar.tsx — FINAL (white contact link)
 "use client";
 
 import { motion } from "framer-motion";
@@ -38,15 +38,15 @@ export default function NowBar({ text }: { text: string }) {
             <p className="mt-1 text-neutral-400">always open to collaborate</p>
           </div>
 
-          {/* Right link */}
+          {/* Right link (white) */}
           <Link
             href={linkedin}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Contact via LinkedIn"
-            className="group relative text-base font-medium text-sky-400 transition-colors duration-300 hover:text-sky-300"
+            className="group relative text-base font-medium text-white transition-colors duration-300 hover:text-neutral-300"
           >
-            <span className="relative after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-0 after:bg-sky-400 after:transition-all after:duration-300 group-hover:after:w-full">
+            <span className="relative after:absolute after:bottom-0 after:left-0 after:h-[1px] after:w-0 after:bg-white after:transition-all after:duration-300 group-hover:after:w-full">
               contact →
             </span>
           </Link>
