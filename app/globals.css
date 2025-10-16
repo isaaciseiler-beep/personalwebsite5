@@ -81,92 +81,42 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   background-size:180px 180px;
 }
 
-/* optional hero fog band (if used in Hero.tsx) */
-.fog-stage{
-  position:absolute; left:0; right:0; bottom:0; height:140px;
-  overflow:clip; pointer-events:none; width:100%;
-}
-.fog-black-cap{
-  position:absolute; inset:-30% -10% 40% -10%;
-  background: radial-gradient(120% 80% at 50% 0%, #000 65%, rgba(0,0,0,0) 100%);
-  filter: blur(20px); opacity:.9;
-}
+/* optional hero fog band */
+.fog-stage{ position:absolute; left:0; right:0; bottom:0; height:140px; overflow:clip; pointer-events:none; width:100%; }
+.fog-black-cap{ position:absolute; inset:-30% -10% 40% -10%; background: radial-gradient(120% 80% at 50% 0%, #000 65%, rgba(0,0,0,0) 100%); filter: blur(20px); opacity:.9; }
 .fog-layer{ position:absolute; inset:-25%; filter: blur(48px) saturate(115%); opacity:.28; mix-blend-mode:screen; will-change:transform,opacity; }
-.fog-hue{
-  background: conic-gradient(from 340deg, #6be4ff, #a86bff, #ff6bd6, #ff6b6b, #ffd66b, #6bff9e, #6be4ff);
-  animation: fogFloatUp 14s ease-in-out infinite, fogSpin 42s linear infinite;
-}
-.fog-hue2{
-  background: conic-gradient(from 160deg, #a86bff, #ff6bd6, #ff6b6b, #ffd66b, #6bff9e, #6be4ff, #a86bff);
-  opacity:.22; animation: fogFloatDown 16s ease-in-out infinite, fogSpin 56s linear infinite reverse;
-}
-.fog-grain{
-  position:absolute; inset:-10%;
-  background-image:url("data:image/svg+xml;utf8,\
+.fog-hue{ background: conic-gradient(from 340deg, #6be4ff, #a86bff, #ff6bd6, #ff6b6b, #ffd66b, #6bff9e, #6be4ff); animation: fogFloatUp 14s ease-in-out infinite, fogSpin 42s linear infinite; }
+.fog-hue2{ background: conic-gradient(from 160deg, #a86bff, #ff6bd6, #ff6b6b, #ffd66b, #6bff9e, #6be4ff, #a86bff); opacity:.22; animation: fogFloatDown 16s ease-in-out infinite, fogSpin 56s linear infinite reverse; }
+.fog-grain{ position:absolute; inset:-10%; background-image:url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'>\
   <filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix type='saturate' values='0'/>\
   <feComponentTransfer><feFuncA type='table' tableValues='0 0.035 0'/></feComponentTransfer></filter>\
   <rect width='100%' height='100%' filter='url(%23n)'/>\
-</svg>");
-  background-size:240px 240px; mix-blend-mode:soft-light; opacity:.45; animation:fogDrift 24s linear infinite;
-}
-.fog-to-white{
-  position:absolute; left:0; right:0; bottom:0; height:85%;
-  background: linear-gradient(to bottom,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0.02) 25%,
-    rgba(255,255,255,0.08) 45%,
-    rgba(255,255,255,0.22) 62%,
-    rgba(255,255,255,0.45) 75%,
-    #ffffff 100%);
-}
+</svg>"); background-size:240px 240px; mix-blend-mode:soft-light; opacity:.45; animation:fogDrift 24s linear infinite; }
+.fog-to-white{ position:absolute; left:0; right:0; bottom:0; height:85%; background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.22) 62%, rgba(255,255,255,0.45) 75%, #ffffff 100%); }
 
 /* ========== PROGRESS BARS ========== */
 .route-progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#0ea5e9,#7dd3fc);transform-origin:left;z-index:60}
 .scroll-progress{position:fixed;top:0;left:0;height:3px;background:rgba(127,127,127,.35);transform-origin:left;z-index:59}
 .edge-progress{position:fixed;left:0;top:0;width:2px;background:color-mix(in oklab,var(--color-accent) 70%, transparent);transform-origin:top;z-index:40}
 
-/* ========== MAP (stacking + popup + attribution styling) ========== */
+/* ========== MAP ========== */
 .leaflet-container,.mapboxgl-map{ z-index:0; }
-
-.mapboxgl-popup-content{
-  background: color-mix(in oklab, var(--color-bg) 70%, transparent);
-  color: var(--color-fg);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  backdrop-filter: blur(6px);
-  padding: 6px 10px;
-}
+.mapboxgl-popup-content{ background: color-mix(in oklab, var(--color-bg) 70%, transparent); color: var(--color-fg); border: 1px solid var(--color-border); border-radius: 10px; backdrop-filter: blur(6px); padding: 6px 10px; }
 .mapboxgl-popup-tip{ border-top-color: color-mix(in oklab, var(--color-bg) 70%, transparent) !important; }
 .popup-card{ font-size: 12px; }
-
-/* attribution restyle (compliant) */
-.mapboxgl-ctrl-attrib{
-  background: none !important;
-  font-size: 11px !important;
-  color: var(--color-fg) !important;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  padding: 2px 6px !important;
-  border-radius: 6px;
-  backdrop-filter: blur(6px);
-  background-color: rgba(0,0,0,.5);
-}
+.mapboxgl-ctrl-attrib{ background: none !important; font-size: 11px !important; color: var(--color-fg) !important; text-transform: uppercase; letter-spacing: .05em; padding: 2px 6px !important; border-radius: 6px; backdrop-filter: blur(6px); background-color: rgba(0,0,0,.5); }
 .mapboxgl-ctrl-attrib a{ color: var(--color-accent) !important; text-decoration:none !important; }
 .mapboxgl-ctrl-attrib a:hover{ text-decoration: underline !important; }
 
-/* ========== MASONRY (magazine layout) ========== */
+/* ========== MASONRY ========== */
 .masonry{column-gap:1.5rem}
 @media (min-width:640px){.masonry{column-count:2}}
 @media (min-width:768px){.masonry{column-count:3}}
 .masonry-item{break-inside:avoid;margin-bottom:1.5rem}
 
 /* photo hover caption helper */
-.caption-bar{
-  transform:translateY(12px);
-  opacity:0;
-  transition:transform 200ms cubic-bezier(.2,0,0,1),opacity 200ms cubic-bezier(.2,0,0,1);
-}
+.caption-bar{ transform:translateY(12px); opacity:0; transition:transform 200ms cubic-bezier(.2,0,0,1),opacity 200ms cubic-bezier(.2,0,0,1); }
 .group:hover .caption-bar{ transform:translateY(0); opacity:1; }
 
 /* ========== MOTION KEYFRAMES ========== */
@@ -175,7 +125,6 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 @keyframes fogFloatUp{ 0%,100%{ transform: translateY(6px) } 50%{ transform: translateY(-6px) } }
 @keyframes fogFloatDown{ 0%,100%{ transform: translateY(-5px) } 50%{ transform: translateY(5px) } }
 
-/* reduced motion: keep look, stop movement */
 @media (prefers-reduced-motion:reduce){
   .fog-hue,.fog-hue2,.fog-grain{ animation:none }
 }
@@ -184,55 +133,22 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 .shadow-subtle{ box-shadow:0 8px 30px rgba(0,0,0,.20); }
 .bg-card-blur{ background-color:color-mix(in oklab, var(--color-bg) 60%, transparent); backdrop-filter:blur(6px); }
 
-/* app/globals.css — ADD/UPDATE (focus removal in header, reactive text) */
 @layer utilities {
-  .pressable {
-    position: relative;
-    transform: translateZ(0);
-    transition: transform 120ms ease, opacity 120ms ease, filter 120ms ease;
-  }
+  .pressable { position: relative; transform: translateZ(0); transition: transform 120ms ease, opacity 120ms ease, filter 120ms ease; }
   .pressable:active { transform: scale(0.97); }
 
-  /* ripple kept from prior step */
   .pressable-ripple { position:absolute; border-radius:9999px; transform:scale(0); opacity:.25; background:currentColor; pointer-events:none; animation:pr 450ms ease-out; }
   @keyframes pr { to { transform:scale(1); opacity:0; } }
 
-  /* header: remove default blue focus box, keep accessibility via subtle shadow if needed */
   [data-no-outline] *:focus { outline: none; }
   [data-no-outline] *:focus-visible { outline: none; box-shadow: 0 0 0 0 transparent; }
 
-  /* more reactive text on press */
   .text-reactive { transition: color 120ms ease, opacity 120ms ease, letter-spacing 120ms ease; }
   .text-reactive:active { opacity: 1; letter-spacing: 0.1px; font-variation-settings: "wght" 600; }
-}
 
-/* app/globals.css — ADD at the end */
-@layer utilities {
-  .hero-name {
-    --shine: linear-gradient(120deg, transparent 0%, currentColor 30%, transparent 60%);
-    color: color-mix(in oklab, var(--color-fg) 96%, transparent);
-    position: relative;
-  }
-  .hero-letter {
-    display: inline-block;
-    will-change: transform, opacity;
-    text-shadow:
-      0 1px 0 rgba(0,0,0,.08),
-      0 2px 12px color-mix(in oklab, currentColor 24%, transparent);
-    transition: color .15s ease;
-  }
-  .hero-stroke {
-    position: absolute;
-    inset: 0;
-    -webkit-text-stroke: 1px color-mix(in oklab, currentColor 35%, transparent);
-    color: transparent;
-    background: var(--shine);
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    animation: shine 3.2s linear infinite;
-    pointer-events: none;
-  }
+  .hero-name { --shine: linear-gradient(120deg, transparent 0%, currentColor 30%, transparent 60%); color: color-mix(in oklab, var(--color-fg) 96%, transparent); position: relative; }
+  .hero-letter { display: inline-block; will-change: transform, opacity; text-shadow: 0 1px 0 rgba(0,0,0,.08), 0 2px 12px color-mix(in oklab, currentColor 24%, transparent); transition: color .15s ease; }
+  .hero-stroke { position: absolute; inset: 0; -webkit-text-stroke: 1px color-mix(in oklab, currentColor 35%, transparent); color: transparent; background: var(--shine); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; animation: shine 3.2s linear infinite; pointer-events: none; }
   @keyframes shine { to { background-position: 200% 0; } }
 
   @media (prefers-reduced-motion: reduce) {
@@ -241,10 +157,13 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   }
 }
 
-/* Motion-reduced fallback for CardMotion transforms */
+/* Motion-reduced + no-hover fallbacks for CardMotion transforms */
 @media (prefers-reduced-motion: reduce) {
   .group[style] { transform: none !important; }
   .group:hover[style] { transform: none !important; }
+}
+@media (hover: none) {
+  .group[style] { transform: none !important; }
 }
 
 /* Ensure keyboard focus is visible above overlay */
@@ -252,10 +171,9 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   outline: 2px solid var(--color-accent, currentColor);
   outline-offset: 2px;
   position: relative;
-  z-index: 1; /* sits above the spotlight overlay */
+  z-index: 1;
 }
-
-/* restore focus outlines for cards inside [data-no-outline] areas */
+/* restore focus outlines inside [data-no-outline] regions */
 [data-no-outline] .card-focusable:focus-visible{
   outline:2px solid var(--color-accent, currentColor);
   outline-offset:2px;
