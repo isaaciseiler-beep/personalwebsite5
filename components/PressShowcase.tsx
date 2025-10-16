@@ -1,3 +1,4 @@
+// components/PressShowcase.tsx — FULL REPLACEMENT
 "use client";
 
 import Image from "next/image";
@@ -26,7 +27,7 @@ const pressItems: PressItem[] = [
   },
   {
     title: "WashU Rhodes Scholar finalist",
-    href: "https://source.washu.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/",
+    href: "https://source.wustl.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/",
     source: "Rhodes Trust",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/rhodes.jpg`,
   },
@@ -38,19 +39,19 @@ const pressItems: PressItem[] = [
   },
   {
     title: "Awarded 2024 Michigan Truman Scholarship",
-    href: "https://artsci.washu.edu/ampersand/junior-seiler-awarded-truman-scholarship",
+    href: "https://artsci.wustl.edu/ampersand/junior-seiler-awarded-truman-scholarship",
     source: "Washington University",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/truman.jpg`,
   },
   {
     title: "Awarded 2025 Fulbright to Taiwan",
-    href: "https://source.washu.edu/2025/06/several-alumni-earn-fulbright-awards/",
+    href: "https://source.wustl.edu/2025/06/several-alumni-earn-fulbright-awards/",
     source: "Washington University",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/fulbright.jpg`,
   },
   {
     title: "University profile",
-    href: "https://artsci.washu.edu/ampersand/isaac-seiler-setting-his-sights-high",
+    href: "https://artsci.wustl.edu/ampersand/isaac-seiler-setting-his-sights-high",
     source: "Washington University",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/wustl.jpg`,
   },
@@ -58,8 +59,8 @@ const pressItems: PressItem[] = [
 
 export default function PressShowcase() {
   return (
-    <section className="mx-auto mt-14 max-w-6xl px-4">
-      <h2 className="mb-4 text-2xl font-normal text-neutral-100">in the news</h2>
+    <section className="mx-auto mt-6 max-w-6xl px-4"> {/* reduced from mt-14 */}
+      <h2 className="mb-4 text-2xl md:text-3xl font-semibold text-neutral-100">in the news</h2> {/* match photos header */}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {pressItems.map((item, i) => (
@@ -111,7 +112,7 @@ function PressCard({ item }: { item: PressItem }) {
         {item.source && <p className="text-sm text-neutral-400">{item.source}</p>}
       </div>
 
-      {/* Right 33% image — fills card edge to edge */}
+      {/* Right 33% image */}
       <div className="relative flex-[0_0_33%] select-none pointer-events-none">
         {item.image ? (
           <Image
