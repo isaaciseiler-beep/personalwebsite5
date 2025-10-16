@@ -1,4 +1,3 @@
-// app/page.tsx — FIXED FULL REPLACEMENT
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
@@ -76,16 +75,20 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* in the news — same layout behavior and padding as projects/photos */}
+          {/* in the news — FIXED */}
           <section className="m-0 p-0">
-            <div className="mb-3">
+            <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xl leading-none">in the news</h2>
+              <Link
+                href="/press" // Assuming you have a press page
+                className="link-underline text-sm text-muted hover:text-[color:var(--color-accent)]"
+                prefetch
+              >
+                see all
+              </Link>
             </div>
-
-            {/* container identical to projects/photos grid */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-              <PressShowcase />
-            </div>
+            {/* The PressShowcase component is no longer wrapped in a grid div, allowing it to control its own layout and fill the width. */}
+            <PressShowcase />
           </section>
 
           {/* photos */}
