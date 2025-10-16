@@ -2,12 +2,9 @@
 
 import CardMotion from "@/components/CardMotion";
 
-const base =
-  "inline-block rounded-full border border-subtle px-3 py-1 text-sm transition-colors hover:border-[color:var(--color-accent)]/60 bg-card";
+export type Pill = { href: string; label: string };
 
-type Pill = { href: string; label: string };
-
-const pills: Pill[] = [
+export const PILLS: Pill[] = [
   { href: "https://openai.com/index/introducing-chatgpt-pulse/", label: "OpenAI: Introducing ChatGPT Pulse" },
   { href: "https://www.whitehouse.gov/briefing-room/statements-releases/2025/05/02/fact-sheet-biden-harris-administration-announces-new-actions-to-advance-safe-secure-and-trustworthy-artificial-intelligence-2/", label: "White House: AI actions mention" },
   { href: "https://truman.gov", label: "Truman Scholarship" },
@@ -18,13 +15,13 @@ const pills: Pill[] = [
 export default function HeroPressPills() {
   return (
     <div className="flex flex-wrap gap-3">
-      {pills.map((p) => (
+      {PILLS.map((p) => (
         <CardMotion key={p.href} maxTiltDeg={5} scale={1.02} className="rounded-full">
           <a
             href={p.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`card-hover ${base}`}
+            className="card-hover inline-block rounded-full border border-subtle bg-card px-3 py-1 text-sm transition-colors hover:border-[color:var(--color-accent)]/60"
           >
             {p.label}
           </a>
