@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import { motion, useMotionValue, useTransform, useMotionTemplate } from "framer-motion";
 import { useState } from "react";
 
 type PressItem = {
@@ -42,21 +42,20 @@ export default function PressShowcase() {
 
 function PressCard({ item }: { item: PressItem }) {
   const [hovered, setHovered] = useState(false);
+
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
 
-  const background = useTransform<[number, number], string>(
-    [x, y],
-    ([lx, ly]: [number, number]) =>
-      `radial-gradient(400px circle at ${lx * 100}% ${ly * 100}%, rgba(59,130,246,0.08), transparent 70%)`
-  );
+  // Scale to percentages independently to avoid tuple typing issues
+  const gx = useTransform(x, (v: number) => v * 100);
+  const gy = useTransform(y, (v: number) => v * 100);
+
+  const background = useMotionTemplate`radial-gradient(400px circle at ${gx}% ${gy}%, rgba(59,130,246,0.08), transparent 70%)`;
 
   function handleMouseMove(e: React.MouseEvent<HTMLAnchorElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    const nx = (e.clientX - rect.left) / rect.width;
-    const ny = (e.clientY - rect.top) / rect.height;
-    x.set(nx);
-    y.set(ny);
+    x.set((e.clientX - rect.left) / rect.width);
+    y.set((e.clientY - rect.top) / rect.height);
   }
 
   return (
