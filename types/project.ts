@@ -1,3 +1,4 @@
+// types/project.ts — FULL REPLACEMENT
 export type ProjectBase = {
   kind: "project" | "photo";
   slug: string;
@@ -16,6 +17,7 @@ export type ProjectExtra = {
   subtitle?: string;
   tagline?: string;
   summary?: string;
+  year?: string | number; // ← added
 };
 
 export type Project = ProjectBase & Partial<ProjectExtra>;
