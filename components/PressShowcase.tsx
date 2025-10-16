@@ -14,39 +14,39 @@ type PressItem = {
 
 const pressItems: PressItem[] = [
   {
-    title: "Isaac featured in launch of ChatGPT Pulse",
+    title: "Featured in launch of ChatGPT Pulse",
     href: "#",
     source: "OpenAI",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/pulse.jpg`,
   },
   {
-    title: "On ChatGPT Study Mode",
+    title: "OpenAI Instragram spotlight on ChatGPT Study Mode",
     href: "#",
     source: "OpenAI",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/study-mode.jpg`,
   },
   {
-    title: "Rhodes Scholar finalist",
+    title: "WashU Rhodes Scholar finalist",
     href: "#",
     source: "Rhodes Trust",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/rhodes.jpg`,
   },
   {
-    title: "Truman Scholarship",
+    title: "Awarded 2024 Michigan Truman Scholarship",
     href: "#",
-    source: "Truman Foundation",
+    source: "Washington University",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/truman.jpg`,
   },
   {
-    title: "Fulbright to Taiwan",
+    title: "Awarded 2025 Fulbright to Taiwan",
     href: "#",
-    source: "Fulbright",
+    source: "Washington University",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/fulbright.jpg`,
   },
   {
-    title: "Washington University profile",
+    title: "University profile",
     href: "#",
-    source: "WUSTL",
+    source: "Washington University",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/wustl.jpg`,
   },
 ];
@@ -54,9 +54,7 @@ const pressItems: PressItem[] = [
 export default function PressShowcase() {
   return (
     <section className="mx-auto mt-14 max-w-6xl px-4">
-      <h2 className="mb-4 text-2xl font-normal text-neutral-100">
-        in the news
-      </h2>
+      <h2 className="mb-4 text-2xl font-normal text-neutral-100">in the news</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {pressItems.map((item, i) => (
@@ -69,12 +67,13 @@ export default function PressShowcase() {
 
 function PressCard({ item }: { item: PressItem }) {
   const [hovered, setHovered] = useState(false);
+
+  // Cursor glow (subtle; dark tile)
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
-
   const gx = useTransform(x, (v) => v * 100);
   const gy = useTransform(y, (v) => v * 100);
-  const glow = useMotionTemplate`radial-gradient(400px circle at ${gx}% ${gy}%, rgba(56,189,248,0.08), transparent 70%)`;
+  const glow = useMotionTemplate`radial-gradient(420px circle at ${gx}% ${gy}%, rgba(56,189,248,0.08), transparent 70%)`;
 
   function handleMove(e: React.MouseEvent<HTMLAnchorElement>) {
     const r = e.currentTarget.getBoundingClientRect();
@@ -97,25 +96,23 @@ function PressCard({ item }: { item: PressItem }) {
         transition: { type: "spring", stiffness: 220, damping: 16 },
       }}
       style={{ backgroundImage: glow }}
-      className="group relative flex min-h-[150px] items-stretch overflow-hidden rounded-2xl border border-neutral-800/70 bg-neutral-950/70 p-5 text-left text-neutral-100 shadow-[0_0_20px_rgba(0,0,0,0.25)] backdrop-blur-md transition-transform duration-300"
+      className="card-hover group relative flex min-h-[170px] items-stretch overflow-hidden rounded-2xl border border-neutral-800/70 bg-neutral-950/70 p-5 text-left text-neutral-100 shadow-[0_0_20px_rgba(0,0,0,0.25)] backdrop-blur-md transition-transform duration-300"
     >
-      {/* Left content */}
-      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 pr-3">
-        <h3 className="text-[1.05rem] leading-snug tracking-tight text-neutral-100">
-          <span className="bg-gradient-to-r from-sky-400/80 to-teal-300/80 bg-[length:0%_2px] bg-left-bottom bg-no-repeat transition-[background-size,transform] duration-300 group-hover:bg-[length:100%_2px]">
+      {/* Left 67% */}
+      <div className="flex min-w-0 flex-[0_0_67%] flex-col justify-center gap-1 pr-4">
+        <h3 className="text-[1.05rem] leading-snug tracking-tight">
+          {/* White underline reveal; no color toggle -> no blink */}
+          <span className="bg-[linear-gradient(white,white)] bg-[length:0%_2px] bg-left-bottom bg-no-repeat transition-[background-size,transform] duration-300 group-hover:bg-[length:100%_2px]">
             {item.title}
           </span>
         </h3>
-        {item.source && (
-          <p className="text-sm text-neutral-400">{item.source}</p>
-        )}
-        {item.date && (
-          <p className="text-xs text-neutral-500">{item.date}</p>
-        )}
+
+        {item.source && <p className="text-sm text-neutral-400">{item.source}</p>}
+        {item.date && <p className="text-xs text-neutral-500">{item.date}</p>}
       </div>
 
-      {/* Right image */}
-      <div className="relative hidden w-[30%] shrink-0 sm:block">
+      {/* Right 33% image */}
+      <div className="relative hidden flex-[0_0_33%] sm:block">
         <motion.div
           className="relative h-full w-full"
           whileHover={{ scale: 1.03 }}
@@ -127,12 +124,13 @@ function PressCard({ item }: { item: PressItem }) {
               alt=""
               fill
               priority={false}
-              sizes="(min-width: 1024px) 30vw, (min-width: 640px) 30vw, 100vw"
+              sizes="(min-width:1024px) 33vw, (min-width:640px) 33vw, 100vw"
               className="object-cover"
             />
           ) : (
             <div className="h-full w-full bg-neutral-800" />
           )}
+          {/* left fade for readability on dark tiles */}
           <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-neutral-950 to-transparent" />
         </motion.div>
       </div>
