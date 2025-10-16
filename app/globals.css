@@ -1,4 +1,4 @@
- /* ========== Tailwind base ========== */
+/* ========== Tailwind base ========== */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -240,7 +240,8 @@ h2{@apply text-xl md:text-2xl tracking-tight}
     .hero-stroke { animation: none; }
   }
 }
-/* Motion-reduced fallback */
+
+/* Motion-reduced fallback for CardMotion transforms */
 @media (prefers-reduced-motion: reduce) {
   .group[style] { transform: none !important; }
   .group:hover[style] { transform: none !important; }
@@ -252,4 +253,11 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   outline-offset: 2px;
   position: relative;
   z-index: 1; /* sits above the spotlight overlay */
+}
+
+/* restore focus outlines for cards inside [data-no-outline] areas */
+[data-no-outline] .card-focusable:focus-visible{
+  outline:2px solid var(--color-accent, currentColor);
+  outline-offset:2px;
+  box-shadow:none;
 }
