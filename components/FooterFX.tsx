@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import clsx from "clsx";
 
 export default function FooterFX() {
   const [on, setOn] = useState(false);
@@ -53,15 +52,13 @@ export default function FooterFX() {
           key="prideFx"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0.0 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
           aria-hidden
-          className={clsx(
-            "pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
-          )}
+          className="pointer-events-none absolute inset-0 overflow-hidden"
         >
-          {/* Pride fluid background */}
-          <div className="absolute -inset-8 blur-2xl opacity-70">
+          {/* Pride fluid background across full footer */}
+          <div className="absolute -inset-12 blur-2xl opacity-70">
             <motion.div
               className="h-full w-full"
               animate={{ rotate: 360 }}
@@ -72,7 +69,8 @@ export default function FooterFX() {
               }}
             />
           </div>
-          {/* Liquid mask pane */}
+
+          {/* Soft light movement */}
           <motion.div
             className="absolute inset-0"
             animate={{ backgroundPositionX: ["0%", "100%"], backgroundPositionY: ["0%", "100%"] }}
