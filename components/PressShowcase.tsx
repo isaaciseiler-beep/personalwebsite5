@@ -6,7 +6,7 @@ import { useState } from "react";
 
 type PressItem = {
   title: string;
-  href?: string;
+  href: string;
   source?: string;
   date?: string;
   image?: string;
@@ -15,43 +15,43 @@ type PressItem = {
 const pressItems: PressItem[] = [
   {
     title: "Featured in launch of ChatGPT Pulse",
-    href: "#",
+    href: "https://openai.com/index/introducing-chatgpt-pulse/",
     source: "OpenAI",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/pulse.jpg`,
   },
   {
-    title: "OpenAI Instragram spotlight on ChatGPT Study Mode",
-    href: "#",
+    title: "OpenAI Instagram spotlight on ChatGPT Study Mode",
+    href: "https://www.instagram.com/chatgpt/reel/DNyG5VvXEZM/",
     source: "OpenAI",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/study-mode.jpg`,
   },
   {
     title: "WashU Rhodes Scholar finalist",
-    href: "#",
+    href: "https://source.washu.edu/2024/11/seniors-darden-seiler-were-rhodes-scholars-finalists/",
     source: "Rhodes Trust",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/rhodes.jpg`,
   },
-   {
+  {
     title: "Co-published Book on Education Uses of ChatGPT",
-    href: "#",
+    href: "https://chatgpt.com/100chats-project",
     source: "OpenAI",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/100chats.jpg`,
   },
   {
     title: "Awarded 2024 Michigan Truman Scholarship",
-    href: "#",
+    href: "https://artsci.washu.edu/ampersand/junior-seiler-awarded-truman-scholarship",
     source: "Washington University",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/truman.jpg`,
   },
   {
     title: "Awarded 2025 Fulbright to Taiwan",
-    href: "#",
+    href: "https://source.washu.edu/2025/06/several-alumni-earn-fulbright-awards/",
     source: "Washington University",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/fulbright.jpg`,
   },
   {
     title: "University profile",
-    href: "#",
+    href: "https://artsci.washu.edu/ampersand/isaac-seiler-setting-his-sights-high",
     source: "Washington University",
     image: `${process.env.NEXT_PUBLIC_CDN_BASE ?? ""}/press/wustl.jpg`,
   },
@@ -73,8 +73,6 @@ export default function PressShowcase() {
 
 function PressCard({ item }: { item: PressItem }) {
   const [hovered, setHovered] = useState(false);
-
-  // Cursor glow (subtle; dark tile)
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
   const gx = useTransform(x, (v) => v * 100);
@@ -89,8 +87,8 @@ function PressCard({ item }: { item: PressItem }) {
 
   return (
     <motion.a
-      href={item.href || "#"}
-      target={item.href ? "_blank" : undefined}
+      href={item.href}
+      target="_blank"
       rel="noopener noreferrer"
       onMouseMove={handleMove}
       onHoverStart={() => setHovered(true)}
@@ -107,18 +105,17 @@ function PressCard({ item }: { item: PressItem }) {
       {/* Left 67% */}
       <div className="flex min-w-0 flex-[0_0_67%] flex-col justify-center gap-1 pr-4">
         <h3 className="text-[1.05rem] leading-snug tracking-tight">
-          {/* White underline reveal; no color toggle -> no blink */}
+          {/* White underline reveal, no flicker */}
           <span className="bg-[linear-gradient(white,white)] bg-[length:0%_2px] bg-left-bottom bg-no-repeat transition-[background-size,transform] duration-300 group-hover:bg-[length:100%_2px]">
             {item.title}
           </span>
         </h3>
-
         {item.source && <p className="text-sm text-neutral-400">{item.source}</p>}
         {item.date && <p className="text-xs text-neutral-500">{item.date}</p>}
       </div>
 
-      {/* Right 33% image */}
-      <div className="relative hidden flex-[0_0_33%] sm:block">
+      {/* Right 33% image (locked; not clickable) */}
+      <div className="relative hidden flex-[0_0_33%] select-none sm:block pointer-events-none">
         <motion.div
           className="relative h-full w-full"
           whileHover={{ scale: 1.03 }}
@@ -136,7 +133,7 @@ function PressCard({ item }: { item: PressItem }) {
           ) : (
             <div className="h-full w-full bg-neutral-800" />
           )}
-          {/* left fade for readability on dark tiles */}
+          {/* subtle left fade for readability */}
           <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-neutral-950 to-transparent" />
         </motion.div>
       </div>
