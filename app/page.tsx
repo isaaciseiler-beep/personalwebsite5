@@ -35,7 +35,6 @@ export default function HomePage() {
       <EdgeProgress />
       <Hero />
 
-      {/* single container controls width */}
       <div className="mx-auto max-w-5xl px-4">
         <div className="space-y-6 md:space-y-8">
           {/* about */}
@@ -66,7 +65,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* in the news — match header spacing; full-width inside container */}
+          {/* in the news — header spacing matches; tabs follow width on resize */}
           <section className="m-0 p-0">
             <div className="mb-3">
               <h2 className="text-xl leading-none">in the news</h2>
@@ -74,13 +73,25 @@ export default function HomePage() {
             <div
               className="
                 w-full
-                [&_*]:max-w-none        /* remove inner caps */
-                [&_*]:mx-0 [&_*]:px-0   /* align to container edges */
-                [&_*]:mt-0              /* kill extra top margins */
-                [&_h2]:hidden           /* hide any internal headings */
-                [&_a[href*='/press']]:hidden  /* hide internal 'see all' */
-                [&_[role='tablist']]:w-full
-                [&_[role='tab']]:flex-1 [&_[role='tab']]:text-center
+                [&_*]:max-w-none [&_*]:mx-0 [&_*]:px-0 [&_*]:mt-0
+                [&_h2]:hidden
+                [&_a[href*='/press']]:hidden
+
+                /* Make tabs size with the container like Projects */
+                [&_[role='tablist']]:grid
+                [&_[role='tablist']]:gap-2 md:[&_[role='tablist']]:gap-3
+                [&_[role='tablist']]:grid-cols-2
+                sm:[&_[role='tablist']]:grid-cols-3
+                md:[&_[role='tablist']]:grid-cols-4
+
+                [&_[role='tab']]:w-full
+                [&_[role='tab']]:min-w-0
+                [&_[role='tab']]:truncate
+                [&_[role='tab']]:px-3
+                [&_[role='tab']]:py-2
+
+                /* Restore inner padding on each news card */
+                [&_.news-card]:p-4 md:[&_.news-card]:p-5
               "
             >
               <PressShowcase />
