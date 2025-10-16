@@ -1,4 +1,3 @@
-// app/page.tsx — FULL REPLACEMENT
 "use client";
 
 import { PageTransition } from "@/components/PageTransition";
@@ -40,7 +39,6 @@ export default function HomePage() {
       <EdgeProgress />
       <Hero />
 
-      {/* unified container for consistent section widths */}
       <div className="mx-auto max-w-5xl px-4">
         <div className="space-y-6 md:space-y-8">
           {/* about */}
@@ -56,7 +54,7 @@ export default function HomePage() {
 
           {/* projects */}
           <section className="m-0 p-0">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-2.5 flex items-center justify-between">
               <h2 className="text-xl leading-none">featured projects</h2>
               <Link
                 href="/work/projects"
@@ -77,22 +75,24 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* in the news — single header, no 'see all', full-width content */}
+          {/* in the news — single header, tightened gap, full-width content */}
           <section className="m-0 p-0">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-2.5">
               <h2 className="text-xl leading-none">in the news</h2>
             </div>
 
-            {/* Width + spacing normalizer for PressShowcase */}
+            {/* Normalizer: widen to container edges and remove internal caps/margins */}
             <div
               className="
-                w-full
-                [&_*]:max-w-none
-                [&_[role='tablist']]:w-full
-                [&_[role='tab']]:flex-1 [&_[role='tab']]:text-center
+                -mx-4 md:-mx-4 -mt-1
+                w-[calc(100%+2rem)]
+                [&_*]:!max-w-none
+                [&_*]:!mx-0
+                [&_*]:!px-0
                 [&_h2]:hidden
                 [&_a[href*='/press']]:hidden
-                [&>div]:px-0
+                [&_[role='tablist']]:w-full
+                [&_[role='tab']]:flex-1 [&_[role='tab']]:text-center
               "
             >
               <PressShowcase />
@@ -101,7 +101,7 @@ export default function HomePage() {
 
           {/* featured photos */}
           <section className="m-0 p-0">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-2.5 flex items-center justify-between">
               <h2 className="text-xl leading-none">featured photos</h2>
               <Link
                 href="/work/photos"
