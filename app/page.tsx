@@ -34,14 +34,14 @@ export default function HomePage() {
       <EdgeProgress />
       <Hero />
 
-      <PinnedAbout
-        lines={[
-          "designerly research at the edge of ai and policy.",
-          "shipping visual explainers and field notes.",
-          "based in taipei • open to collabs."
-        ]}
-        images={["/images/sample1.svg", "/images/sample2.svg", "/images/sample3.svg"]}
-      />
+     <PinnedAbout
+      lines={[
+        "designerly research at the edge of ai and policy.",
+        "shipping visual explainers and field notes.",
+        "based in taipei • open to collabs.",
+      ]}
+      imageName="about/isaac-about-card.jpg"  // upload to R2 and set this name
+    />
 
       {/* projects */}
       <section className="py-8">
