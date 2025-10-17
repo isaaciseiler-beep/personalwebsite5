@@ -61,9 +61,9 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
         {...baseProps}
         aria-label={alt}
         title={alt}
-        className={`group relative block h-full w-full overflow-hidden rounded-2xl border border-subtle bg-card card-hover ${aspect} card-focusable`}
+        className={`group relative block h-full w-full overflow-hidden rounded-2xl bg-card card-hover ${aspect} card-focusable`}
       >
-        {/* media */}
+        {/* Image */}
         <div className="absolute inset-0">
           <ShimmerImage
             src={src}
@@ -77,15 +77,15 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
           />
         </div>
 
-        {/* glossy sweep like project cards */}
+        {/* glossy sweep */}
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
           <div className="absolute -left-52 top-0 h-full w-40 rotate-12 bg-gradient-to-r from-white/0 via-white/10 to-white/0 blur-sm" />
         </div>
 
-        {/* bottom gradient for text legibility */}
+        {/* bottom gradient for legibility */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 sm:h-32 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
-        {/* pills (includes location) */}
+        {/* pills (tags / location) */}
         {pills.length > 0 && (
           <div className="absolute inset-x-0 bottom-0 pb-2 pt-6 sm:pb-2 sm:pt-8">
             <div className="pointer-events-auto mx-2 flex flex-wrap gap-2">
@@ -100,9 +100,6 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
             </div>
           </div>
         )}
-
-        {/* inner ring to match project cards */}
-        <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" />
       </Base>
     </CursorTilt>
   );
