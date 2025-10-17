@@ -224,3 +224,10 @@ h2{@apply text-xl md:text-2xl tracking-tight}
   -webkit-mask-image: linear-gradient(#000,#000);
           mask-image: linear-gradient(#000,#000);
 }
+@layer utilities {
+  /* Disable vertical lift but keep other hover effects */
+  .no-lift:hover,
+  .no-lift:active {
+    transform: none !important;
+  }
+}
