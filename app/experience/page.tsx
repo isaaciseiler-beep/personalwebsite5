@@ -14,7 +14,8 @@ type Linked = TimelineEvent & {
   href?: string | null;
   link?: string | null;
   image?: string | null;
-  linkText?: string | null;  // the sentence you wrote (use this)
+  linkText?: string | null;   // camelCase
+  link_text?: string | null;  // snake_case (as in your JSON)
   org?: string | null;
 };
 
@@ -37,7 +38,7 @@ export default function ExperiencePage() {
       let y: number | null = null;
       if (role.includes("communications director") || role.includes("transition aide")) y = 2023;
       else if (role.includes("research assistant")) y = 2021;
-      else if (role.includes("freelance") || role.includes("consult") || org.includes("freelance")) y = 2024;
+      else if (role.includes("freelance") || role.includes("consult")) y = 2024;
       else y = maxYear(ev.dates) ?? new Date().getFullYear();
 
       map.set(y, [...(map.get(y) ?? []), ev]);
@@ -77,10 +78,10 @@ export default function ExperiencePage() {
 
           {byYear.map(([year, list], yi) => (
             <li key={year} className="space-y-9">
-              {/* between-year separator (does not cross spine) */}
+              {/* between-year separator */}
               {yi > 0 && <div className="ml-6 h-px w-full bg-[linear-gradient(90deg,rgba(255,255,255,.18),transparent)]" />}
 
-              {/* compact sticky year pill (opaque enough to hide spine) */}
+              {/* compact sticky year pill */}
               <div className="sticky top-[96px] z-30">
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/15 px-3 py-1 text-xs text-neutral-300 backdrop-blur-md shadow-[0_0_0_1px_rgba(0,0,0,.25)_inset]">
                   {year}
@@ -93,7 +94,8 @@ export default function ExperiencePage() {
                     <Reveal key={`${year}-${i}-${ev.role}-${ev.org ?? ""}`} delay={(yi * 0.02) + i * 0.045}>
                       {/* resume text (plain) */}
                       <TimelineItem event={ev} />
-                      {/* restored image button with your linkText inside */}
+
+                      {/* image button with original link text inside */}
                       {renderImageButton(ev)}
                     </Reveal>
                   ))}
@@ -106,14 +108,12 @@ export default function ExperiencePage() {
 
       <ExperienceChatFab />
 
-      {/* freeze hover inside education */}
+      {/* freeze hover inside education + hide any inline anchors from TimelineItem */}
       <style jsx>{`
         .freeze-card :global(.card-hover),
         .freeze-card :global(.card-hover:hover),
-        .freeze-card :global(.card-hover:active) {
-          transform: none !important;
-          box-shadow: none !important;
-        }
+        .freeze-card :global(.card-hover:active) { transform: none !important; box-shadow: none !important; }
+        :global(.entry a), :global(.learn-more), :global(.entry-link) { display: none !important; }
       `}</style>
     </PageTransition>
   );
@@ -123,15 +123,15 @@ export default function ExperiencePage() {
 
 function isCSG(ev: Linked) {
   const org = (ev.org ?? "").toLowerCase();
-  return /csg|council of state governments/.test(org);
+  return /csg|council (of|for) state governments/.test(org);
 }
 
 function renderImageButton(ev: Linked) {
   const href = ev.href ?? ev.link ?? null;
   if (!href) return null;
 
-  // USE PER-ENTRY LINK TEXT ONLY. If missing: CSG → "learn more", others → no button.
-  const label = ev.linkText?.trim() || (isCSG(ev) ? "learn more" : "");
+  // Use JSON's snake_case link_text first, then camelCase linkText. CSG falls back to "learn more".
+  const label = (ev.link_text?.trim() || ev.linkText?.trim() || (isCSG(ev) ? "learn more" : "")).trim();
   if (!label) return null;
 
   const img = ev.image ?? undefined;
