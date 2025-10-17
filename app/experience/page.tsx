@@ -14,7 +14,7 @@ type Linked = TimelineEvent & {
   href?: string | null;
   link?: string | null;
   image?: string | null;
-  linkText?: string | null;       // your per-entry custom button text
+  linkText?: string | null;
   desc?: string | null;
   description?: string | null;
   org?: string | null;
@@ -23,7 +23,7 @@ type Linked = TimelineEvent & {
 export default function ExperiencePage() {
   const events = items as Linked[];
 
-  // Assign each entry to a single year
+  // One-year placement rules
   const byYear = useMemo(() => {
     const maxYear = (s?: string) => {
       if (!s) return null;
@@ -31,27 +31,23 @@ export default function ExperiencePage() {
       if (!m) return null;
       return Math.max(...m.map((x) => parseInt(x, 10)));
     };
-
     const map = new Map<number, Linked[]>();
     for (const ev of events) {
       const role = (ev.role ?? "").toLowerCase();
       const org = (ev.org ?? "").toLowerCase();
-
       let y: number | null = null;
       if (role.includes("communications director") || role.includes("transition aide")) y = 2023;
       else if (role.includes("research assistant")) y = 2021;
       else if (role.includes("freelance") || role.includes("consult") || org.includes("freelance")) y = 2024;
       else y = maxYear(ev.dates) ?? new Date().getFullYear();
-
       map.set(y, [...(map.get(y) ?? []), ev]);
     }
-
     return Array.from(map.entries()).sort((a, b) => b[0] - a[0]);
   }, [events]);
 
   return (
     <PageTransition>
-      {/* HEADER */}
+      {/* Header */}
       <section className="mx-auto max-w-5xl px-4 pt-12 md:pt-16">
         <motion.h1
           initial={{ opacity: 0, y: 8 }}
@@ -71,7 +67,7 @@ export default function ExperiencePage() {
         </motion.p>
       </section>
 
-      {/* EDUCATION — frozen (no hover transforms) */}
+      {/* Education (frozen) */}
       <section className="mx-auto mt-8 max-w-5xl px-4">
         <h2 className="mb-4 text-xl">education</h2>
         <div className="freeze-card">
@@ -81,12 +77,12 @@ export default function ExperiencePage() {
         </div>
       </section>
 
-      {/* TIMELINE */}
+      {/* Timeline */}
       <section className="mx-auto mt-10 max-w-5xl px-4 pb-16">
         <h2 className="mb-4 text-xl">professional experience</h2>
 
         <ol className="relative space-y-10">
-          {/* only one left spine */}
+          {/* Single left spine */}
           <span
             aria-hidden
             className="pointer-events-none absolute left-[0.5rem] top-0 h-full w-px bg-[linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06))]"
@@ -94,29 +90,31 @@ export default function ExperiencePage() {
 
           {byYear.map(([year, list], yi) => (
             <li key={year} className="space-y-9">
-              {/* separator between years (clean intersection) */}
+              {/* Year separator */}
               {yi > 0 && (
                 <div className="ml-6">
                   <div className="h-px w-full bg-[linear-gradient(90deg,rgba(255,255,255,.18),transparent)]" />
                 </div>
               )}
 
-              {/* translucent, non-spanning year pill */}
+              {/* Sticky year pill */}
               <div className="sticky top-[96px] z-30">
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/15 px-3 py-1 text-xs text-neutral-300 backdrop-blur-md shadow-[0_0_0_1px_rgba(0,0,0,.25)_inset]">
                   {year}
                 </span>
               </div>
 
-              {/* entries */}
               <div className="relative pl-6">
                 <div className="space-y-9">
                   {list.map((ev, i) => (
-                    <Reveal key={`${year}-${i}-${ev.role}-${ev.org ?? ""}`} delay={(yi * 0.02) + i * 0.045}>
+                    <Reveal
+                      key={`${year}-${i}-${ev.role}-${ev.org ?? ""}`}
+                      delay={(yi * 0.02) + i * 0.045}
+                    >
                       {/* Resume text (plain) */}
                       <TimelineItem event={ev} />
 
-                      {/* Custom button-cell below */}
+                      {/* Button below (long link text now inside) */}
                       {renderButtonCell(ev)}
                     </Reveal>
                   ))}
@@ -129,7 +127,7 @@ export default function ExperiencePage() {
 
       <ExperienceChatFab />
 
-      {/* Freeze hover on education */}
+      {/* Freeze hover inside education */}
       <style jsx>{`
         .freeze-card :global(.card-hover),
         .freeze-card :global(.card-hover:hover),
@@ -153,12 +151,14 @@ function renderButtonCell(ev: Linked) {
   const href = ev.href ?? ev.link ?? null;
   if (!href) return null;
 
-  // Each item uses its own custom linkText if available; CSG always "learn more"
+  const img = ev.image ?? undefined;
+
+  // Pull each entry's original link text. Fallback: CSG → learn more; others → desc/description.
   const label = isCSG(ev)
     ? "learn more"
     : ev.linkText?.trim() || ev.desc?.trim() || ev.description?.trim() || "";
 
-  const img = ev.image ?? undefined;
+  if (!label) return null;
 
   return (
     <a
@@ -167,9 +167,9 @@ function renderButtonCell(ev: Linked) {
       rel="noopener noreferrer"
       className="group mt-3 block overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-sm transition hover:bg-white/[0.04]"
     >
-      {/* left alignment: same padding as resume text */}
+      {/* Aligns left with resume text */}
       <div className="flex min-h-[84px] items-stretch gap-4 px-4 md:px-5">
-        {/* image fills left rounded corner */}
+        {/* Image flush with left rounded corner */}
         <div className="relative hidden select-none sm:block sm:w-[20%] -ml-4 md:-ml-5 rounded-l-xl overflow-hidden">
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -183,14 +183,17 @@ function renderButtonCell(ev: Linked) {
           )}
         </div>
 
-        {/* text */}
+        {/* Long link text inside button */}
         <div className="flex min-w-0 flex-1 items-center justify-between py-3">
-          <p className="min-w-0 pr-3 text-sm text-neutral-200 line-clamp-2">
+          <p className="min-w-0 pr-3 text-sm text-neutral-200 leading-snug line-clamp-3">
             <span className="bg-[linear-gradient(white,white)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-200 group-hover:bg-[length:100%_1px]">
               {label}
             </span>
           </p>
-          <span aria-hidden className="shrink-0 text-neutral-400 transition group-hover:translate-x-0.5">
+          <span
+            aria-hidden
+            className="shrink-0 text-neutral-400 transition group-hover:translate-x-0.5"
+          >
             →
           </span>
         </div>
