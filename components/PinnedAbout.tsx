@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, CSSProperties } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type Props = {
-  image: string;                 // single image URL (right 33%)
-  blurbs?: string[];             // 5–6 rotating headers (BW only)
-  bio?: string;                  // short bio (~100 → ~50% length)
-  linkedinUrl?: string;          // optional
-  emailHref?: string;            // optional "mailto:..."
-  lines?: string[];              // legacy -> mapped to blurbs
+  image: string;
+  blurbs?: string[];
+  bio?: string;
+  linkedinUrl?: string;
+  emailHref?: string;
+  lines?: string[];
 };
 
 export default function PinnedAbout({
@@ -22,8 +22,6 @@ export default function PinnedAbout({
   lines,
 }: Props) {
   const prefers = useReducedMotion();
-
-  // headers (no gradients, BW only)
   const items = (blurbs?.length ? blurbs : lines?.length ? lines : DEFAULT_BLURBS).slice(0, 6);
 
   // rotate every ~5s
@@ -36,39 +34,41 @@ export default function PinnedAbout({
 
   const bioText = bio?.trim().length ? bio : DEFAULT_BIO_SHORT;
 
+  // fixed 3-line slot height for header (prevents overlap/reflow)
+  const headerVars = {
+    "--hdr": "clamp(8rem, 10vw, 13.5rem)",
+  } as CSSProperties;
+
   return (
-    <section id="about" className="w-full px-4 md:px-6">
-      {/* CARD — matches site cards, fills page width */}
-      <div className="card-hover w-full overflow-hidden rounded-2xl border border-subtle bg-card">
+    <section id="about" className="w-full px-0 md:px-0">
+      <div
+        className="card-hover w-full overflow-hidden rounded-2xl border border-subtle bg-card"
+      >
         <div className="grid grid-cols-1 md:grid-cols-3">
           {/* TEXT (2/3) */}
           <div className="md:col-span-2 p-5 md:p-7">
-            {/* Fixed 3-line header slot to prevent reflow */}
-            <div
-              className="relative"
-              style={{
-                lineHeight: 1.15,
-                minHeight: "calc(1em * 3 * 1.15)", // reserve exactly 3 lines
-              }}
-            >
-              <AnimatePresence mode="wait">
-                <motion.h3
-                  key={idx}
-                  initial={{ opacity: 0, y: 12, scale: 0.99, filter: "blur(8px)" }}
-                  animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: -10, scale: 0.995, filter: "blur(8px)" }}
-                  transition={{ duration: 0.9, ease: [0.22, 0.72, 0.12, 1] }}
-                  className="absolute inset-x-0 top-0 text-2xl font-medium leading-tight text-white md:text-4xl"
-                >
-                  {items[idx]}
-                </motion.h3>
-              </AnimatePresence>
+            {/* reserved header area */}
+            <div className="relative" style={headerVars}>
+              <div className="h-[var(--hdr)] relative">
+                <AnimatePresence mode="wait">
+                  <motion.h3
+                    key={idx}
+                    initial={{ opacity: 0, y: 12, scale: 0.99, filter: "blur(10px)" }}
+                    animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, y: -10, scale: 0.995, filter: "blur(10px)" }}
+                    transition={{ duration: 0.9, ease: [0.22, 0.72, 0.12, 1] }}
+                    className="absolute inset-x-0 top-0 text-2xl font-medium leading-tight text-white md:text-4xl"
+                  >
+                    {items[idx]}
+                  </motion.h3>
+                </AnimatePresence>
+              </div>
             </div>
 
-            {/* ~50% shorter bio */}
-            <p className="mt-4 text-sm leading-relaxed text-muted md:text-base">{bioText}</p>
+            {/* Bio */}
+            <p className="mt-2 text-sm leading-relaxed text-muted md:text-base">{bioText}</p>
 
-            {/* Actions: unified style, more interesting hover */}
+            {/* CTAs */}
             <div className="mt-5 flex flex-wrap gap-3">
               <CTA href="/about">About me →</CTA>
               <CTA href={linkedinUrl}>LinkedIn →</CTA>
@@ -96,7 +96,7 @@ export default function PinnedAbout({
   );
 }
 
-/* Unified CTA button consistent with site cards */
+/* CTA style matching site */
 function CTA({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a
@@ -119,6 +119,5 @@ const DEFAULT_BLURBS = [
   "Skilled strategic communicator with cross-sector experience",
 ];
 
-// ~50% of prior length
 const DEFAULT_BIO_SHORT =
   "I work where media, civic data, and applied AI meet. Current research tracks real classroom uses of generative tools and which workflows endure. I’ve led communications across government and nonprofits, translating complex policy into clear narratives. I build small products, study AI’s impact on local journalism, and help teams adopt practical AI. Off hours I shoot photo and video and fly drones internationally.";
