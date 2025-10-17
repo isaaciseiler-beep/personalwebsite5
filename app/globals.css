@@ -1,5 +1,3 @@
-/* app/globals.css — FULL REPLACEMENT */
-
 /* ========== Tailwind base ========== */
 @tailwind base;
 @tailwind components;
@@ -54,10 +52,39 @@ h2{@apply text-xl md:text-2xl tracking-tight}
 }
 .link-underline:hover::after{transform:scaleX(1)}
 
-/* cards / hover baseline */
-.card-hover{transition:transform 150ms cubic-bezier(.2,0,0,1), box-shadow 150ms cubic-bezier(.2,0,0,1);transform:translateY(0) rotate(0)}
-.card-hover:hover{box-shadow:0 8px 30px rgba(0,0,0,.20)}
-.group:hover .card-hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.20)}
+/* ========== CARDS / HOVER (restores Featured Photos motion) ========== */
+/* Use utilities layer so these win against element-level utilities */
+@layer utilities {
+  .card-hover {
+    position: relative;
+    transition: transform 280ms theme("transitionTimingFunction.smooth"), box-shadow 280ms theme("transitionTimingFunction.smooth"), border-color 280ms theme("transitionTimingFunction.smooth"), background-color 280ms theme("transitionTimingFunction.smooth") !important;
+    will-change: transform;
+    transform: translateY(0) rotate(0);
+  }
+  .card-hover:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: theme("boxShadow.card-hover") !important;
+    border-color: rgba(255,255,255,.08) !important;
+  }
+  .card-hover:active { transform: translateY(-1px) !important; }
+
+  /* Media polish: works with Next/Image (img nested in span) */
+  .card-hover :where(img,video,.card-media){
+    transition: transform 550ms theme("transitionTimingFunction.smooth"), filter 550ms theme("transitionTimingFunction.smooth"), opacity 550ms theme("transitionTimingFunction.smooth");
+    will-change: transform, filter;
+  }
+  .card-hover:hover :where(img,video,.card-media){
+    transform: scale(1.035);
+    filter: saturate(1.05);
+  }
+
+  /* If wrapper uses .group, still lift inner card */
+  .group:hover > .card-hover,
+  .group:hover .card-hover.group-child {
+    transform: translateY(-2px) !important;
+    box-shadow: theme("boxShadow.card-hover") !important;
+  }
+}
 
 /* borders */
 .border-subtle{border-color:var(--color-border)}
