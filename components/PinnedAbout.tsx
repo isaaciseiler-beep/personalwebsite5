@@ -5,12 +5,12 @@ import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type Props = {
-  image: string;                 // single image URL
-  blurbs?: string[];             // 5–6 rotating headers (BW only)
-  bio?: string;                  // short bio
+  image: string;
+  blurbs?: string[];
+  bio?: string;
   linkedinUrl?: string;
   emailHref?: string;
-  lines?: string[];              // legacy -> mapped to blurbs
+  lines?: string[];
 };
 
 export default function PinnedAbout({
@@ -23,16 +23,10 @@ export default function PinnedAbout({
 }: Props) {
   const prefers = useReducedMotion();
 
-  // headers
   const items = (blurbs?.length ? blurbs : lines?.length ? lines : DEFAULT_BLURBS)
-    .map((t) =>
-      /youngest|congress/i.test(t)
-        ? "youngest communications director in the u.s. congress"
-        : t
-    )
+    .map((t) => (/youngest|congress/i.test(t) ? "youngest communications director in the u.s. congress" : t))
     .slice(0, 6);
 
-  // rotate every ~5s
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     if (prefers || items.length <= 1) return;
@@ -41,25 +35,21 @@ export default function PinnedAbout({
   }, [prefers, items.length]);
 
   const bioText =
-    bio?.trim().length
+    bio?.trim()
       ? bio
-      : DEFAULT_BIO_SHORT;
+      : "I work where media, civic data, and applied AI meet. Current research tracks classroom uses of generative tools and the workflows that last. I’ve led communications in government and nonprofits, translating policy into clear narratives. I build small products, study AI’s effects on local journalism, and help teams adopt practical AI. Off hours I shoot photo and video and fly drones internationally.";
 
-  // fixed TWO-line slot; matches home container width
-  const slotVars = {
-    "--lh": 1.14,
-    "--slot": "clamp(5.6rem, 9vw, 8.8rem)", // ≈ two lines for md:text-4xl
-  } as CSSProperties;
+  // fixed two-line header slot
+  const slotVars = { "--lh": 1.14, "--slot": "clamp(5.6rem,9vw,8.8rem)" } as CSSProperties;
 
   return (
-    <section id="about" className="w-full">
-      {/* same container as status card */}
-      <div className="mx-auto w-full max-w-5xl px-4 md:px-6">
+    <section id="about" className="py-8">
+      {/* EXACTLY matches projects/status container */}
+      <div className="mx-auto max-w-5xl px-4">
         <div className="card-hover w-full overflow-hidden rounded-2xl border border-subtle bg-card">
           <div className="grid grid-cols-1 md:grid-cols-3">
-            {/* TEXT (2/3) */}
+            {/* text 2/3 */}
             <div className="p-5 md:col-span-2 md:p-7">
-              {/* reserved two-line header area */}
               <div className="relative" style={slotVars}>
                 <div className="relative h-[var(--slot)]" style={{ lineHeight: "var(--lh)" }}>
                   <AnimatePresence mode="wait">
@@ -77,12 +67,8 @@ export default function PinnedAbout({
                 </div>
               </div>
 
-              {/* bio */}
-              <p className="mt-4 text-sm leading-relaxed text-muted md:text-base">
-                {bioText}
-              </p>
+              <p className="mt-4 text-sm leading-relaxed text-muted md:text-base">{bioText}</p>
 
-              {/* CTAs (lowercase) */}
               <div className="mt-5 flex flex-wrap gap-3">
                 <CTA href="/about">about me →</CTA>
                 <CTA href={linkedinUrl}>linkedin →</CTA>
@@ -90,7 +76,7 @@ export default function PinnedAbout({
               </div>
             </div>
 
-            {/* IMAGE (1/3) */}
+            {/* image 1/3 */}
             <figure className="relative h-[280px] overflow-hidden md:h-full">
               <div className="group absolute inset-0">
                 <Image
@@ -111,7 +97,6 @@ export default function PinnedAbout({
   );
 }
 
-/* unified CTA */
 function CTA({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a
@@ -133,6 +118,3 @@ const DEFAULT_BLURBS = [
   "member of chatgpt lab @ openai, informing product decisions",
   "skilled strategic communicator with cross-sector experience",
 ];
-
-const DEFAULT_BIO_SHORT =
-  "I work where media, civic data, and applied AI meet. Current research tracks classroom uses of generative tools and the workflows that last. I’ve led communications in government and nonprofits, translating policy into clear narratives. I build small products, study AI’s effects on local journalism, and help teams adopt practical AI. Off hours I shoot photo and video and fly drones internationally.";
