@@ -137,12 +137,10 @@ export default function PinnedAbout({
         >
           {/* Image is pinned edge-to-edge and inherits card rounding via overflow-hidden */}
           <ShimmerImage
-            src={src}
-            alt={imageAlt}
-            width={1200}
-            height={1600}
-            priority
-            className="absolute inset-0 h-full w-full object-cover"
+            src="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev/about.jpg"
+            alt="About photo"
+            width={800}
+            height={800}
           />
         </motion.div>
       </div>
