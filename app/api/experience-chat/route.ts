@@ -3,54 +3,89 @@ import timeline from "@/data/timeline.json";
 
 export const runtime = "edge";
 
+type TLItem = {
+  dates: string;
+  role: string;
+  org?: string;
+  summary?: string;
+  href?: string | null;
+  link?: string | null;
+  linkText?: string | null;
+};
+
 export async function POST(req: Request) {
   try {
     const { message } = await req.json();
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { reply: "OpenAI API key is not configured on the server." },
+        { reply: "I'm not feeling very well right now. Try again later :(" },
         { status: 500 }
       );
     }
 
-    const input = (timeline as Array<{ dates: string; role: string; org?: string; summary?: string }>)
-      .map((e) => `${e.dates} — ${e.role}${e.org ? `, ${e.org}` : ""}${e.summary ? `: ${e.summary}` : ""}`)
+    // Build compact site-grounded context
+    const input = (timeline as TLItem[])
+      .map((e) =>
+        [
+          e.dates?.trim(),
+          e.role?.trim(),
+          e.org ? ` — ${e.org.trim()}` : "",
+          e.summary ? ` :: ${e.summary.trim()}` : "",
+        ].join("")
+      )
       .join("\n");
 
-    const sys =
-      "You are an assistant that answers questions about the user's professional experience. Base answers ONLY on the provided timeline text. Be concise, specific, and recruiter-friendly. If asked for something not present, say you don’t have that detail.";
+    // Guardrail: hard scope and truthfulness
+    const sys = [
+      "You are the on-site assistant for Isaac Seiler’s portfolio.",
+      "SCOPE: Only answer questions about Isaac, his experience/education/skills, or the content present on this website. If the question is outside scope, reply briefly that you only answer questions about Isaac or this site, and invite a relevant question.",
+      "SOURCE OF TRUTH: Use ONLY the provided timeline text as factual grounding. Do not invent, speculate, or infer missing details. If information is not present, say you don’t have that detail.",
+      "TONE & STYLE: Optimistic, concise, recruiter-friendly. No hype. Prefer 1–3 short bullet points OR 1–2 tight sentences.",
+      "PERSONA: Answer in first person as Isaac unless the user explicitly asks for third person.",
+      "STRICTNESS: If the user asks for anything beyond scope (general advice, unrelated facts, opinions), refuse with a single sentence that redirects to Isaac’s experience.",
+    ].join("\n");
+
+    const userContent =
+      `TIMELINE (ground truth; one per line):\n${input}\n\n` +
+      `QUESTION:\n${String(message ?? "").slice(0, 2000)}\n\n` +
+      "RESPONSE FORMAT:\n" +
+      "- If answerable from the timeline, respond in 1–3 bullets or 1–2 sentences.\n" +
+      "- If a detail is missing, say “I don’t have that detail here.”\n" +
+      "- If out of scope, reply: “I only answer questions about my experience and what’s on this site.”";
 
     const body = {
       model: "gpt-4o-mini",
+      temperature: 0.2,
       messages: [
         { role: "system", content: sys },
-        { role: "user", content: `Timeline:\n${input}\n\nQuestion: ${message}` }
+        { role: "user", content: userContent },
       ],
-      temperature: 0.2
+      // keep outputs tight
+      max_tokens: 220,
     };
 
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     if (!resp.ok) {
       const details = await resp.text().catch(() => "");
       return NextResponse.json(
-        { reply: `upstream error (${resp.status}) ${details ? "- " + details : ""}` },
+        { reply: `upstream error (${resp.status})${details ? ` – ${details}` : ""}` },
         { status: 500 }
       );
     }
 
     const json = await resp.json();
-    const reply = json?.choices?.[0]?.message?.content ?? "…";
+    const reply: string = json?.choices?.[0]?.message?.content ?? "I don’t have that detail here.";
     return NextResponse.json({ reply });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ reply: "server error" }, { status: 500 });
   }
 }
