@@ -31,12 +31,11 @@ export default function HomePage() {
 
       <PinnedAbout
         lines={[
-          "designerly research across ai policy public sector.",
-          "portfolio highlights",
-          "based in taipei • open to collabs.",
+          "Fulbright scholar documenting AI uses in education",
+          "Expert on digital disruption and innovation in journalism and media",
+          "Member of ChatGPT Lab @ OpenAI, informing product decisions",
         ]}
-        imageName="about.jpg"
-        imageBaseUrl="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev"
+        image="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev/about.jpg"
       />
 
       {/* projects */}
