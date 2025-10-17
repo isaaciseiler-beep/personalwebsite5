@@ -39,20 +39,17 @@ export default function PinnedAbout({
       ? bio
       : "I work where media, civic data, and applied AI meet. Current research tracks classroom uses of generative tools and the workflows that last. I’ve led communications in government and nonprofits, translating policy into clear narratives. I build small products, study AI’s effects on local journalism, and help teams adopt practical AI. Off hours I shoot photo and video and fly drones internationally.";
 
-  // fixed two-line header slot
+  // fixed two-line header slot + adjusted spacing
   const slotVars = { "--lh": 1.14, "--slot": "clamp(5.6rem,9vw,8.8rem)" } as CSSProperties;
 
   return (
     <section id="about" className="py-8">
-      {/* matches projects/status container exactly */}
       <div className="mx-auto max-w-5xl px-4">
-        {/* static card: no hover lift */}
         <div className="w-full overflow-hidden rounded-2xl border border-subtle bg-card">
           <div className="grid grid-cols-1 md:grid-cols-3">
-            {/* text 2/3 */}
+            {/* TEXT */}
             <div className="p-5 md:col-span-2 md:p-7">
               <div className="relative" style={slotVars}>
-                {/* reserved area; absolute content to avoid reflow */}
                 <div className="relative h-[var(--slot)]" style={{ lineHeight: "var(--lh)" }}>
                   <AnimatePresence mode="wait">
                     <motion.h3
@@ -62,7 +59,6 @@ export default function PinnedAbout({
                       exit={{ opacity: 0, y: -14, filter: "blur(10px)" }}
                       transition={{ duration: 0.8, ease: [0.22, 0.72, 0.12, 1] }}
                       className="absolute inset-x-0 top-0 transform-gpu text-2xl font-normal leading-tight text-white md:text-4xl"
-                      style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
                     >
                       {items[idx]}
                     </motion.h3>
@@ -70,7 +66,8 @@ export default function PinnedAbout({
                 </div>
               </div>
 
-              <p className="mt-4 text-sm leading-relaxed text-muted md:text-base">{bioText}</p>
+              {/* bio — gap reduced by ~50% */}
+              <p className="mt-2 text-sm leading-relaxed text-muted md:text-base">{bioText}</p>
 
               <div className="mt-5 flex flex-wrap gap-3">
                 <CTA href="/about">about me →</CTA>
@@ -79,9 +76,10 @@ export default function PinnedAbout({
               </div>
             </div>
 
-            {/* image 1/3 — only element that animates on hover */}
-            <figure className="relative h-[280px] overflow-hidden rounded-2xl md:h-full">
-              <div className="group absolute inset-0 overflow-hidden rounded-2xl">
+            {/* IMAGE (hard left edge) */}
+            <figure className="relative h-[280px] overflow-hidden md:h-full">
+              {/* only top-right & bottom-right rounded */}
+              <div className="group absolute inset-0 overflow-hidden rounded-tr-2xl rounded-br-2xl">
                 <Image
                   src={image}
                   alt="about image"
@@ -90,8 +88,7 @@ export default function PinnedAbout({
                   sizes="(min-width:768px) 33vw, 100vw"
                   className="object-cover transform-gpu will-change-transform transition-transform duration-700 group-hover:scale-[1.05]"
                 />
-                {/* confine zoom to rounded frame */}
-                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
+                <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10 rounded-tr-2xl rounded-br-2xl" />
               </div>
             </figure>
           </div>
@@ -101,6 +98,7 @@ export default function PinnedAbout({
   );
 }
 
+/* unified CTA */
 function CTA({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a
