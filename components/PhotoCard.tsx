@@ -4,29 +4,35 @@
 import { memo } from "react";
 import ShimmerImage from "@/components/ShimmerImage";
 
-type Photo = {
-  src: string;
-  alt: string;
+// Accepts either Photo {src, alt, tags?} or Project {image, title, tags?}
+type PhotoLike = {
+  src?: string;
+  alt?: string;
+  image?: string;
+  title?: string;
   tags?: string[];
 };
 
 type Props = {
-  item: Photo;
+  item: PhotoLike;
   onClick?: (src: string, alt: string) => void;
 };
 
 function PhotoCard({ item, onClick }: Props) {
+  const src = item.src ?? item.image ?? "";
+  const alt = item.alt ?? item.title ?? "photo";
+
   return (
     <button
       type="button"
-      onClick={() => onClick?.(item.src, item.alt)}
-      className="group relative block h-[360px] w-full overflow-hidden rounded-2xl border border-subtle bg-card"
-      aria-label={item.alt}
+      onClick={() => onClick?.(src, alt)}
+      className="group relative block h:[360px] sm:h-[360px] md:h-[420px] w-full overflow-hidden rounded-2xl border border-subtle bg-card"
+      aria-label={alt}
     >
       {/* Image */}
       <ShimmerImage
-        src={item.src}
-        alt={item.alt}
+        src={src}
+        alt={alt}
         width={1600}
         height={1066}
         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
