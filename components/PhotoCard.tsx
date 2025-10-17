@@ -12,6 +12,7 @@ type PhotoLike = {
   tags?: string[];
   keywords?: string[];
   stack?: string[];
+  location?: string;
 };
 
 type Props = {
@@ -23,7 +24,14 @@ type Props = {
 function PhotoCard({ item, ratio = "square", onClick }: Props) {
   const src = item.src ?? item.image ?? "";
   const alt = item.alt ?? item.title ?? "photo";
-  const pills = item.tags ?? item.keywords ?? item.stack ?? [];
+
+  // include location as a pill
+  const pills = [
+    ...(item.tags ?? []),
+    ...(item.keywords ?? []),
+    ...(item.stack ?? []),
+    ...(item.location ? [item.location] : []),
+  ];
 
   const aspect = useMemo(() => {
     switch (ratio) {
