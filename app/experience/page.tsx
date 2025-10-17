@@ -14,7 +14,7 @@ type Linked = TimelineEvent & {
   href?: string | null;
   link?: string | null;
   image?: string | null;
-  linkText?: string | null;       // optional label, else “learn more”
+  linkText?: string | null;
   desc?: string | null;
   description?: string | null;
 };
@@ -22,26 +22,33 @@ type Linked = TimelineEvent & {
 export default function ExperiencePage() {
   const events = items as Linked[];
 
-  // expand ranges like “2021–2023”
+  // Assign EACH item to a SINGLE year bucket.
+  // Rules:
+  // 1) If role matches "communications director" or "transition aide" → 2023.
+  // 2) Else use the MAX year found in dates; if none, use current year.
   const byYear = useMemo(() => {
-    const map = new Map<number, Linked[]>();
-    const yearsFrom = (s?: string) => {
-      if (!s) return [] as number[];
+    const getMaxYear = (s?: string) => {
+      if (!s) return null;
       const m = s.match(/\b(19|20)\d{2}\b/g);
-      if (!m) return [];
-      const a = parseInt(m[0], 10);
-      const b = parseInt(m[m.length - 1], 10);
-      if (m.length === 1) return [a];
-      const start = Math.min(a, b), end = Math.max(a, b);
-      const out: number[] = [];
-      for (let y = start; y <= end; y++) out.push(y);
-      return out;
+      if (!m) return null;
+      return Math.max(...m.map((x) => parseInt(x, 10)));
     };
+
+    const map = new Map<number, Linked[]>();
     for (const ev of events) {
-      const ys = yearsFrom(ev.dates);
-      const list = ys.length ? ys : [new Date().getFullYear()];
-      for (const y of list) map.set(y, [...(map.get(y) ?? []), ev]);
+      const role = (ev.role ?? "").toLowerCase();
+      let year: number | null = null;
+
+      if (role.includes("communications director") || role.includes("transition aide")) {
+        year = 2023;
+      } else {
+        year = getMaxYear(ev.dates) ?? new Date().getFullYear();
+      }
+
+      map.set(year, [...(map.get(year) ?? []), ev]);
     }
+
+    // sort years desc
     return Array.from(map.entries()).sort((a, b) => b[0] - a[0]);
   }, [events]);
 
@@ -49,10 +56,20 @@ export default function ExperiencePage() {
     <PageTransition>
       {/* header */}
       <section className="mx-auto max-w-5xl px-4 pt-12 md:pt-16">
-        <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="text-3xl font-semibold tracking-tight md:text-5xl">
+        <motion.h1
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+          className="text-3xl font-semibold tracking-tight md:text-5xl"
+        >
           experience
         </motion.h1>
-        <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="mt-3 max-w-3xl text-sm text-muted md:text-base">
+        <motion.p
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.05 }}
+          className="mt-3 max-w-3xl text-sm text-muted md:text-base"
+        >
           Roles across media, policy, and applied AI.
         </motion.p>
       </section>
@@ -70,7 +87,10 @@ export default function ExperiencePage() {
         <h2 className="mb-4 text-xl">professional experience</h2>
 
         <ol className="relative space-y-10">
-          <span aria-hidden className="pointer-events-none absolute left-[0.5rem] top-0 h-full w-px bg-[linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06))]" />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-[0.5rem] top-0 h-full w-px bg-[linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06))]"
+          />
           {byYear.map(([year, list], yi) => (
             <li key={year} className="space-y-6">
               {/* sticky year chip */}
@@ -86,24 +106,23 @@ export default function ExperiencePage() {
                   {list.map((ev, i) => {
                     const href = ev.href ?? ev.link ?? null;
                     const img = ev.image ?? undefined;
-                    const desc = ev.desc ?? ev.description ?? null;
                     const label = (ev.linkText && ev.linkText.trim()) || "learn more";
                     const key = `${year}-${i}-${ev.role}-${ev.org ?? ""}`;
 
                     return (
                       <Reveal key={key} delay={(yi * 0.02) + i * 0.045}>
-                        {/* 1) Resume text (restored) */}
-                        <div className="rounded-xl bg-white/[0.015] transition hover:bg-white/[0.03]">
+                        {/* Resume text (exactly as TimelineItem renders it) */}
+                        <div className="entry-wrap rounded-xl bg-white/[0.015] transition hover:bg-white/[0.03]">
                           <TimelineItem event={ev} />
                         </div>
 
-                        {/* 2) Compact link card below, if link exists */}
+                        {/* Compact link button-card below (only if link exists) */}
                         {href && (
                           <a
                             href={href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group mt-2 flex min-h-[88px] w-full overflow-hidden rounded-xl border border-neutral-800/70 bg-neutral-950/80 text-left text-neutral-100 shadow-[0_0_20px_rgba(0,0,0,0.20)] backdrop-blur-md transition hover:bg-white/[0.03]"
+                            className="group mt-2 flex min-h-[72px] w-full overflow-hidden rounded-xl border border-neutral-800/70 bg-neutral-950/80 text-left text-neutral-100 shadow-[0_0_16px_rgba(0,0,0,0.18)] backdrop-blur-md transition hover:bg-white/[0.03]"
                           >
                             {/* image pane: 20% on sm+, stacked on mobile */}
                             <div className="relative hidden select-none sm:block sm:flex-[0_0_20%]">
@@ -115,21 +134,13 @@ export default function ExperiencePage() {
                               )}
                             </div>
 
-                            {/* text + reactive underline */}
-                            <div className="flex min-w-0 flex-1 items-center justify-between gap-3 p-4">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm text-neutral-300">
-                                  <span className="bg-[linear-gradient(white,white)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-200 group-hover:bg-[length:100%_1px]">
-                                    {label}
-                                  </span>
-                                  {href && (
-                                    <span className="ml-2 text-neutral-500">
-                                      {/* host hint */}
-                                      {displayHost(href)}
-                                    </span>
-                                  )}
-                                </p>
-                              </div>
+                            {/* compact text/button label ONLY inside the card */}
+                            <div className="flex min-w-0 flex-1 items-center justify-between gap-3 p-3 md:p-4">
+                              <p className="truncate text-sm text-neutral-300">
+                                <span className="bg-[linear-gradient(white,white)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-200 group-hover:bg-[length:100%_1px]">
+                                  {label}
+                                </span>
+                              </p>
                               <span aria-hidden className="shrink-0 text-neutral-400 transition group-hover:translate-x-0.5">
                                 →
                               </span>
@@ -148,15 +159,13 @@ export default function ExperiencePage() {
 
       {/* pinned chatgpt fab */}
       <ExperienceChatFab />
+
+      {/* hide any inline anchors INSIDE TimelineItem to ensure link text appears only in the button-card */}
+      <style jsx>{`
+        .entry-wrap :global(a) {
+          display: none;
+        }
+      `}</style>
     </PageTransition>
   );
-}
-
-function displayHost(href: string) {
-  try {
-    const u = new URL(href);
-    return u.host.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
 }
