@@ -1,3 +1,4 @@
+// components/FeaturedPhotos.tsx — FULL REPLACEMENT
 "use client";
 
 import Reveal from "@/components/Reveal";
@@ -11,7 +12,7 @@ export default function FeaturedPhotos({ photos }: { photos: Project[] }) {
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
 
-  const gallery = photos.map(p => ({
+  const gallery = photos.map((p) => ({
     src: p.image ?? "",
     alt: p.title,
     caption: p.location || p.title,
@@ -36,6 +37,7 @@ export default function FeaturedPhotos({ photos }: { photos: Project[] }) {
             <Reveal key={item.slug} delay={i * 0.06}>
               <PhotoCard
                 item={item}
+                ratio="square"
                 onClick={() => {
                   setIdx(i);
                   setOpen(true);
