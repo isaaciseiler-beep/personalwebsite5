@@ -10,7 +10,7 @@ type Props = {
   bio?: string;
   linkedinUrl?: string;
   emailHref?: string;
-  lines?: string[]; // legacy -> blurbs
+  lines?: string[];
 };
 
 export default function PinnedAbout({
@@ -23,7 +23,6 @@ export default function PinnedAbout({
 }: Props) {
   const prefers = useReducedMotion();
 
-  // rotate list, force the “Congress” line to a tight 2-line variant
   const items = (blurbs?.length ? blurbs : lines?.length ? lines : DEFAULT_BLURBS)
     .map((t) =>
       /youngest|congress/i.test(t)
@@ -41,29 +40,28 @@ export default function PinnedAbout({
 
   const bioText = bio?.trim().length ? bio : DEFAULT_BIO_SHORT;
 
-  // fixed 2-line header slot, responsive via em + line-height
-  const headerSlot = { "--lh": 1.12 } as CSSProperties;
+  // Fixed TWO-line slot, but with more breathing room to avoid crowding.
+  const slotVars = {
+    "--lh": 1.14,                     // line-height
+    "--slot": "clamp(5.6rem, 9vw, 8.8rem)", // reserved height ≈ 2 lines of md:text-4xl
+  } as CSSProperties;
 
   return (
     <section id="about" className="w-full px-4 md:px-6">
-      <div className="mx-auto w-full max-w-6xl">
+      <div className="mx-auto w-full max-w-5xl">
         <div className="card-hover w-full overflow-hidden rounded-2xl border border-subtle bg-card">
           <div className="grid grid-cols-1 md:grid-cols-3">
             {/* TEXT (2/3) */}
             <div className="p-5 md:col-span-2 md:p-7">
-              {/* reserved two-line area */}
-              <div
-                className="relative"
-                style={headerSlot}
-              >
-                <div className="relative"
-                     style={{ minHeight: "calc(1em * 2 * var(--lh))", lineHeight: "var(--lh)" }}>
+              {/* rotating header slot */}
+              <div className="relative" style={slotVars}>
+                <div className="relative h-[var(--slot)]" style={{ lineHeight: "var(--lh)" }}>
                   <AnimatePresence mode="wait">
                     <motion.h3
                       key={idx}
-                      initial={{ opacity: 0, y: 18, scale: 0.985, filter: "blur(10px)", clipPath: "inset(10% 0% 10% 0%)" }}
-                      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)", clipPath: "inset(0% 0% 0% 0%)" }}
-                      exit={{ opacity: 0, y: -16, scale: 0.985, filter: "blur(10px)", clipPath: "inset(10% 0% 10% 0%)" }}
+                      initial={{ opacity: 0, y: 18, scale: 0.985, filter: "blur(10px)", clipPath: "inset(12% 0 12% 0)" }}
+                      animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)", clipPath: "inset(0 0 0 0)" }}
+                      exit={{ opacity: 0, y: -16, scale: 0.985, filter: "blur(10px)", clipPath: "inset(12% 0 12% 0)" }}
                       transition={{ duration: 1.05, ease: [0.22, 0.72, 0.12, 1] }}
                       className="absolute inset-x-0 top-0 text-2xl font-normal leading-tight text-white md:text-4xl"
                     >
@@ -74,11 +72,11 @@ export default function PinnedAbout({
               </div>
 
               {/* bio */}
-              <p className="mt-3 text-sm leading-relaxed text-muted md:text-base">
+              <p className="mt-4 text-sm leading-relaxed text-muted md:text-base">
                 {bioText}
               </p>
 
-              {/* CTAs (lowercase) */}
+              {/* CTAs */}
               <div className="mt-5 flex flex-wrap gap-3">
                 <CTA href="/about">about me →</CTA>
                 <CTA href={linkedinUrl}>linkedin →</CTA>
@@ -107,7 +105,6 @@ export default function PinnedAbout({
   );
 }
 
-/* unified CTA style */
 function CTA({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a
@@ -130,6 +127,5 @@ const DEFAULT_BLURBS = [
   "skilled strategic communicator with cross-sector experience",
 ];
 
-// ~50% of the previous bio
 const DEFAULT_BIO_SHORT =
   "I work where media, civic data, and applied AI meet. Current research tracks classroom uses of generative tools and the workflows that last. I’ve led communications in government and nonprofits, translating policy into clear narratives. I build small products, study AI’s effects on local journalism, and help teams adopt practical AI. Off hours I shoot photo and video and fly drones internationally.";
