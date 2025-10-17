@@ -47,7 +47,7 @@ export default function PinnedAbout({
   } as CSSProperties;
 
   return (
-    <section id="about" className="mx-auto w-full max-w-5xl px-4 md:px-6">
+    <section id="about" className="mx-auto w-full max-w-5xl px-0 md:px-0">
       <div className="mx-auto w-full max-w-5xl">
         <div className="card-hover w-full overflow-hidden rounded-2xl border border-subtle bg-card">
           <div className="grid grid-cols-1 md:grid-cols-3">
