@@ -14,18 +14,21 @@ type Linked = TimelineEvent & {
   href?: string | null;
   link?: string | null;
   image?: string | null;
-  linkText?: string | null;       // your custom button copy (preferred)
-  desc?: string | null;           // long blurb
-  description?: string | null;    // alt key for long blurb
+  linkText?: string | null;       // your original long button copy
+  desc?: string | null;           // blurb
+  description?: string | null;    // alt blurb
   org?: string | null;
 };
+
+const DEFAULT_LONG =
+  "Check out one of the campaigns I consulted for here, including the website I built";
 
 export default function ExperiencePage() {
   const events = items as Linked[];
 
-  // One bucket per item:
-  // - Force Communications Director and Transition Aide into 2023
-  // - Else use MAX year from dates; fallback current year
+  // Put each item in exactly one year:
+  //  - Force Communications Director & Transition Aide to 2023
+  //  - Else the MAX year in its dates, fallback = current year
   const byYear = useMemo(() => {
     const maxYear = (s?: string) => {
       if (!s) return null;
@@ -36,10 +39,11 @@ export default function ExperiencePage() {
     const map = new Map<number, Linked[]>();
     for (const ev of events) {
       const role = (ev.role ?? "").toLowerCase();
-      const forced2023 =
-        role.includes("communications director") || role.includes("transition aide");
-      const year = forced2023 ? 2023 : (maxYear(ev.dates) ?? new Date().getFullYear());
-      map.set(year, [...(map.get(year) ?? []), ev]);
+      const y =
+        role.includes("communications director") || role.includes("transition aide")
+          ? 2023
+          : maxYear(ev.dates) ?? new Date().getFullYear();
+      map.set(y, [...(map.get(y) ?? []), ev]);
     }
     return Array.from(map.entries()).sort((a, b) => b[0] - a[0]);
   }, [events]);
@@ -66,7 +70,7 @@ export default function ExperiencePage() {
         </motion.p>
       </section>
 
-      {/* education (unchanged) */}
+      {/* education */}
       <section className="mx-auto mt-8 max-w-5xl px-4">
         <h2 className="mb-4 text-xl">education</h2>
         <Reveal>
@@ -79,7 +83,7 @@ export default function ExperiencePage() {
         <h2 className="mb-4 text-xl">professional experience</h2>
 
         <ol className="relative space-y-10">
-          {/* left spine only */}
+          {/* the ONLY left line */}
           <span
             aria-hidden
             className="pointer-events-none absolute left-[0.5rem] top-0 h-full w-px bg-[linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06))]"
@@ -87,33 +91,35 @@ export default function ExperiencePage() {
 
           {byYear.map(([year, list], yi) => (
             <li key={year} className="space-y-6">
-              {/* between-years separator (not full-width pill) */}
+              {/* between-years separator ONLY */}
               {yi > 0 && (
                 <div className="-mx-4 px-4">
                   <div className="h-px w-full bg-[linear-gradient(90deg,rgba(255,255,255,.18),transparent)]" />
                 </div>
               )}
 
-              {/* compact sticky year pill; does not span screen */}
+              {/* compact sticky year pill, translucent like header */}
               <div className="sticky top-[88px] z-30">
-                <span className="inline-flex items-center gap-2 rounded-full border border-subtle bg-[color:var(--color-bg)]/60 px-3 py-1 text-xs text-muted backdrop-blur">
+                <span className="inline-flex items-center gap-2 rounded-full border border-subtle bg-white/[0.02] px-3 py-1 text-xs text-muted backdrop-blur-sm">
                   {year}
                 </span>
               </div>
 
-              {/* entries */}
-              <div className="relative border-l border-subtle pl-6">
+              {/* entries (no inner left borders) */}
+              <div className="relative pl-6">
                 <div className="space-y-6">
                   {list.map((ev, i) => (
                     <Reveal
                       key={`${year}-${i}-${ev.role}-${ev.org ?? ""}`}
                       delay={(yi * 0.02) + i * 0.045}
                     >
-                      {/* 1) Resume text (no cell wrapper) */}
-                      <TimelineItem event={ev} />
+                      {/* 1) Resume text — plain, no cell */}
+                      <div className="entry-text">
+                        <TimelineItem event={ev} />
+                      </div>
 
-                      {/* 2) Compact button-card below; left edge aligned with resume text start; no borders */}
-                      {renderLinkButton(ev)}
+                      {/* 2) Button cell below, left-aligned with text start */}
+                      {renderButtonCell(ev)}
                     </Reveal>
                   ))}
                 </div>
@@ -123,12 +129,12 @@ export default function ExperiencePage() {
         </ol>
       </section>
 
-      {/* pinned ChatGPT fab */}
       <ExperienceChatFab />
 
-      {/* Hide any inline anchors inside TimelineItem so button owns the link text */}
+      {/* Hide original inline anchors so the sentence only appears inside the button cell */}
       <style jsx>{`
-        :global(.entry a), :global(.entry-link), :global(.learn-more) { display: none !important; }
+        .entry-text :global(p:has(a)),
+        .entry-text :global(a) { display: none !important; }
       `}</style>
     </PageTransition>
   );
@@ -141,26 +147,31 @@ function isCSG(ev: Linked) {
   return /csg|council of state governments/.test(org);
 }
 
-function renderLinkButton(ev: Linked) {
+function renderButtonCell(ev: Linked) {
   const href = ev.href ?? ev.link ?? null;
   if (!href) return null;
 
-  // Primary button text: original custom linkText; else long blurb; CSG uses short label only.
-  const hasCustom = !!(ev.linkText && ev.linkText.trim());
-  const long = (ev.linkText?.trim() || ev.desc?.trim() || ev.description?.trim() || "");
-  const label = isCSG(ev) ? "learn more" : long || "learn more";
   const img = ev.image ?? undefined;
+
+  // Button text priority:
+  // 1) linkText (original sentence); 2) desc; 3) description; 4) DEFAULT_LONG (except CSG → "learn more")
+  const fallback = isCSG(ev) ? "learn more" : DEFAULT_LONG;
+  const label =
+    (ev.linkText && ev.linkText.trim()) ||
+    (ev.desc && ev.desc.trim()) ||
+    (ev.description && ev.description.trim()) ||
+    fallback;
 
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group mt-2 block overflow-hidden rounded-xl bg-white/[0.02] px-4 py-0 backdrop-blur-sm transition hover:bg-white/[0.04] md:px-5"
+      className="group mt-2 block overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] px-4 py-0 backdrop-blur-sm transition hover:bg-white/[0.04] md:px-5"
     >
-      {/* row aligned by padding; NO borders */}
-      <div className="flex min-h-[72px] items-stretch gap-4">
-        {/* image 20% on sm+, stacked on mobile */}
+      {/* row; cell restored; alignment via px-4/md:px-5 to match text inset */}
+      <div className="flex min-h-[84px] items-stretch gap-4">
+        {/* 20% image on sm+ */}
         <div className="relative hidden select-none sm:block sm:w-[20%]">
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -174,9 +185,9 @@ function renderLinkButton(ev: Linked) {
           )}
         </div>
 
-        {/* text only inside the button; clamp to keep compact */}
+        {/* text inside the button */}
         <div className="flex min-w-0 flex-1 items-center justify-between py-3">
-          <p className={`min-w-0 pr-3 text-sm text-neutral-200 ${isCSG(ev) ? "truncate" : "line-clamp-2"}`}>
+          <p className="min-w-0 pr-3 text-sm text-neutral-200 line-clamp-2">
             <span className="bg-[linear-gradient(white,white)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-200 group-hover:bg-[length:100%_1px]">
               {label}
             </span>
