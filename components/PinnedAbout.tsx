@@ -4,35 +4,28 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 
-type NewProps = {
-  heading?: [string, string];
-  blurbs?: string[];
-  images?: string[];
-};
-
-// legacy props still used in app/page.tsx
-type LegacyProps = {
-  lines?: string[];
-  imageName?: string;
-  imageBaseUrl?: string;
-};
-
+type NewProps = { heading?: [string, string]; blurbs?: string[]; images?: string[] };
+type LegacyProps = { lines?: string[]; imageName?: string; imageBaseUrl?: string };
 type Props = NewProps & LegacyProps;
 
 export default function PinnedAbout(props: Props) {
-  // defaults + legacy mapping
+  // map legacy -> new
+  const defaultHeading: [string, string] = ["civic data work between", "public sector."];
   const heading: [string, string] =
     props.heading ??
-    (props.lines && props.lines.length >= 1
-      ? // try to split first legacy line at the last space for two lines
-        (() => {
-          const s = props.lines![0];
-          const cut = s.lastIndexOf(" ");
-          return cut > 0
-            ? [s.slice(0, cut).trim(), s.slice(cut + 1).trim()]
-            : ["civic data work", "between public sector."];
+    (props.lines && props.lines.length
+      ? (() => {
+          // take last 2 words as line 2 if possible
+          const s = props.lines[0];
+          const parts = s.split(" ");
+          if (parts.length > 2) {
+            const l2 = parts.slice(-2).join(" ");
+            const l1 = parts.slice(0, -2).join(" ");
+            return [l1, l2];
+          }
+          return defaultHeading;
         })()
-      : ["civic data work", "between public sector."]);
+      : defaultHeading);
 
   const blurbs =
     props.blurbs && props.blurbs.length
@@ -53,128 +46,136 @@ export default function PinnedAbout(props: Props) {
       : []);
 
   const prefers = useReducedMotion();
-  const [idx, setIdx] = useState(0);
-  const hold = useRef(false);
+
+  // --- typewriter for first heading line ---
+  const [i, setI] = useState(0); // blurb index
+  const [display, setDisplay] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (prefers || blurbs.length <= 1) return;
-    const t = setInterval(() => {
-      if (!hold.current) setIdx((v) => (v + 1) % blurbs.length);
-    }, 3200);
-    return () => clearInterval(t);
-  }, [prefers, blurbs.length]);
+    if (prefers) {
+      setDisplay(blurbs[0] ?? "");
+      return;
+    }
+    const current = blurbs[i % blurbs.length];
+    const doneTyping = display === current;
+    const empty = display.length === 0;
 
-  const imgIdx = images.length ? idx % images.length : 0;
+    let delta = deleting ? 16 : 28; // speed
+    if (doneTyping && !deleting) delta = 1400; // hold
+    if (empty && deleting) delta = 280; // pause before next
+
+    const t = setTimeout(() => {
+      if (!deleting) {
+        // type
+        const next = current.slice(0, display.length + 1);
+        setDisplay(next);
+        if (next === current) setDeleting(true);
+      } else {
+        // delete
+        const next = current.slice(0, Math.max(0, display.length - 2));
+        setDisplay(next);
+        if (next.length === 0) {
+          setDeleting(false);
+          setI((v) => (v + 1) % blurbs.length);
+        }
+      }
+    }, delta);
+
+    return () => clearTimeout(t);
+  }, [display, deleting, i, prefers, blurbs]);
+
+  // keep image synced with blurb index
+  const imgIdx = images.length ? i % images.length : 0;
 
   const headingVariants = useMemo(
-    () => ({
-      hidden: { opacity: 0, y: 8 },
-      show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-    }),
+    () => ({ hidden: { opacity: 0, y: 6 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }),
     []
   );
 
   return (
-    <section id="about" className="relative mx-auto mt-8 max-w-6xl px-4 md:px-6" aria-label="About">
-      {/* ambient grid + glow */}
+    <section id="about" className="relative mx-auto mt-6 max-w-6xl px-4 md:px-6" aria-label="About">
+      {/* subtle grid + glow */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07]"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06]"
         style={{
           background:
-            "repeating-linear-gradient(90deg, transparent 0 22px, #fff2 22px 23px), repeating-linear-gradient(0deg, transparent 0 22px, #fff2 22px 23px)",
-          maskImage: "radial-gradient(1200px 600px at 20% 30%, #000 65%, transparent)",
+            "repeating-linear-gradient(90deg,transparent 0 22px,#fff2 22px 23px),repeating-linear-gradient(0deg,transparent 0 22px,#fff2 22px 23px)",
+          maskImage: "radial-gradient(1200px 600px at 22% 30%,#000 65%,transparent)",
         }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -inset-20 -z-10 blur-3xl"
+        className="pointer-events-none absolute -inset-24 -z-10 blur-3xl"
         style={{
           background:
-            "radial-gradient(600px 320px at 15% 20%, rgba(14,165,233,.18), transparent 60%), radial-gradient(500px 260px at 85% 70%, rgba(147,51,234,.18), transparent 60%)",
+            "radial-gradient(520px 280px at 15% 18%, rgba(14,165,233,.16), transparent 60%), radial-gradient(460px 240px at 85% 72%, rgba(147,51,234,.16), transparent 60%)",
         }}
       />
 
-      <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-7 md:grid-cols-3">
         {/* TEXT */}
         <div className="md:col-span-2 md:pr-4">
-          <motion.h2 initial="hidden" animate="show" variants={headingVariants} className="mb-3 text-base tracking-wide text-muted">
+          <motion.h2 initial="hidden" animate="show" variants={headingVariants} className="mb-2 text-sm tracking-wide text-muted">
             about
           </motion.h2>
 
-          <motion.h3 initial="hidden" animate="show" variants={headingVariants} className="relative mb-4 text-4xl leading-tight md:text-6xl">
-            <span className="bg-gradient-to-r from-sky-400 to-fuchsia-400 bg-clip-text text-transparent">{heading[0]}</span>
+          {/* Dynamic first line */}
+          <motion.h3
+            initial="hidden"
+            animate="show"
+            variants={headingVariants}
+            className="relative mb-2 text-3xl leading-tight md:text-5xl"
+          >
+            <span className="block bg-gradient-to-r from-sky-400 to-fuchsia-400 bg-clip-text text-transparent">
+              {prefers ? blurbs[0] : display}
+              {!prefers && <Caret />}
+            </span>
             <span className="block">{heading[1]}</span>
-            <span className="pointer-events-none mt-3 block h-[3px] w-24 rounded-full bg-gradient-to-r from-sky-400 to-fuchsia-400">
-              <span className="block h-full w-0 animate-[grow_1.2s_ease-out_forwards] bg-current" />
+            <span className="pointer-events-none mt-2 block h-[2px] w-20 rounded-full bg-gradient-to-r from-sky-400 to-fuchsia-400">
+              <span className="block h-full w-0 animate-[grow_1.1s_ease-out_forwards] bg-current" />
             </span>
           </motion.h3>
-
-          <div
-            onMouseEnter={() => (hold.current = true)}
-            onMouseLeave={() => (hold.current = false)}
-            className="relative mt-6"
-          >
-            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur supports-[backdrop-filter]:bg-white/[0.03]">
-              <motion.p
-                key={idx}
-                initial={{ opacity: 0, y: 6, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.45 }}
-                className="pr-6 text-lg leading-relaxed md:text-xl"
-              >
-                {blurbs[idx]}
-                <span className="ml-2 inline-block h-5 w-[2px] align-baseline bg-current animate-[blink_1.2s_steps(2,start)_infinite]" />
-              </motion.p>
-              <AccentCorners />
-            </div>
-            <p className="mt-3 text-xs text-muted">hover to pause • updates every ~3s</p>
-          </div>
         </div>
 
-        {/* IMAGE 33% on md+, hover zoom confined */}
-        <figure className="group relative h-[360px] overflow-hidden rounded-2xl border border-white/10 bg-card md:h-[560px]">
-          {images.map((src, i) => (
+        {/* IMAGE 33% on md+, confined hover */}
+        <figure className="group relative h-[320px] overflow-hidden rounded-2xl border border-white/10 bg-card md:h-[500px]">
+          {images.map((src, j) => (
             <Image
-              key={`${src}-${i}`}
+              key={`${src}-${j}`}
               src={src}
               alt="about image"
               fill
-              priority={i === 0}
+              priority={j === 0}
               sizes="(min-width:768px) 33vw, 100vw"
               className={`object-cover transition duration-600 ease-out will-change-transform ${
-                i === imgIdx ? "opacity-100" : "opacity-0"
-              } group-hover:scale-[1.06]`}
+                j === imgIdx ? "opacity-100" : "opacity-0"
+              } group-hover:scale-[1.05]`}
             />
           ))}
           <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
           <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
             <div className="absolute -left-52 top-0 h-full w-40 rotate-12 bg-gradient-to-r from-white/0 via-white/10 to-white/0 blur-sm" />
           </div>
-          <figcaption className="sr-only">About photo</figcaption>
         </figure>
       </div>
 
       <style jsx>{`
+        @keyframes grow {
+          to {
+            width: 100%;
+          }
+        }
         @keyframes blink {
           0%, 49% { opacity: 1; }
           50%, 100% { opacity: 0; }
         }
-        @keyframes grow { to { width: 100%; } }
       `}</style>
     </section>
   );
 }
 
-function AccentCorners() {
-  const c = "absolute h-5 w-5 border-[2px] border-sky-400/60";
-  return (
-    <>
-      <span className={`${c} left-3 top-3 rounded-tl-xl border-b-0 border-r-0`} />
-      <span className={`${c} right-3 top-3 rounded-tr-xl border-b-0 border-l-0`} />
-      <span className={`${c} bottom-3 left-3 rounded-bl-xl border-t-0 border-r-0`} />
-      <span className={`${c} bottom-3 right-3 rounded-br-xl border-t-0 border-l-0`} />
-    </>
-  );
+function Caret() {
+  return <span className="ml-1 inline-block h-[0.9em] w-[2px] align-baseline bg-current animate-[blink_1.1s_steps(2,start)_infinite]" />;
 }
