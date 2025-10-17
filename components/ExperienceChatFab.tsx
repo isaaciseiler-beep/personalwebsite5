@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 export default function ExperienceChatFab() {
+  const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -13,29 +15,26 @@ export default function ExperienceChatFab() {
   const shellRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const streamTimer = useRef<number | null>(null);
+  const DUR = 360;
 
-  const DUR = 360; // ms
+  useEffect(() => setMounted(true), []);
 
-  // Outside click → close
   useEffect(() => {
     function onDoc(e: MouseEvent) {
       if (!(open || closing) || !shellRef.current) return;
       if (!shellRef.current.contains(e.target as Node)) handleClose();
     }
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open, closing]);
-
-  // ESC to close
-  useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((open || closing) && e.key === "Escape") handleClose();
     }
+    document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
   }, [open, closing]);
 
-  // Lock scroll while open/closing
   useEffect(() => {
     const lock = open || closing;
     if (!lock) return;
@@ -49,14 +48,12 @@ export default function ExperienceChatFab() {
     };
   }, [open, closing]);
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [msgs, busy]);
 
-  // Cleanup streaming timer on unmount
   useEffect(() => {
     return () => {
       if (streamTimer.current) {
@@ -70,7 +67,6 @@ export default function ExperienceChatFab() {
     setClosing(false);
     setOpen(true);
   }
-
   function handleClose() {
     if (streamTimer.current) {
       window.clearInterval(streamTimer.current);
@@ -104,9 +100,7 @@ export default function ExperienceChatFab() {
         setMsgs((m) => {
           const copy = m.slice();
           const last = copy[copy.length - 1];
-          if (last && last.role === "assistant") {
-            copy[copy.length - 1] = { ...last, content: slice };
-          }
+          if (last && last.role === "assistant") copy[copy.length - 1] = { ...last, content: slice };
           return copy;
         });
         if (i >= reply.length) {
@@ -123,14 +117,10 @@ export default function ExperienceChatFab() {
     }
   }
 
-  return (
+  const ui = (
     <>
       {(open || closing) && (
-        <button
-          aria-label="close chat"
-          className={`backdrop ${open ? "visible" : closing ? "closing" : ""}`}
-          onClick={handleClose}
-        />
+        <button aria-label="close chat" className={`backdrop ${open ? "visible" : "closing"}`} onClick={handleClose} />
       )}
 
       <div
@@ -192,25 +182,21 @@ export default function ExperienceChatFab() {
 
       <style jsx>{`
         .backdrop {
-          position: fixed;
-          inset: 0;
-          z-index: 50;
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
+          position: fixed; inset: 0; z-index: 9998;
+          backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
           background: linear-gradient(to bottom, rgba(0,0,0,.14), rgba(0,0,0,.22));
-          opacity: 0;
-          transition: opacity ${DUR}ms cubic-bezier(.2,.7,0,1);
+          opacity: 0; transition: opacity ${DUR}ms cubic-bezier(.2,.7,0,1);
         }
         .backdrop.visible { opacity: 1; }
         .backdrop.closing { opacity: 0; }
 
-        /* Pinned to bottom of the viewport with safe-area offsets */
+        /* Portal-pinned to viewport bottom */
         .chat-shell {
           position: fixed;
           left: 50%;
           bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
           transform: translateX(-50%);
-          z-index: 60;
+          z-index: 9999;
           transition:
             width ${DUR}ms cubic-bezier(.2,.7,0,1),
             height ${DUR}ms cubic-bezier(.2,.7,0,1),
@@ -219,135 +205,56 @@ export default function ExperienceChatFab() {
             opacity 200ms ease;
         }
         .chat-shell:not(.open) { width: auto; height: 48px; }
-        .chat-shell.open {
-          width: min(92vw, 540px);
-          height: min(52vh, 400px);
-          border-radius: 16px;
-        }
+        .chat-shell.open { width: min(92vw, 540px); height: min(52vh, 400px); border-radius: 16px; }
 
         .pill {
-          white-space: nowrap;
-          background: #ffffff;
-          color: #0b0b0c;
-          border-radius: 9999px;
-          padding: 10px 20px;
-          border: 1px solid var(--color-border);
-          font-size: 0.9rem;
-          position: absolute;
-          left: 50%;
-          bottom: 0;
-          transform: translate(-50%, 0);
-          transition:
-            transform ${DUR}ms cubic-bezier(.2,.7,0,1),
-            width ${DUR}ms cubic-bezier(.2,.7,0,1),
-            height ${DUR}ms cubic-bezier(.2,.7,0,1),
-            border-radius ${DUR}ms cubic-bezier(.2,.7,0,1),
-            opacity 200ms ease;
-          animation: floaty 4.2s ease-in-out infinite;
-          z-index: 70;
-          display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+          white-space: nowrap; background: #fff; color: #0b0b0c;
+          border-radius: 9999px; padding: 10px 20px; border: 1px solid var(--color-border);
+          font-size: 0.9rem; position: absolute; left: 50%; bottom: 0; transform: translate(-50%, 0);
+          transition: transform ${DUR}ms cubic-bezier(.2,.7,0,1), width ${DUR}ms cubic-bezier(.2,.7,0,1), height ${DUR}ms cubic-bezier(.2,.7,0,1), border-radius ${DUR}ms cubic-bezier(.2,.7,0,1), opacity 200ms ease;
+          animation: floaty 4.2s ease-in-out infinite; z-index: 1; display: inline-flex; align-items: center; gap: 8px;
         }
         .pill:hover { transform: translate(-50%, -1px); }
-        .chat-shell.open .pill {
-          top: 10px; right: 10px; left: auto; bottom: auto;
-          height: 30px; width: 30px; padding: 0;
-          border-radius: 8px;
-          transform: translate(0, 0);
-          animation: none;
-        }
+        .chat-shell.open .pill { top: 10px; right: 10px; left: auto; bottom: auto; height: 30px; width: 30px; padding: 0; border-radius: 8px; transform: translate(0,0); animation: none; }
         .pill-label { display: inline-block; }
         .pill-x { display: none; line-height: 0; }
         .chat-shell.open .pill-label { display: none; }
         .chat-shell.open .pill-x { display: grid; place-items: center; }
 
         .panel {
-          position: absolute; inset: 0;
-          border-radius: 16px;
-          border: 1px solid var(--color-border);
-          background: rgba(0,0,0,0.82);
-          color: #e7e7ea;
-          backdrop-filter: blur(14px) saturate(160%);
+          position: absolute; inset: 0; border-radius: 16px; border: 1px solid var(--color-border);
+          background: rgba(0,0,0,0.82); color: #e7e7ea; backdrop-filter: blur(14px) saturate(160%);
           -webkit-backdrop-filter: blur(14px) saturate(160%);
-          overflow: hidden;
-          opacity: 0; pointer-events: none;
-          transform-origin: bottom center;
+          overflow: hidden; opacity: 0; pointer-events: none; transform-origin: bottom center;
           transform: translateY(6px) scale(0.98);
-          transition:
-            opacity ${DUR - 120}ms ease,
-            transform ${DUR}ms cubic-bezier(.2,.7,0,1);
+          transition: opacity ${DUR - 120}ms ease, transform ${DUR}ms cubic-bezier(.2,.7,0,1);
         }
-        .chat-shell.open .panel,
-        .chat-shell.closing .panel {
-          opacity: 1; pointer-events: auto; transform: translateY(0) scale(1);
-        }
+        .chat-shell.open .panel, .chat-shell.closing .panel { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
         .chat-shell.closing .panel { opacity: 0; transform: translateY(6px) scale(0.98); }
 
         .panel-header { height: 48px; }
-
-        .scroll {
-          height: calc(100% - 48px - 56px);
-          overflow-y: auto;
-          padding: 10px 12px;
-          display: flex; flex-direction: column; gap: 10px;
-          scroll-behavior: smooth;
-        }
+        .scroll { height: calc(100% - 48px - 56px); overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
         .row { display: flex; }
         .row.left { justify-content: flex-start; }
         .row.right { justify-content: flex-end; }
-
-        .bubble {
-          max-width: 80%;
-          border-radius: 18px;
-          padding: 10px 14px;
-          font-size: 0.94rem; line-height: 1.5;
-          border: 1px solid var(--color-border);
-          color: #e7e7ea;
-        }
+        .bubble { max-width: 80%; border-radius: 18px; padding: 10px 14px; font-size: 0.94rem; line-height: 1.5; border: 1px solid var(--color-border); color: #e7e7ea; }
         .assistant { background: var(--color-card); }
-        .user { background: transparent; border-color: var(--color-border); }
+        .user { background: transparent; }
 
-        .skeleton .sk {
-          height: 10px; border-radius: 9999px;
-          background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.18), rgba(255,255,255,.08));
-          background-size: 200% 100%;
-          animation: shimmer 1200ms linear infinite;
-          margin: 6px 0;
-        }
-        .skeleton .sk1 { width: 72%; }
-        .skeleton .sk2 { width: 92%; }
-        .skeleton .sk3 { width: 56%; }
+        .skeleton .sk { height: 10px; border-radius: 9999px; background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.18), rgba(255,255,255,.08)); background-size: 200% 100%; animation: shimmer 1200ms linear infinite; margin: 6px 0; }
+        .skeleton .sk1 { width: 72%; } .skeleton .sk2 { width: 92%; } .skeleton .sk3 { width: 56%; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        .input {
-          position: absolute; left: 0; right: 0; bottom: 0;
-          display: flex; gap: 8px; align-items: center;
-          border-top: 1px solid var(--color-border);
-          padding: 8px;
-          background: rgba(0,0,0,0.82);
-          backdrop-filter: blur(14px) saturate(160%);
-          -webkit-backdrop-filter: blur(14px) saturate(160%);
-        }
-        .input input {
-          flex: 1; height: 36px; background: transparent;
-          color: #e7e7ea; border: 1px solid var(--color-border);
-          border-radius: 10px; padding: 0 12px; outline: none;
-          transition: border-color 150ms ease;
-        }
-        .input input:focus { border-color: var(--color-border); }
-        .send {
-          height: 36px; width: 36px; border: 1px solid var(--color-border);
-          border-radius: 10px; background: transparent; color: #e7e7ea;
-          display: grid; place-items: center;
-          transition: transform 100ms ease, border-color 150ms ease;
-        }
+        .input { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; align-items: center; border-top: 1px solid var(--color-border); padding: 8px; background: rgba(0,0,0,0.82); backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%); }
+        .input input { flex: 1; height: 36px; background: transparent; color: #e7e7ea; border: 1px solid var(--color-border); border-radius: 10px; padding: 0 12px; outline: none; transition: border-color 150ms ease; }
+        .send { height: 36px; width: 36px; border: 1px solid var(--color-border); border-radius: 10px; background: transparent; color: #e7e7ea; display: grid; place-items: center; transition: transform 100ms ease, border-color 150ms ease; }
         .send:hover { transform: translateY(-1px); }
         .send:disabled { opacity: .5; transform: none; }
-
-        @keyframes floaty { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -6px); } }
-        @media (prefers-reduced-motion: reduce) {
-          .pill { animation: none; }
-        }
+        @keyframes floaty { 0%,100% { transform: translate(-50%,0); } 50% { transform: translate(-50%,-6px); } }
+        @media (prefers-reduced-motion: reduce) { .pill { animation: none; } }
       `}</style>
     </>
   );
+
+  if (!mounted) return null;
+  return createPortal(ui, document.body);
 }
