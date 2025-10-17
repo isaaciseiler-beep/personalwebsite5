@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -9,24 +9,7 @@ type LegacyProps = { lines?: string[]; imageName?: string; imageBaseUrl?: string
 type Props = NewProps & LegacyProps;
 
 export default function PinnedAbout(props: Props) {
-  // map legacy -> new
-  const defaultHeading: [string, string] = ["civic data work between", "public sector."];
-  const heading: [string, string] =
-    props.heading ??
-    (props.lines && props.lines.length
-      ? (() => {
-          // take last 2 words as line 2 if possible
-          const s = props.lines[0];
-          const parts = s.split(" ");
-          if (parts.length > 2) {
-            const l2 = parts.slice(-2).join(" ");
-            const l1 = parts.slice(0, -2).join(" ");
-            return [l1, l2];
-          }
-          return defaultHeading;
-        })()
-      : defaultHeading);
-
+  // content
   const blurbs =
     props.blurbs && props.blurbs.length
       ? props.blurbs
@@ -47,55 +30,72 @@ export default function PinnedAbout(props: Props) {
 
   const prefers = useReducedMotion();
 
-  // --- typewriter for first heading line ---
-  const [i, setI] = useState(0); // blurb index
-  const [display, setDisplay] = useState("");
-  const [deleting, setDeleting] = useState(false);
+  // ---------- typewriter: slower + irregular ----------
+  const [bIdx, setBIdx] = useState(0);
+  const [txt, setTxt] = useState("");
+  const [phase, setPhase] = useState<"type" | "hold" | "erase">("type");
 
   useEffect(() => {
     if (prefers) {
-      setDisplay(blurbs[0] ?? "");
+      setTxt(blurbs[bIdx]);
       return;
     }
-    const current = blurbs[i % blurbs.length];
-    const doneTyping = display === current;
-    const empty = display.length === 0;
+    const full = blurbs[bIdx];
 
-    let delta = deleting ? 16 : 28; // speed
-    if (doneTyping && !deleting) delta = 1400; // hold
-    if (empty && deleting) delta = 280; // pause before next
+    // base cadence
+    const randomJitter = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-    const t = setTimeout(() => {
-      if (!deleting) {
-        // type
-        const next = current.slice(0, display.length + 1);
-        setDisplay(next);
-        if (next === current) setDeleting(true);
-      } else {
-        // delete
-        const next = current.slice(0, Math.max(0, display.length - 2));
-        setDisplay(next);
+    let delay = 40; // fallback
+    if (phase === "type") {
+      // irregular typing: vary speed and insert micro-pauses on punctuation and word boundaries
+      const nextLen = txt.length + 1;
+      const nextChar = full.charAt(nextLen - 1);
+      const isPunct = /[.,;:!?]/.test(nextChar);
+      const boundaryPause = nextChar === " " ? randomJitter(60, 160) : 0;
+      delay = randomJitter(26, 75) + (isPunct ? randomJitter(140, 320) : 0) + boundaryPause;
+
+      const t = setTimeout(() => {
+        const next = full.slice(0, nextLen);
+        setTxt(next);
+        if (next === full) setPhase("hold");
+      }, delay);
+      return () => clearTimeout(t);
+    }
+
+    if (phase === "hold") {
+      // longer hold
+      delay = 2200 + randomJitter(300, 900);
+      const t = setTimeout(() => setPhase("erase"), delay);
+      return () => clearTimeout(t);
+    }
+
+    if (phase === "erase") {
+      // irregular erase in 1–3 char chunks
+      const chunk = Math.min(txt.length, randomJitter(1, 3));
+      delay = randomJitter(22, 60);
+      const t = setTimeout(() => {
+        const next = txt.slice(0, Math.max(0, txt.length - chunk));
+        setTxt(next);
         if (next.length === 0) {
-          setDeleting(false);
-          setI((v) => (v + 1) % blurbs.length);
+          setBIdx((v) => (v + 1) % blurbs.length);
+          setPhase("type");
         }
-      }
-    }, delta);
+      }, delay);
+      return () => clearTimeout(t);
+    }
+  }, [txt, phase, bIdx, prefers, blurbs]);
 
-    return () => clearTimeout(t);
-  }, [display, deleting, i, prefers, blurbs]);
+  // sync image to current blurb index
+  const imgIdx = images.length ? bIdx % images.length : 0;
 
-  // keep image synced with blurb index
-  const imgIdx = images.length ? i % images.length : 0;
-
-  const headingVariants = useMemo(
+  const hVariants = useMemo(
     () => ({ hidden: { opacity: 0, y: 6 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }),
     []
   );
 
   return (
     <section id="about" className="relative mx-auto mt-6 max-w-6xl px-4 md:px-6" aria-label="About">
-      {/* subtle grid + glow */}
+      {/* subtle grid + ambient glow */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06]"
@@ -115,28 +115,23 @@ export default function PinnedAbout(props: Props) {
       />
 
       <div className="grid grid-cols-1 items-start gap-7 md:grid-cols-3">
-        {/* TEXT */}
+        {/* TEXT BLOCK — single dynamic line only */}
         <div className="md:col-span-2 md:pr-4">
-          <motion.h2 initial="hidden" animate="show" variants={headingVariants} className="mb-2 text-sm tracking-wide text-muted">
+          <motion.h2 initial="hidden" animate="show" variants={hVariants} className="mb-2 text-sm tracking-wide text-muted">
             about
           </motion.h2>
 
-          {/* Dynamic first line */}
-          <motion.h3
+          <motion.h1
             initial="hidden"
             animate="show"
-            variants={headingVariants}
-            className="relative mb-2 text-3xl leading-tight md:text-5xl"
+            variants={hVariants}
+            className="relative text-3xl leading-tight md:text-5xl"
           >
-            <span className="block bg-gradient-to-r from-sky-400 to-fuchsia-400 bg-clip-text text-transparent">
-              {prefers ? blurbs[0] : display}
-              {!prefers && <Caret />}
+            <span className="bg-gradient-to-r from-sky-400 to-fuchsia-400 bg-clip-text text-transparent">
+              {prefers ? blurbs[0] : txt}
             </span>
-            <span className="block">{heading[1]}</span>
-            <span className="pointer-events-none mt-2 block h-[2px] w-20 rounded-full bg-gradient-to-r from-sky-400 to-fuchsia-400">
-              <span className="block h-full w-0 animate-[grow_1.1s_ease-out_forwards] bg-current" />
-            </span>
-          </motion.h3>
+            {!prefers && <Caret />}
+          </motion.h1>
         </div>
 
         {/* IMAGE 33% on md+, confined hover */}
@@ -160,22 +155,12 @@ export default function PinnedAbout(props: Props) {
           </div>
         </figure>
       </div>
-
-      <style jsx>{`
-        @keyframes grow {
-          to {
-            width: 100%;
-          }
-        }
-        @keyframes blink {
-          0%, 49% { opacity: 1; }
-          50%, 100% { opacity: 0; }
-        }
-      `}</style>
     </section>
   );
 }
 
 function Caret() {
-  return <span className="ml-1 inline-block h-[0.9em] w-[2px] align-baseline bg-current animate-[blink_1.1s_steps(2,start)_infinite]" />;
+  return (
+    <span className="ml-1 inline-block h-[0.9em] w-[2px] align-baseline bg-current animate-[blink_1.2s_steps(2,start)_infinite]" />
+  );
 }
