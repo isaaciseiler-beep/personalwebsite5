@@ -61,7 +61,7 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
         {...baseProps}
         aria-label={alt}
         title={alt}
-        className={`group relative block h-full w-full overflow-hidden rounded-2xl bg-card card-hover ${aspect} card-focusable`}
+        className={`group relative block h-full w-full overflow-hidden rounded-2xl bg-card card-hover no-lift ${aspect} card-focusable`}
       >
         {/* Image */}
         <div className="absolute inset-0">
