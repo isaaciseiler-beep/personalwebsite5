@@ -30,10 +30,13 @@ export default function HomePage() {
       <Hero />
 
       <PinnedAbout
-        lines={[
+        blurbs={[
           "Fulbright scholar documenting AI uses in education",
           "Expert on digital disruption and innovation in journalism and media",
+          "Served as the youngest Communications Director in congressional history",
+          "Photographer, videographer, and internationally licensed drone pilot",
           "Member of ChatGPT Lab @ OpenAI, informing product decisions",
+          "Skilled strategic communicator with cross-sector experience",
         ]}
         image="https://pub-41d52824b0bb4f44898c39e1c3c63cb8.r2.dev/about.jpg"
       />
