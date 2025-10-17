@@ -14,9 +14,9 @@ type Linked = TimelineEvent & {
   href?: string | null;
   link?: string | null;
   image?: string | null;
-  linkText?: string | null;       // your original long button copy
-  desc?: string | null;           // blurb
-  description?: string | null;    // alt blurb
+  linkText?: string | null;
+  desc?: string | null;
+  description?: string | null;
   org?: string | null;
 };
 
@@ -26,9 +26,11 @@ const DEFAULT_LONG =
 export default function ExperiencePage() {
   const events = items as Linked[];
 
-  // Put each item in exactly one year:
-  //  - Force Communications Director & Transition Aide to 2023
-  //  - Else the MAX year in its dates, fallback = current year
+  // One bucket per item (no duplicates)
+  // Force rules:
+  //  - 2023: communications director, transition aide
+  //  - 2021: research assistant
+  //  - 2024: freelance/consult communications
   const byYear = useMemo(() => {
     const maxYear = (s?: string) => {
       if (!s) return null;
@@ -36,15 +38,32 @@ export default function ExperiencePage() {
       if (!m) return null;
       return Math.max(...m.map((x) => parseInt(x, 10)));
     };
+
     const map = new Map<number, Linked[]>();
+
     for (const ev of events) {
       const role = (ev.role ?? "").toLowerCase();
-      const y =
-        role.includes("communications director") || role.includes("transition aide")
-          ? 2023
-          : maxYear(ev.dates) ?? new Date().getFullYear();
+      const org = (ev.org ?? "").toLowerCase();
+
+      let y: number | null = null;
+      if (role.includes("communications director") || role.includes("transition aide")) {
+        y = 2023;
+      } else if (role.includes("research assistant")) {
+        y = 2021;
+      } else if (
+        role.includes("freelance") ||
+        role.includes("consult") ||
+        org.includes("freelance") ||
+        org.includes("consult")
+      ) {
+        y = 2024;
+      } else {
+        y = maxYear(ev.dates) ?? new Date().getFullYear();
+      }
+
       map.set(y, [...(map.get(y) ?? []), ev]);
     }
+
     return Array.from(map.entries()).sort((a, b) => b[0] - a[0]);
   }, [events]);
 
@@ -70,12 +89,14 @@ export default function ExperiencePage() {
         </motion.p>
       </section>
 
-      {/* education */}
+      {/* education — frozen (no hover reactions) */}
       <section className="mx-auto mt-8 max-w-5xl px-4">
         <h2 className="mb-4 text-xl">education</h2>
-        <Reveal>
-          <ExperienceEducation />
-        </Reveal>
+        <div className="freeze-card">
+          <Reveal>
+            <ExperienceEducation />
+          </Reveal>
+        </div>
       </section>
 
       {/* timeline */}
@@ -83,42 +104,37 @@ export default function ExperiencePage() {
         <h2 className="mb-4 text-xl">professional experience</h2>
 
         <ol className="relative space-y-10">
-          {/* the ONLY left line */}
+          {/* single left spine */}
           <span
             aria-hidden
             className="pointer-events-none absolute left-[0.5rem] top-0 h-full w-px bg-[linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06))]"
           />
 
           {byYear.map(([year, list], yi) => (
-            <li key={year} className="space-y-6">
-              {/* between-years separator ONLY */}
+            <li key={year} className="space-y-9">{/* +50% spacing (was 6 → 9) */}
+              {/* between-years separator; starts AFTER the spine to avoid messy cross */}
               {yi > 0 && (
-                <div className="-mx-4 px-4">
+                <div className="ml-6">
                   <div className="h-px w-full bg-[linear-gradient(90deg,rgba(255,255,255,.18),transparent)]" />
                 </div>
               )}
 
-              {/* compact sticky year pill, translucent like header */}
-              <div className="sticky top-[88px] z-30">
-                <span className="inline-flex items-center gap-2 rounded-full border border-subtle bg-white/[0.02] px-3 py-1 text-xs text-muted backdrop-blur-sm">
+              {/* compact sticky year pill; less see-through so spine doesn’t show through */}
+              <div className="sticky top-[96px] z-30">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/14 px-3 py-1 text-xs text-neutral-300 backdrop-blur-md shadow-[0_0_0_1px_rgba(0,0,0,.25)_inset]">
                   {year}
                 </span>
               </div>
 
-              {/* entries (no inner left borders) */}
+              {/* entries (no inner borders) */}
               <div className="relative pl-6">
-                <div className="space-y-6">
+                <div className="space-y-9">
                   {list.map((ev, i) => (
-                    <Reveal
-                      key={`${year}-${i}-${ev.role}-${ev.org ?? ""}`}
-                      delay={(yi * 0.02) + i * 0.045}
-                    >
-                      {/* 1) Resume text — plain, no cell */}
-                      <div className="entry-text">
-                        <TimelineItem event={ev} />
-                      </div>
+                    <Reveal key={`${year}-${i}-${ev.role}-${ev.org ?? ""}`} delay={(yi * 0.02) + i * 0.045}>
+                      {/* resume text (plain) */}
+                      <TimelineItem event={ev} />
 
-                      {/* 2) Button cell below, left-aligned with text start */}
+                      {/* button cell below */}
                       {renderButtonCell(ev)}
                     </Reveal>
                   ))}
@@ -131,10 +147,16 @@ export default function ExperiencePage() {
 
       <ExperienceChatFab />
 
-      {/* Hide original inline anchors so the sentence only appears inside the button cell */}
+      {/* page-scoped overrides */}
       <style jsx>{`
-        .entry-text :global(p:has(a)),
-        .entry-text :global(a) { display: none !important; }
+        /* freeze any hover transforms/shadows inside education */
+        .freeze-card :global(.card-hover),
+        .freeze-card :global(.card-hover:hover),
+        .freeze-card :global(.card-hover:active) {
+          transform: none !important;
+          box-shadow: none !important;
+          border-color: var(--color-border) !important;
+        }
       `}</style>
     </PageTransition>
   );
@@ -151,10 +173,6 @@ function renderButtonCell(ev: Linked) {
   const href = ev.href ?? ev.link ?? null;
   if (!href) return null;
 
-  const img = ev.image ?? undefined;
-
-  // Button text priority:
-  // 1) linkText (original sentence); 2) desc; 3) description; 4) DEFAULT_LONG (except CSG → "learn more")
   const fallback = isCSG(ev) ? "learn more" : DEFAULT_LONG;
   const label =
     (ev.linkText && ev.linkText.trim()) ||
@@ -162,17 +180,21 @@ function renderButtonCell(ev: Linked) {
     (ev.description && ev.description.trim()) ||
     fallback;
 
+  const img = ev.image ?? undefined;
+
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group mt-2 block overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] px-4 py-0 backdrop-blur-sm transition hover:bg-white/[0.04] md:px-5"
+      className="group mt-2 block overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-sm transition hover:bg-white/[0.04]"
     >
-      {/* row; cell restored; alignment via px-4/md:px-5 to match text inset */}
-      <div className="flex min-h-[84px] items-stretch gap-4">
-        {/* 20% image on sm+ */}
-        <div className="relative hidden select-none sm:block sm:w-[20%]">
+      {/* Row: image must touch the card's left rounded corner.
+          We keep content aligned with resume text by adding container padding,
+          then pull the image left with a matching negative margin. */}
+      <div className="flex min-h-[84px] items-stretch gap-4 px-4 md:px-5">
+        {/* image 20% on sm+; bleed into left padding so it fills rounded corner */}
+        <div className="relative hidden select-none sm:block sm:w-[20%] -ml-4 md:-ml-5 rounded-l-xl overflow-hidden">
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -185,7 +207,7 @@ function renderButtonCell(ev: Linked) {
           )}
         </div>
 
-        {/* text inside the button */}
+        {/* text */}
         <div className="flex min-w-0 flex-1 items-center justify-between py-3">
           <p className="min-w-0 pr-3 text-sm text-neutral-200 line-clamp-2">
             <span className="bg-[linear-gradient(white,white)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-200 group-hover:bg-[length:100%_1px]">
