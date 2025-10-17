@@ -41,7 +41,7 @@ export default function ExperiencePage() {
           transition={{ duration: 0.4, delay: 0.05 }}
           className="mt-3 max-w-3xl text-sm text-muted md:text-base"
         >
-          Roles and projects across media, policy, and applied AI.
+          Roles across media, policy, and applied AI.
         </motion.p>
       </section>
 
@@ -53,28 +53,35 @@ export default function ExperiencePage() {
         </Reveal>
       </section>
 
-      {/* experience timeline */}
-      <section className="mx-auto mt-10 max-w-5xl px-4 pb-10">
+      {/* professional timeline */}
+      <section className="mx-auto mt-10 max-w-5xl px-4 pb-14">
         <h2 className="mb-4 text-xl">professional experience</h2>
 
+        {/* spine with subtle progress sheen */}
         <ol className="relative space-y-10">
-          {byYear.map(([year, list]) => (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-[0.5rem] top-0 h-full w-px bg-[linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06))]"
+          />
+          {byYear.map(([year, list], yi) => (
             <li key={year} className="space-y-6">
-              {/* sticky year label, consistent with site borders */}
-              <div className="sticky top-[56px] z-10 -mx-4 px-4">
+              {/* sticky year chip */}
+              <div className="sticky top-[64px] z-10 -mx-4 px-4">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted">{year}</span>
-                  <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(255,255,255,.22),transparent)]" />
+                  <span className="rounded-full border border-subtle px-2 py-0.5 text-xs text-muted">{year}</span>
+                  <span className="h-px flex-1 bg-[linear-gradient(90deg,rgba(255,255,255,.18),transparent)]" />
                 </div>
               </div>
 
-              {/* timeline column */}
+              {/* entries */}
               <div className="relative border-l border-subtle pl-6">
-                <span className="pointer-events-none absolute left-0 top-0 h-full w-px translate-x-[-1px] bg-[linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,.06))]" />
                 <div className="space-y-6">
                   {list.map((ev, i) => (
-                    <Reveal key={`${ev.dates}-${ev.role}-${ev.org ?? ""}`} delay={i * 0.045}>
-                      <TimelineItem event={ev} />
+                    <Reveal key={`${ev.dates}-${ev.role}-${ev.org ?? ""}`} delay={(yi * 0.02) + i * 0.045}>
+                      {/* slight row highlight on hover; monochrome */}
+                      <div className="rounded-xl bg-white/[0.015] p-0 hover:bg-white/[0.03] transition">
+                        <TimelineItem event={ev} />
+                      </div>
                     </Reveal>
                   ))}
                 </div>
@@ -84,7 +91,7 @@ export default function ExperiencePage() {
         </ol>
       </section>
 
-      {/* pinned ChatGPT FAB (unchanged) */}
+      {/* pinned FAB (stays at bottom of frame) */}
       <ExperienceChatFab />
     </PageTransition>
   );
