@@ -5,33 +5,16 @@ import { useReducedMotion } from "framer-motion";
 import Image from "next/image";
 
 type Props = {
-  // original content API
-  lines: string[]; // pass your three lines
-  images?: string[]; // optional array of image URLs
-
-  // legacy image API (still used in app/page.tsx)
-  imageName?: string;
-  imageBaseUrl?: string;
+  lines: [string, string, string];
+  image: string; // single image
 };
 
-export default function PinnedAbout({ lines, images, imageName, imageBaseUrl }: Props) {
+export default function PinnedAbout({ lines, image }: Props) {
   const prefers = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
 
-  // derive final images list, supporting legacy props
-  const derivedImages: string[] = (() => {
-    if (images && images.length) return images;
-    if (imageBaseUrl && imageName) {
-      const base = imageBaseUrl.replace(/\/$/, "");
-      const url = `${base}/${imageName}`;
-      // keep three slots so crossfade logic remains stable
-      return [url, url, url];
-    }
-    return [];
-  })();
-
-  // repo-original scroll-proportional highlighting (no typewriter)
+  // original scroll-linked fade logic (unchanged)
   useEffect(() => {
     if (prefers) return;
     let raf = 0;
@@ -39,10 +22,9 @@ export default function PinnedAbout({ lines, images, imageName, imageBaseUrl }: 
       const el = ref.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const total = Math.max(1, rect.height - window.innerHeight);
-      const prog = Math.min(1, Math.max(0, (window.innerHeight - rect.top) / total));
-      const bucket = prog < 1 / 3 ? 0 : prog < 2 / 3 ? 1 : 2;
-      setIdx(Math.min(bucket, Math.max(0, lines.length - 1)));
+      const total = rect.height - window.innerHeight;
+      const prog = Math.min(1, Math.max(0, (window.innerHeight - rect.top) / (total || 1)));
+      setIdx(prog < 0.33 ? 0 : prog < 0.66 ? 1 : 2);
     };
     const loop = () => {
       onScroll();
@@ -50,14 +32,14 @@ export default function PinnedAbout({ lines, images, imageName, imageBaseUrl }: 
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [prefers, lines.length]);
+  }, [prefers]);
 
   return (
-    <section id="about" className="relative mx-auto mt-6 max-w-6xl px-4">
-      <div ref={ref} className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* left: list, emphasizes active line */}
-        <div className="md:col-span-2 md:sticky md:top-[84px]">
-          <h2 className="mb-4 text-sm tracking-wide text-muted">about</h2>
+    <section id="about" className="relative mx-auto mt-6 max-w-5xl px-4">
+      <div ref={ref} className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* text list */}
+        <div className="md:sticky md:top-[84px]">
+          <h2 className="mb-4 text-xl">about</h2>
           <ul className="space-y-3 text-muted">
             {lines.map((t, i) => (
               <li
@@ -72,19 +54,16 @@ export default function PinnedAbout({ lines, images, imageName, imageBaseUrl }: 
           </ul>
         </div>
 
-        {/* right: image column (33%), crossfades with index; hover zoom stays confined */}
-        <div className="group relative h-[320px] overflow-hidden rounded-xl border border-subtle bg-card md:h-[500px]">
-          {derivedImages.map((src, i) => (
-            <Image
-              key={`${src}-${i}`}
-              src={src}
-              alt={`about ${i + 1}`}
-              fill
-              sizes="(min-width:768px) 33vw, 100vw"
-              priority={i === 0}
-              className={`object-cover transition-opacity duration-300 ${i === idx ? "opacity-100" : "opacity-0"} group-hover:scale-[1.04]`}
-            />
-          ))}
+        {/* single static image with confined hover */}
+        <div className="group relative h-[320px] overflow-hidden rounded-xl border border-subtle bg-card md:h-[420px]">
+          <Image
+            src={image}
+            alt="about image"
+            fill
+            sizes="(min-width: 768px) 50vw, 100vw"
+            priority
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+          />
           <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10" />
         </div>
       </div>
