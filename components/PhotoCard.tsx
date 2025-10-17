@@ -27,12 +27,17 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
 
   const aspect = useMemo(() => {
     switch (ratio) {
-      case "video": return "aspect-[16/9]";
-      case "photo": return "aspect-[4/3]";
-      case "tall": return "aspect-[3/4]";
-      case "cinematic": return "aspect-[21/9]";
+      case "video":
+        return "aspect-[16/9]";
+      case "photo":
+        return "aspect-[4/3]";
+      case "tall":
+        return "aspect-[3/4]";
+      case "cinematic":
+        return "aspect-[21/9]";
       case "square":
-      default: return "aspect-[1/1]";
+      default:
+        return "aspect-[1/1]";
     }
   }, [ratio]);
 
@@ -55,10 +60,8 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
         />
       </div>
 
-      {/* header-strength bottom fade */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 sm:h-32 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
-      {/* pills strip */}
       {pills.length > 0 && (
         <div className="absolute inset-x-0 bottom-0 pb-2 pt-6 sm:pb-2 sm:pt-8">
           <div className="pointer-events-auto mx-2 flex flex-wrap gap-2">
