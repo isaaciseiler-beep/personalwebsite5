@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
-type NewProps = { heading?: [string, string]; blurbs?: string[]; images?: string[] };
+type NewProps = { blurbs?: string[]; images?: string[] };
 type LegacyProps = { lines?: string[]; imageName?: string; imageBaseUrl?: string };
 type Props = NewProps & LegacyProps;
 
 export default function PinnedAbout(props: Props) {
   // content
   const blurbs =
-    props.blurbs && props.blurbs.length
+    props.blurbs?.length
       ? props.blurbs
       : [
           "Fulbright scholar documenting AI uses in education",
@@ -23,70 +23,26 @@ export default function PinnedAbout(props: Props) {
         ];
 
   const images =
-    (props.images && props.images.length ? props.images : undefined) ??
-    (props.imageBaseUrl && props.imageName
+    props.images?.length
+      ? props.images
+      : props.imageBaseUrl && props.imageName
       ? [`${props.imageBaseUrl.replace(/\/$/, "")}/${props.imageName}`]
-      : []);
+      : [];
 
   const prefers = useReducedMotion();
+  const [i, setI] = useState(0);
+  const hold = useRef(false);
 
-  // ---------- typewriter: slower + irregular ----------
-  const [bIdx, setBIdx] = useState(0);
-  const [txt, setTxt] = useState("");
-  const [phase, setPhase] = useState<"type" | "hold" | "erase">("type");
-
+  // original-style rotation: timed crossfade, pause on hover
   useEffect(() => {
-    if (prefers) {
-      setTxt(blurbs[bIdx]);
-      return;
-    }
-    const full = blurbs[bIdx];
+    if (prefers || blurbs.length <= 1) return;
+    const t = setInterval(() => {
+      if (!hold.current) setI((v) => (v + 1) % blurbs.length);
+    }, 3200);
+    return () => clearInterval(t);
+  }, [prefers, blurbs.length]);
 
-    // base cadence
-    const randomJitter = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-    let delay = 40; // fallback
-    if (phase === "type") {
-      // irregular typing: vary speed and insert micro-pauses on punctuation and word boundaries
-      const nextLen = txt.length + 1;
-      const nextChar = full.charAt(nextLen - 1);
-      const isPunct = /[.,;:!?]/.test(nextChar);
-      const boundaryPause = nextChar === " " ? randomJitter(60, 160) : 0;
-      delay = randomJitter(26, 75) + (isPunct ? randomJitter(140, 320) : 0) + boundaryPause;
-
-      const t = setTimeout(() => {
-        const next = full.slice(0, nextLen);
-        setTxt(next);
-        if (next === full) setPhase("hold");
-      }, delay);
-      return () => clearTimeout(t);
-    }
-
-    if (phase === "hold") {
-      // longer hold
-      delay = 2200 + randomJitter(300, 900);
-      const t = setTimeout(() => setPhase("erase"), delay);
-      return () => clearTimeout(t);
-    }
-
-    if (phase === "erase") {
-      // irregular erase in 1–3 char chunks
-      const chunk = Math.min(txt.length, randomJitter(1, 3));
-      delay = randomJitter(22, 60);
-      const t = setTimeout(() => {
-        const next = txt.slice(0, Math.max(0, txt.length - chunk));
-        setTxt(next);
-        if (next.length === 0) {
-          setBIdx((v) => (v + 1) % blurbs.length);
-          setPhase("type");
-        }
-      }, delay);
-      return () => clearTimeout(t);
-    }
-  }, [txt, phase, bIdx, prefers, blurbs]);
-
-  // sync image to current blurb index
-  const imgIdx = images.length ? bIdx % images.length : 0;
+  const imgIdx = images.length ? i % images.length : 0;
 
   const hVariants = useMemo(
     () => ({ hidden: { opacity: 0, y: 6 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }),
@@ -95,7 +51,7 @@ export default function PinnedAbout(props: Props) {
 
   return (
     <section id="about" className="relative mx-auto mt-6 max-w-6xl px-4 md:px-6" aria-label="About">
-      {/* subtle grid + ambient glow */}
+      {/* subtle grid + glow */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06]"
@@ -115,23 +71,32 @@ export default function PinnedAbout(props: Props) {
       />
 
       <div className="grid grid-cols-1 items-start gap-7 md:grid-cols-3">
-        {/* TEXT BLOCK — single dynamic line only */}
+        {/* TEXT with original glass CARD */}
         <div className="md:col-span-2 md:pr-4">
-          <motion.h2 initial="hidden" animate="show" variants={hVariants} className="mb-2 text-sm tracking-wide text-muted">
+          <motion.h2 initial="hidden" animate="show" variants={hVariants} className="mb-3 text-sm tracking-wide text-muted">
             about
           </motion.h2>
 
-          <motion.h1
-            initial="hidden"
-            animate="show"
-            variants={hVariants}
-            className="relative text-3xl leading-tight md:text-5xl"
+          <div
+            onMouseEnter={() => (hold.current = true)}
+            onMouseLeave={() => (hold.current = false)}
+            className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur supports-[backdrop-filter]:bg-white/[0.03] md:p-5"
           >
-            <span className="bg-gradient-to-r from-sky-400 to-fuchsia-400 bg-clip-text text-transparent">
-              {prefers ? blurbs[0] : txt}
-            </span>
-            {!prefers && <Caret />}
-          </motion.h1>
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={prefers ? `static-${i}` : i}
+                initial={{ opacity: 0, y: 6, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -6, filter: "blur(4px)" }}
+                transition={{ duration: 0.45 }}
+                className="pr-6 text-xl leading-relaxed md:text-2xl"
+              >
+                {prefers ? blurbs[0] : blurbs[i]}
+              </motion.p>
+            </AnimatePresence>
+
+            <AccentCorners />
+          </div>
         </div>
 
         {/* IMAGE 33% on md+, confined hover */}
@@ -159,8 +124,14 @@ export default function PinnedAbout(props: Props) {
   );
 }
 
-function Caret() {
+function AccentCorners() {
+  const c = "absolute h-5 w-5 border-[2px] border-sky-400/60";
   return (
-    <span className="ml-1 inline-block h-[0.9em] w-[2px] align-baseline bg-current animate-[blink_1.2s_steps(2,start)_infinite]" />
+    <>
+      <span className={`${c} left-3 top-3 rounded-tl-xl border-b-0 border-r-0`} />
+      <span className={`${c} right-3 top-3 rounded-tr-xl border-b-0 border-l-0`} />
+      <span className={`${c} bottom-3 left-3 rounded-bl-xl border-t-0 border-r-0`} />
+      <span className={`${c} bottom-3 right-3 rounded-br-xl border-t-0 border-l-0`} />
+    </>
   );
 }
