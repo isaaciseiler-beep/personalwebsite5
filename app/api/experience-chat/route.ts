@@ -19,12 +19,12 @@ export async function POST(req: Request) {
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { reply: "I'm not feeling very well right now. Try again later :(" },
+        { reply: "OpenAI API key is not configured on the server." },
         { status: 500 }
       );
     }
 
-    // Build compact site-grounded context
+    // Compact, factual context from the site only
     const input = (timeline as TLItem[])
       .map((e) =>
         [
@@ -36,33 +36,33 @@ export async function POST(req: Request) {
       )
       .join("\n");
 
-    // Guardrail: hard scope and truthfulness
+    // System rules
     const sys = [
       "You are the on-site assistant for Isaac Seiler’s portfolio.",
-      "SCOPE: Only answer questions about Isaac, his experience/education/skills, or the content present on this website. If the question is outside scope, reply briefly that you only answer questions about Isaac or this site, and invite a relevant question.",
-      "SOURCE OF TRUTH: Use ONLY the provided timeline text as factual grounding. Do not invent, speculate, or infer missing details. If information is not present, say you don’t have that detail.",
-      "TONE & STYLE: Optimistic, concise, recruiter-friendly. No hype. Prefer 1–3 short bullet points OR 1–2 tight sentences.",
-      "PERSONA: Answer in first person as Isaac unless the user explicitly asks for third person.",
-      "STRICTNESS: If the user asks for anything beyond scope (general advice, unrelated facts, opinions), refuse with a single sentence that redirects to Isaac’s experience.",
+      "SCOPE: Only answer questions about Isaac, his experience/education/skills, or content present on this website. If the question is outside scope, reply briefly that you only answer questions about Isaac or this site, and invite a relevant question.",
+      "SOURCE OF TRUTH: Use ONLY the provided timeline text as factual grounding. Do not invent or speculate. If information is not present, say you don’t have that detail.",
+      "VOICE: Speak in your own neutral voice (third person), referring to Isaac as “he.” Do not write as Isaac.",
+      "STYLE: Optimistic, recruiter-friendly, concise. You may paraphrase, condense, and synthesize resume points for clarity. No hype.",
+      "FORMAT: Prefer 1–3 short bullet points OR 1–2 tight sentences.",
+      "STRICTNESS: If out of scope, reply: “I only answer questions about Isaac’s experience and what’s on this site.”",
     ].join("\n");
 
     const userContent =
       `TIMELINE (ground truth; one per line):\n${input}\n\n` +
       `QUESTION:\n${String(message ?? "").slice(0, 2000)}\n\n` +
-      "RESPONSE FORMAT:\n" +
-      "- If answerable from the timeline, respond in 1–3 bullets or 1–2 sentences.\n" +
+      "RESPONSE RULES:\n" +
+      "- Keep it short. Paraphrase where useful.\n" +
       "- If a detail is missing, say “I don’t have that detail here.”\n" +
-      "- If out of scope, reply: “I only answer questions about my experience and what’s on this site.”";
+      "- Out of scope → the strict refusal line above.";
 
     const body = {
       model: "gpt-4o-mini",
       temperature: 0.2,
+      max_tokens: 220,
       messages: [
         { role: "system", content: sys },
         { role: "user", content: userContent },
       ],
-      // keep outputs tight
-      max_tokens: 220,
     };
 
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
