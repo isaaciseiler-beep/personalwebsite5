@@ -4,18 +4,58 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 
-type Props = {
-  heading: [string, string];
-  blurbs: string[];
-  images: string[];
+type NewProps = {
+  heading?: [string, string];
+  blurbs?: string[];
+  images?: string[];
 };
 
-export default function PinnedAbout({ heading, blurbs, images }: Props) {
+// legacy props still used in app/page.tsx
+type LegacyProps = {
+  lines?: string[];
+  imageName?: string;
+  imageBaseUrl?: string;
+};
+
+type Props = NewProps & LegacyProps;
+
+export default function PinnedAbout(props: Props) {
+  // defaults + legacy mapping
+  const heading: [string, string] =
+    props.heading ??
+    (props.lines && props.lines.length >= 1
+      ? // try to split first legacy line at the last space for two lines
+        (() => {
+          const s = props.lines![0];
+          const cut = s.lastIndexOf(" ");
+          return cut > 0
+            ? [s.slice(0, cut).trim(), s.slice(cut + 1).trim()]
+            : ["civic data work", "between public sector."];
+        })()
+      : ["civic data work", "between public sector."]);
+
+  const blurbs =
+    props.blurbs && props.blurbs.length
+      ? props.blurbs
+      : [
+          "Fulbright scholar documenting AI uses in education",
+          "Expert on digital disruption and innovation in journalism and media",
+          "Served as the youngest Communications Director in congressional history",
+          "Photographer, videographer, and internationally licensed drone pilot",
+          "Member of ChatGPT Lab @ OpenAI, informing product decisions",
+          "Skilled strategic communicator with cross-sector experience",
+        ];
+
+  const images =
+    (props.images && props.images.length ? props.images : undefined) ??
+    (props.imageBaseUrl && props.imageName
+      ? [`${props.imageBaseUrl.replace(/\/$/, "")}/${props.imageName}`]
+      : []);
+
   const prefers = useReducedMotion();
   const [idx, setIdx] = useState(0);
   const hold = useRef(false);
 
-  // auto-rotate blurbs if motion allowed
   useEffect(() => {
     if (prefers || blurbs.length <= 1) return;
     const t = setInterval(() => {
@@ -24,8 +64,7 @@ export default function PinnedAbout({ heading, blurbs, images }: Props) {
     return () => clearInterval(t);
   }, [prefers, blurbs.length]);
 
-  // sync image index to blurb index
-  const imgIdx = idx % Math.max(1, images.length);
+  const imgIdx = images.length ? idx % images.length : 0;
 
   const headingVariants = useMemo(
     () => ({
@@ -36,20 +75,15 @@ export default function PinnedAbout({ heading, blurbs, images }: Props) {
   );
 
   return (
-    <section
-      id="about"
-      className="relative mx-auto mt-8 max-w-6xl px-4 md:px-6"
-      aria-label="About"
-    >
-      {/* ambient grid + grain */}
+    <section id="about" className="relative mx-auto mt-8 max-w-6xl px-4 md:px-6" aria-label="About">
+      {/* ambient grid + glow */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07]"
         style={{
           background:
             "repeating-linear-gradient(90deg, transparent 0 22px, #fff2 22px 23px), repeating-linear-gradient(0deg, transparent 0 22px, #fff2 22px 23px)",
-          maskImage:
-            "radial-gradient(1200px 600px at 20% 30%, #000 65%, transparent)",
+          maskImage: "radial-gradient(1200px 600px at 20% 30%, #000 65%, transparent)",
         }}
       />
       <div
@@ -62,35 +96,20 @@ export default function PinnedAbout({ heading, blurbs, images }: Props) {
       />
 
       <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-3">
-        {/* TEXT BLOCK */}
+        {/* TEXT */}
         <div className="md:col-span-2 md:pr-4">
-          <motion.h2
-            initial="hidden"
-            animate="show"
-            variants={headingVariants}
-            className="mb-3 text-base tracking-wide text-muted"
-          >
+          <motion.h2 initial="hidden" animate="show" variants={headingVariants} className="mb-3 text-base tracking-wide text-muted">
             about
           </motion.h2>
 
-          <motion.h3
-            initial="hidden"
-            animate="show"
-            variants={headingVariants}
-            className="relative mb-4 text-4xl leading-tight md:text-6xl"
-          >
-            <span className="bg-gradient-to-r from-sky-400 to-fuchsia-400 bg-clip-text text-transparent">
-              {heading[0]}
-            </span>
+          <motion.h3 initial="hidden" animate="show" variants={headingVariants} className="relative mb-4 text-4xl leading-tight md:text-6xl">
+            <span className="bg-gradient-to-r from-sky-400 to-fuchsia-400 bg-clip-text text-transparent">{heading[0]}</span>
             <span className="block">{heading[1]}</span>
-
-            {/* animated underline */}
             <span className="pointer-events-none mt-3 block h-[3px] w-24 rounded-full bg-gradient-to-r from-sky-400 to-fuchsia-400">
               <span className="block h-full w-0 animate-[grow_1.2s_ease-out_forwards] bg-current" />
             </span>
           </motion.h3>
 
-          {/* SWITCHING BLURB with caret */}
           <div
             onMouseEnter={() => (hold.current = true)}
             onMouseLeave={() => (hold.current = false)}
@@ -108,34 +127,19 @@ export default function PinnedAbout({ heading, blurbs, images }: Props) {
                 {blurbs[idx]}
                 <span className="ml-2 inline-block h-5 w-[2px] align-baseline bg-current animate-[blink_1.2s_steps(2,start)_infinite]" />
               </motion.p>
-
-              {/* subtle corner accents */}
               <AccentCorners />
             </div>
-            <p className="mt-3 text-xs text-muted">
-              hover to pause • updates every ~3s
-            </p>
+            <p className="mt-3 text-xs text-muted">hover to pause • updates every ~3s</p>
           </div>
         </div>
 
-        {/* IMAGE BLOCK, strict 33% on md+ */}
+        {/* IMAGE 33% on md+, hover zoom confined */}
         <figure className="group relative h-[360px] overflow-hidden rounded-2xl border border-white/10 bg-card md:h-[560px]">
-          {/* ambient glow */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-6 -z-10 rounded-[28px] blur-2xl transition-opacity duration-500 group-hover:opacity-100"
-            style={{
-              background:
-                "radial-gradient(280px 200px at 70% 25%, rgba(14,165,233,.20), transparent 60%)",
-              opacity: 0.7,
-            }}
-          />
-          {/* image crossfade, hover zoom confined */}
           {images.map((src, i) => (
             <Image
-              key={src}
+              key={`${src}-${i}`}
               src={src}
-              alt="portrait"
+              alt="about image"
               fill
               priority={i === 0}
               sizes="(min-width:768px) 33vw, 100vw"
@@ -144,41 +148,25 @@ export default function PinnedAbout({ heading, blurbs, images }: Props) {
               } group-hover:scale-[1.06]`}
             />
           ))}
-
-          {/* inner mask to keep zoom inside frame */}
           <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
-          {/* glossy sweep on hover */}
           <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
             <div className="absolute -left-52 top-0 h-full w-40 rotate-12 bg-gradient-to-r from-white/0 via-white/10 to-white/0 blur-sm" />
           </div>
-          {/* caption optional */}
           <figcaption className="sr-only">About photo</figcaption>
         </figure>
       </div>
 
-      {/* local keyframes */}
       <style jsx>{`
         @keyframes blink {
-          0%,
-          49% {
-            opacity: 1;
-          }
-          50%,
-          100% {
-            opacity: 0;
-          }
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0; }
         }
-        @keyframes grow {
-          to {
-            width: 100%;
-          }
-        }
+        @keyframes grow { to { width: 100%; } }
       `}</style>
     </section>
   );
 }
 
-/** Decorative corner brackets for the blurb card */
 function AccentCorners() {
   const c = "absolute h-5 w-5 border-[2px] border-sky-400/60";
   return (
