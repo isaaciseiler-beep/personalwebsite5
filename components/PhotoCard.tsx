@@ -1,4 +1,3 @@
-// components/PhotoCard.tsx — FULL REPLACEMENT
 "use client";
 
 import { memo, useMemo } from "react";
@@ -25,7 +24,6 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
   const src = item.src ?? item.image ?? "";
   const alt = item.alt ?? item.title ?? "photo";
 
-  // include location as a pill
   const pills = [
     ...(item.tags ?? []),
     ...(item.keywords ?? []),
@@ -51,12 +49,17 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
 
   if (!src) return null;
 
+  const Base = onClick ? "button" : ("div" as const);
+  const baseProps = onClick
+    ? { type: "button" as const, onClick: () => onClick?.(src, alt) }
+    : {};
+
   return (
-    <button
-      type="button"
-      onClick={() => onClick?.(src, alt)}
-      className={`group relative block w-full overflow-hidden rounded-2xl border border-subtle bg-card ${aspect}`}
+    <Base
+      {...baseProps}
       aria-label={alt}
+      title={alt}
+      className={`group relative block w-full overflow-hidden rounded-2xl border border-subtle bg-card card-hover ${aspect} card-focusable`}
     >
       <div className="absolute inset-0">
         <ShimmerImage
@@ -64,7 +67,10 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
           alt={alt}
           width={1600}
           height={1066}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+          sizes="(min-width:1280px) 420px, (min-width:768px) 33vw, 100vw"
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
         />
       </div>
 
@@ -73,9 +79,9 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
       {pills.length > 0 && (
         <div className="absolute inset-x-0 bottom-0 pb-2 pt-6 sm:pb-2 sm:pt-8">
           <div className="pointer-events-auto mx-2 flex flex-wrap gap-2">
-            {pills.map((t) => (
+            {pills.map((t, i) => (
               <span
-                key={t}
+                key={`${t}-${i}`}
                 className="inline-flex min-w-[96px] items-center justify-center rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[11px] leading-none text-white/90 backdrop-blur-sm"
               >
                 {t}
@@ -84,7 +90,7 @@ function PhotoCard({ item, ratio = "square", onClick }: Props) {
           </div>
         </div>
       )}
-    </button>
+    </Base>
   );
 }
 
