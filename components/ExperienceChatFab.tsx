@@ -5,17 +5,18 @@ import { useEffect, useRef, useState } from "react";
 type Msg = { role: "user" | "assistant"; content: string };
 
 export default function ExperienceChatFab() {
-  const [open, setOpen] = useState(false);       // panel state
-  const [closing, setClosing] = useState(false); // drive reverse animation
+  const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const shellRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const streamTimer = useRef<number | null>(null);
 
-  const DUR = 360; // ms, keep in sync with CSS transitions
+  const DUR = 360; // ms
 
-  // Outside click → close (with reverse morph)
+  // Outside click → close
   useEffect(() => {
     function onDoc(e: MouseEvent) {
       if (!(open || closing) || !shellRef.current) return;
@@ -25,7 +26,16 @@ export default function ExperienceChatFab() {
     return () => document.removeEventListener("mousedown", onDoc);
   }, [open, closing]);
 
-  // Lock scroll while open OR closing (so it doesn't jump during reverse)
+  // ESC to close
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((open || closing) && e.key === "Escape") handleClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, closing]);
+
+  // Lock scroll while open/closing
   useEffect(() => {
     const lock = open || closing;
     if (!lock) return;
@@ -39,21 +49,35 @@ export default function ExperienceChatFab() {
     };
   }, [open, closing]);
 
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [msgs, busy]);
+
+  // Cleanup streaming timer on unmount
+  useEffect(() => {
+    return () => {
+      if (streamTimer.current) {
+        window.clearInterval(streamTimer.current);
+        streamTimer.current = null;
+      }
+    };
+  }, []);
+
   function handleOpen() {
     setClosing(false);
     setOpen(true);
   }
 
   function handleClose() {
-    // stop streaming if any
     if (streamTimer.current) {
       window.clearInterval(streamTimer.current);
       streamTimer.current = null;
     }
-    // trigger reverse morph
     setClosing(true);
     setOpen(false);
-    // after animation finishes, clear closing
     window.setTimeout(() => setClosing(false), DUR + 40);
   }
 
@@ -67,12 +91,11 @@ export default function ExperienceChatFab() {
       const r = await fetch("/api/experience-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text }),
       });
       const j = await r.json();
       const reply: string = j?.reply || "…";
 
-      // streaming / typewriter effect
       let i = 0;
       setMsgs((m) => [...m, { role: "assistant", content: "" }]);
       streamTimer.current = window.setInterval(() => {
@@ -102,7 +125,6 @@ export default function ExperienceChatFab() {
 
   return (
     <>
-      {/* blurred/dim backdrop (stays while closing for smooth reverse) */}
       {(open || closing) && (
         <button
           aria-label="close chat"
@@ -111,13 +133,13 @@ export default function ExperienceChatFab() {
         />
       )}
 
-      {/* morphing shell */}
       <div
         ref={shellRef}
         className={`chat-shell ${open ? "open" : ""} ${closing ? "closing" : ""}`}
         aria-live="polite"
+        role="dialog"
+        aria-modal="true"
       >
-        {/* floating pill (white). Becomes centered black X when open */}
         <button
           className={`pill ${open ? "to-x" : ""}`}
           aria-label={open ? "close chat" : "Ask ChatGPT"}
@@ -125,24 +147,16 @@ export default function ExperienceChatFab() {
         >
           <span className="pill-label">Ask ChatGPT</span>
           <span className="pill-x" aria-hidden>
-            <svg
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              stroke="#0b0b0c"
-              strokeWidth="1.8"
-              fill="none"
-            >
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="#0b0b0c" strokeWidth="1.8" fill="none">
               <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
             </svg>
           </span>
         </button>
 
-        {/* panel (dark, blurred) — emerges from the pill; reverses back on close */}
         <div className="panel" aria-hidden={!open && !closing}>
-          <div className="panel-header" /> {/* keep chat below X area */}
+          <div className="panel-header" />
 
-          <div className="scroll">
+          <div ref={scrollRef} className="scroll">
             {msgs.map((m, i) => (
               <div key={i} className={`row ${m.role === "assistant" ? "left" : "right"}`}>
                 <div className={`bubble ${m.role}`}>{m.content}</div>
@@ -168,7 +182,6 @@ export default function ExperienceChatFab() {
               aria-label="Message"
             />
             <button className="send" onClick={send} disabled={busy} aria-label="Send" title="Send">
-              {/* up arrow */}
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.8" fill="none">
                 <path d="M12 5v14M12 5l6 6M12 5L6 11" strokeLinecap="round" />
               </svg>
@@ -178,7 +191,6 @@ export default function ExperienceChatFab() {
       </div>
 
       <style jsx>{`
-        /* Backdrop with smooth fade both ways */
         .backdrop {
           position: fixed;
           inset: 0;
@@ -192,11 +204,11 @@ export default function ExperienceChatFab() {
         .backdrop.visible { opacity: 1; }
         .backdrop.closing { opacity: 0; }
 
-        /* Shell placement & morph */
+        /* Pinned to bottom of the viewport with safe-area offsets */
         .chat-shell {
           position: fixed;
           left: 50%;
-          bottom: 16px;
+          bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
           transform: translateX(-50%);
           z-index: 60;
           transition:
@@ -213,7 +225,6 @@ export default function ExperienceChatFab() {
           border-radius: 16px;
         }
 
-        /* Floating white pill (one line). Smooth reverse on close. */
         .pill {
           white-space: nowrap;
           background: #ffffff;
@@ -249,7 +260,6 @@ export default function ExperienceChatFab() {
         .chat-shell.open .pill-label { display: none; }
         .chat-shell.open .pill-x { display: grid; place-items: center; }
 
-        /* Panel (dark, blurred). Morphs in and out. */
         .panel {
           position: absolute; inset: 0;
           border-radius: 16px;
@@ -272,7 +282,6 @@ export default function ExperienceChatFab() {
         }
         .chat-shell.closing .panel { opacity: 0; transform: translateY(6px) scale(0.98); }
 
-        /* Header spacer (chat starts below X) */
         .panel-header { height: 48px; }
 
         .scroll {
@@ -297,7 +306,6 @@ export default function ExperienceChatFab() {
         .assistant { background: var(--color-card); }
         .user { background: transparent; border-color: var(--color-border); }
 
-        /* Skeleton loading & shimmer */
         .skeleton .sk {
           height: 10px; border-radius: 9999px;
           background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.18), rgba(255,255,255,.08));
@@ -335,10 +343,9 @@ export default function ExperienceChatFab() {
         .send:hover { transform: translateY(-1px); }
         .send:disabled { opacity: .5; transform: none; }
 
-        /* float animation when closed */
-        @keyframes floaty {
-          0%, 100% { transform: translate(-50%, 0); }
-          50% { transform: translate(-50%, -6px); }
+        @keyframes floaty { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -6px); } }
+        @media (prefers-reduced-motion: reduce) {
+          .pill { animation: none; }
         }
       `}</style>
     </>
